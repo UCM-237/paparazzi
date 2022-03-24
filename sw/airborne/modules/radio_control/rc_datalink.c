@@ -26,16 +26,41 @@
 
 #include "modules/radio_control/rc_datalink.h"
 #include "modules/radio_control/radio_control.h"
+#include "modules/core/abi.h"
+#include "pprzlink/dl_protocol.h"
 
 int8_t rc_dl_values[ RC_DL_NB_CHANNEL ];
 volatile bool rc_dl_frame_available;
 
 
-void radio_control_impl_init(void)
+void rc_datalink_init(void)
 {
+  radio_control.nb_channel = RC_DL_NB_CHANNEL;
   rc_dl_frame_available = false;
 }
 
+void rc_datalink_parse_RC_3CH(uint8_t *buf)
+{
+#ifdef RADIO_CONTROL_DATALINK_LED
+  LED_TOGGLE(RADIO_CONTROL_DATALINK_LED);
+#endif
+  parse_rc_3ch_datalink(
+      DL_RC_3CH_throttle_mode(buf),
+      DL_RC_3CH_roll(buf),
+      DL_RC_3CH_pitch(buf));
+}
+
+void rc_datalink_parse_RC_4CH(uint8_t *buf)
+{
+#ifdef RADIO_CONTROL_DATALINK_LED
+  LED_TOGGLE(RADIO_CONTROL_DATALINK_LED);
+#endif
+  parse_rc_4ch_datalink(DL_RC_4CH_mode(buf),
+      DL_RC_4CH_throttle(buf),
+      DL_RC_4CH_roll(buf),
+      DL_RC_4CH_pitch(buf),
+      DL_RC_4CH_yaw(buf));
+}
 
 void parse_rc_3ch_datalink(uint8_t throttle_mode,
                            int8_t roll,
@@ -86,7 +111,7 @@ static void rc_datalink_normalize(int8_t *in, int16_t *out)
   Bound(out[RADIO_MODE], MIN_PPRZ, MAX_PPRZ);
 }
 
-void radio_control_impl_event(void (* _received_frame_handler)(void))
+void rc_datalink_event(void)
 {
   if (rc_dl_frame_available) {
     radio_control.frame_cpt++;
@@ -94,7 +119,7 @@ void radio_control_impl_event(void (* _received_frame_handler)(void))
     radio_control.radio_ok_cpt = 0;
     radio_control.status = RC_OK;
     rc_datalink_normalize(rc_dl_values, radio_control.values);
-    _received_frame_handler();
+    AbiSendMsgRADIO_CONTROL(RADIO_CONTROL_DATALINK_ID, &radio_control);
     rc_dl_frame_available = false;
   }
 }

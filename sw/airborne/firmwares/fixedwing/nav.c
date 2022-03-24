@@ -34,11 +34,13 @@ static unit_t unit __attribute__((unused));
 #include "firmwares/fixedwing/nav.h"
 #include "firmwares/fixedwing/stabilization/stabilization_attitude.h"
 #include "autopilot.h"
-#include "modules/intermcu/inter_mcu.h"
 #include "modules/gps/gps.h"
 
 #include "generated/flight_plan.h"
 
+#if !USE_GENERATED_AUTOPILOT
+PRINT_CONFIG_VAR(NAVIGATION_FREQUENCY)
+#endif
 
 enum oval_status oval_status;
 
@@ -172,20 +174,20 @@ void nav_glide(uint8_t start_wp, uint8_t wp)
 
 #define Goto3D(radius) {                                                \
     if (autopilot_get_mode() == AP_MODE_AUTO2) {                                 \
-      int16_t yaw = imcu_get_radio(RADIO_YAW);                          \
+      int16_t yaw = radio_control_get(RADIO_YAW);                          \
       if (yaw > MIN_DX || yaw < -MIN_DX) {                              \
         carrot_x += FLOAT_OF_PPRZ(yaw, 0, -20.);                        \
         carrot_x = Min(carrot_x, MAX_DIST_CARROT);                      \
         carrot_x = Max(carrot_x, -MAX_DIST_CARROT);                     \
       }                                                                 \
-      int16_t pitch = imcu_get_radio(RADIO_PITCH);                      \
+      int16_t pitch = radio_control_get(RADIO_PITCH);                      \
       if (pitch > MIN_DX || pitch < -MIN_DX) {                          \
         carrot_y += FLOAT_OF_PPRZ(pitch, 0, -20.);                      \
         carrot_y = Min(carrot_y, MAX_DIST_CARROT);                      \
         carrot_y = Max(carrot_y, -MAX_DIST_CARROT);                     \
       }                                                                 \
       v_ctl_mode = V_CTL_MODE_AUTO_ALT;                                 \
-      int16_t roll =  imcu_get_radio(RADIO_ROLL);                       \
+      int16_t roll =  radio_control_get(RADIO_ROLL);                       \
       if (roll > MIN_DX || roll < -MIN_DX) {                            \
         nav_altitude += FLOAT_OF_PPRZ(roll, 0, -1.0);                   \
         nav_altitude = Max(nav_altitude, MIN_HEIGHT_CARROT+ground_alt); \
@@ -582,6 +584,34 @@ void nav_without_gps(void)
 #endif
 }
 
+void nav_parse_BLOCK(struct link_device *dev, struct transport_tx *trans, uint8_t *buf)
+{
+  if (DL_BLOCK_ac_id(buf) != AC_ID) { return; }
+  nav_goto_block(DL_BLOCK_block_id(buf));
+  SEND_NAVIGATION(trans, dev);
+}
+
+void nav_parse_MOVE_WP(struct link_device *dev, struct transport_tx *trans, uint8_t *buf)
+{
+  if (DL_MOVE_WP_ac_id(buf) != AC_ID) { return; }
+  uint8_t wp_id = DL_MOVE_WP_wp_id(buf);
+
+  /* Computes from (lat, long) in the referenced UTM zone */
+  struct LlaCoor_f lla;
+  lla.lat = RadOfDeg((float)(DL_MOVE_WP_lat(buf) / 1e7f));
+  lla.lon = RadOfDeg((float)(DL_MOVE_WP_lon(buf) / 1e7f));
+  lla.alt = (float)(DL_MOVE_WP_alt(buf) / 1000.f); // mm to m
+  struct UtmCoor_f utm;
+  utm.zone = nav_utm_zone0;
+  utm_of_lla_f(&utm, &lla);
+  nav_move_waypoint(wp_id, utm.east, utm.north, utm.alt);
+
+  /* Waypoint range is limited. Computes the UTM pos back from the relative
+     coordinates */
+  utm.east = waypoints[wp_id].x + nav_utm_east0;
+  utm.north = waypoints[wp_id].y + nav_utm_north0;
+  pprz_msg_send_WP_MOVED(trans, dev, AC_ID, &wp_id, &utm.east, &utm.north, &utm.alt, &nav_utm_zone0);
+}
 
 /**************** 8 Navigation **********************************************/
 
