@@ -29,7 +29,6 @@
 #include "modules/sonar/sonar_bluerobotics.h"
 
 #include "generated/airframe.h"
-#include "modules/datalink/telemetry.h"
 #include "autopilot.h"
 #include "navigation.h"
 #include "state.h"
@@ -90,12 +89,21 @@ static uint8_t request_simple_distance[12] = {
         0x06, //  4: 6_L message ID |
         0x00, //  5: 0_H            |
         0x00, //  6: source ID
-        0x00, //  7: device ID
+        0x01, //  7: device ID
         0xBB, //  8: BB_L requested message ID |
         0x04, //  9: 4_H                      |
         0x5C, // 10: 161_L message checksum (sum of all non-checksum bytes) |
         0x01  // 11: 0_H                                                    |
 };
+
+#if PERIODIC_TELEMETRY
+#include "modules/datalink/telemetry.h"
+
+/* Telemetry functions (TESTING TELEMETRY) */
+static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
+  pprz_msg_send_INFO_MSG(trans, dev, AC_ID, &checksum_test);
+}
+#endif
 
 
 /* Initialize decoder */
@@ -105,17 +113,13 @@ void sonar_init(void)
   br_sonar.msg_available = false;
 
   sonar_stream_setting = true;
-  checksum = 0;
-}
-
-/* Telemetry functions (TESTING TELEMETRY) */
-static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
-  pprz_msg_send_INFO_MSG(trans, dev, AC_ID, &checksum_test);
-}
-
-static void sonar_report(void){
+  checksum_test = 0;
+  
+  #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INFO_MSG, send_telemetry);
+  #endif
 }
+
 
 /* Send message to serial port (byte by byte) */
 static void sonar_send_msg(uint8_t len, uint8_t *bytes)
@@ -128,7 +132,6 @@ static void sonar_send_msg(uint8_t len, uint8_t *bytes)
   }
 
   br_sonar.msg_available = false;
-  sonar_report();
 }
 
 
@@ -150,7 +153,7 @@ static uint32_t calculateChecksum(void){
 };
 
 /* TODO: Diseñar el parser basado en GPS ublox y el código de Lia */
-static void sonar_parse(uint8_t byte){checksum_test;}; // ¡¡TESTING PARSER!!
+static void sonar_parse(uint8_t byte){checksum_test = checksum_test + 1;}; // ¡¡TESTING PARSER!!
 
 /*
 // To hexadecimal string for testing
@@ -167,19 +170,20 @@ static void dummy_sonar_parse(struct sonar_msg_t *BR_msg, uint8_t byte)
 void sonar_event(void)
 {
   struct link_device *dev = &((SONAR_DEV).device);
-
+  // Por aquí pasa
+  
   while (dev->char_available(dev->periph)) {
     sonar_parse(dev->get_byte(dev->periph));
+    checksum_test = checksum_test + 1; // NO PASA
     /*if (sonar.msg_available) {
       sonar_send_msg();
     };*/
-    sonar_report();
     }
-  //sonar_report();
 }
 
 // Send ping message
 void sonar_ping(void)
 {   
     sonar_send_msg(12, request_protocol_version);
+    // Por aquí pasa
 }

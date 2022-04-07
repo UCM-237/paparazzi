@@ -19,32 +19,26 @@
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
     </target>    
     
-    <module name="actuators" type="pwm"/>
-    <module name="telemetry" type="xbee_api"/>
-    
     <!-- Same board module as matek_f405_wind but without OSD -->
     <module name="board" type="matek_f405_boat"/> <!-- IMU included -->
-
-    <module name="gps" type="ublox">
-    </module>
+    
+    <module name="actuators" type="pwm"/>
+    <module name="telemetry" type="xbee_api"/>
+    <module name="gps" type="ublox"/>
     <module name="gps_ubx_ucenter"/>
-
     <module name="ins"/>
-
-    <!-- Either of this AHRS works fine with our rover -->
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
+    
+    <!-- Nuestros módulos -->
+    <module name="sonar" type="bluerobotics">
+    	<configure name="SONAR_UART" value="UART3"/>
+    </module>
 
-    <!--module name="ahrs" type="float_cmpl_quat">
-      <define name="AHRS_HEADING_UPDATE_GPS_MIN_SPEED" value="0.1"/>
-      <define name="AHRS_USE_GPS_HEADING" value="TRUE"/>
-      <configure name="USE_MAGNETOMETER" value="0"/>
-    </module-->
-
+    <!-- Tendremos que cambiar estos por módulos de guiado y nav. del barco -->
     <module name="nav"  type="rover_base"/>
     <module name="gvf"  type="module"/>
-
     <module name="guidance" type="rover_steering">
       <define name="MAX_DELTA"            value="15.0"/>
       <define name="DRIVE_SHAFT_DISTANCE" value="0.25"/>
@@ -59,13 +53,13 @@
   <!-- COMMANDS SECTION ..................................................................... -->
   <servos> 
     <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
-    <servo name="MOTOR_THROTTLE" no="3" min="1000" neutral="1500" max="2000"/>
-    <servo name="MOTOR_STEERING" no="4" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
   </servos> 
   
   <!-- Low level commands (PWM signal) -->
   <commands>
-    <axis name="THROTTLE"    failsafe_value="0"/>
+    <axis name="THROTTLE" failsafe_value="0"/>
     <axis name="STEERING" failsafe_value="0"/>
   </commands>
 
