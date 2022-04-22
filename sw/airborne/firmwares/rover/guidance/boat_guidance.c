@@ -83,7 +83,8 @@ void boat_guidance_bearing_ctrl(void) // TODO: Boat bearing control
 
 // Speed control (feed feed forward + propotional + integral controler) (PID)
 void boat_guidance_speed_ctrl(void) // TODO: Boat speed control
-{
+{ 
+  /**
   // - Looking for setting update
   if (guidance_control.kp != boat_pid.g[0] || guidance_control.ki != boat_pid.g[2]) {
     set_gains_pid_f(&boat_pid, guidance_control.kp, 0.f, guidance_control.ki);
@@ -96,7 +97,8 @@ void boat_guidance_speed_ctrl(void) // TODO: Boat speed control
   guidance_control.speed_error = (guidance_control.cmd.speed - stateGetHorizontalSpeedNorm_f());
   update_pid_f(&boat_pid, guidance_control.speed_error, time_step);
 
-  guidance_control.throttle = BoundThrottle(guidance_control.kf*guidance_control.cmd.speed + get_pid_f(&boat_pid));
+  guidance_control.throttle = BoundCmd(guidance_control.kf*guidance_control.cmd.speed + get_pid_f(&boat_pid));
+  **/
 }
 
 

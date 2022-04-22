@@ -55,26 +55,27 @@
   
   <!-- Low level commands -->
   <commands> 
-  <!-- TODO: Revisar cuando desarrollemos guiado, de momento hago el mix en command laws -->
-    <axis name="THROTTLE"  failsafe_value="0"/>
-    <axis name="BEARING" failsafe_value="0"/>
+  <!-- TODO: Revisar cuando desarrollemos guiado, puede interesar comandos THROTTLE y BEARING -->
+    <axis name="MLEFT"  failsafe_value="0"/>
+    <axis name="MRIGHT" failsafe_value="0"/>
   </commands>
 
-  <!-- When SetCommandsFromRC -->
-  <rc_commands>
-    <set command="THROTTLE" value="@THROTTLE"/>
-    <set command="BEARING"  value="@ROLL"/>
-  </rc_commands>
-  
-  <section name="MIXER"> <!-- TODO: Este mixer es temporal para no saturar, hay que cambiarlo -->
+  <section name="RC_MIXER"> 
+  <!-- TODO: Este mixer es temporal para no saturar, habría que buscar una mejor solución -->
     <define name="THROTTLE_RATE" value="0.8"/>
     <define name="BEARING_RATE"  value="0.2"/>
   </section>
   
+  <!-- When SetCommandsFromRC -->
+  <rc_commands>
+    <set command="MLEFT"  value="@THROTTLE * THROTTLE_RATE - @ROLL * BEARING_RATE"/>
+    <set command="MRIGHT" value="@THROTTLE * THROTTLE_RATE + @ROLL * BEARING_RATE"/>
+  </rc_commands>
+  
   <!-- When SetActuatorsFromCommands-->
   <command_laws>
-    <set servo="MOTOR_LEFT"  value="@THROTTLE * THROTTLE_RATE - @BEARING * BEARING_RATE" />
-    <set servo="MOTOR_RIGHT" value="@THROTTLE * THROTTLE_RATE + @BEARING * BEARING_RATE"/>
+    <set servo="MOTOR_LEFT"  value="@MLEFT" />
+    <set servo="MOTOR_RIGHT" value="@MRIGHT"/>
   </command_laws>
 
 

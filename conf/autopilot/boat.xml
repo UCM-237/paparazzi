@@ -49,8 +49,8 @@
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
-        <call fun="SetCommandsFromRC(commands, radio_control.values)"/>
-        <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
+	<!-- TODO: Haremos toda la asignación de comandos desde el boat guidance -->
+	<call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
         
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
@@ -64,6 +64,9 @@
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
+      	<!--TODO: Toda la asginación de comando desde el boat guidance 
+      		  Únicamente a funciones "boat_guidance_...()" -->
+      		  
         <!--call fun="rover_guidance_steering_speed_ctrl()"/>
         <call fun="rover_guidance_steering_heading_ctrl()"/>
 

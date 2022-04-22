@@ -21,15 +21,15 @@
 #ifndef BOAT_GUIDANCE_H
 #define BOAT_GUIDANCE_H
 
+#include "std.h"
+#include <math.h>
+
 /** Generated airframe.h from airframe.xml
  * - fun: SetActuatorsFromCommands
  * - var: commands
  * - var: hardware and construction parameters
  **/
-
-#include "std.h"
-#include <math.h>
-
+ 
 #include "generated/airframe.h"
 
 // Check critical global definitiones
@@ -41,12 +41,12 @@
 #error "Boat guidance requires the servo MOTOR_RIGHT"
 #endif
 
-#ifndef COMMAND_THROTTLE
-#error "Boat guidance requires the command COMMAND_THROTTLE"
+#ifndef COMMAND_MLEFT
+#error "Boat guidance requires the command COMMAND_MLEFT"
 #endif
 
-#ifndef COMMAND_BEARING
-#error "Boat guidance requires the command COMMAND_BEARING"
+#ifndef COMMAND_MRIGHT
+#error "Boat guidance requires the command COMMAND_MRIGHT"
 #endif
 
 
@@ -101,14 +101,11 @@ extern void boat_guidance_kill(void);
                           (speed >  MAX_SPEED ? MAX_SPEED : \
                            speed));
                            
-// Bound throttle
-#define BoundThrottle(throttle) TRIM_PPRZ((int)throttle);
-
-// Set low level commands from high level commands
-#define GetCmdFromDelta(delta) (delta >= 0 ? -delta/MAX_DELTA * (MAX_PPRZ - (int)MAX_CMD_SHUT) : \
-                                             -delta/MIN_DELTA * (MAX_PPRZ - (int)MIN_CMD_SHUT));
+// Bound commands
+#define BoundCmd(cmd) TRIM_PPRZ((int)cmd);
 
 // Set AP throttle value
-#define SetAPThrottleFromCommands(void) autopilot.throttle = commands[COMMAND_THROTTLE];
+#define SetAPThrottleFromCommands(void) { \
+autopilot.throttle = (commands[COMMAND_MLEFT] + commands[COMMAND_MRIGHT])/2; }
 
 #endif // BOAT_GUIDANCE_H
