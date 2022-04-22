@@ -242,9 +242,7 @@ void gvf_control_2D(float ke, float kn, float e,
   }
 
   #elif defined(ROVER_FIRMWARE) 
-  if (autopilot_get_mode() != AP_MODE_DIRECT) {
     guidance_control.gvf_omega = omega; //TODO: set omega into external GVF variable
-  }
 
   #else
   #error GVF does not support your firmware yet

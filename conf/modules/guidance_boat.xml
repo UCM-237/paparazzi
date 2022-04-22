@@ -1,0 +1,41 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="guidance_boat" dir="guidance" task="control">
+  <doc>
+    <description>
+      UCM boat guidance.
+    </description>
+
+  </doc>
+
+  <!--settings name="SR Guidance">
+    <dl_settings>
+      <dl_settings NAME="SR Guidance">
+        <dl_settings NAME="Steering control">
+          <dl_setting MAX="15.0" MIN="-15.0" STEP="0.1" VAR="guidance_control.cmd.delta" shortname="sr_delta" param="SR_GUIDANCE_DELTA"/>
+        </dl_settings>
+        <dl_settings NAME="Speed control">
+          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="guidance_control.cmd.speed" shortname="sr_speed" param="SR_GUIDANCE_SPEED"/>
+          <dl_setting MAX="2000.0" MIN="0.0" STEP="1" VAR="guidance_control.kf" shortname="kf"/>
+          <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.kp" shortname="kp"/>
+          <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.ki" shortname="ki"/>
+        </dl_settings>
+      </dl_settings>
+    </dl_settings>
+  </settings-->
+  
+    <dep>
+    <depends>@navigation</depends>
+    <provides>guidance,commands</provides>
+  </dep>
+  
+  <header>
+    <file name="boat_guidance.h"/>
+  </header>
+
+  <init fun="boat_guidance_init()"/>
+  <makefile target="ap|nps" firmware="rover">
+    <file name="boat_guidance.c" dir="$(SRC_FIRMWARE)/guidance"/>
+  </makefile>
+  
+</module>

@@ -3,7 +3,7 @@
 <airframe name="boat">
 
   <firmware name="rover">
-    <autopilot name="rover_steering.xml"/>
+    <autopilot name="boat.xml"/>
 
     <target name="ap" board="matek_f405_wing_v1">
       <configure name="PERIODIC_FREQUENCY" value="100"/>
@@ -14,7 +14,7 @@
     
     <target name="nps" board="pc">
       <module name="radio_control" type="ppm"/>
-      <module name="fdm"           type="rover"/> <!-- NPS_FDM rover physics!! -->
+      <module name="fdm"           type="rover"/> <!-- TODO: Físicas del barco en NPS -->
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
     </target>    
@@ -31,20 +31,16 @@
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
-    <!-- Nuestros módulos -->
+    <!-- Nuestros módulos: Drivers del sonar... -->
     <module name="sonar" type="bluerobotics">
     	<configure name="SONAR_UART" value="UART3"/>
     </module>
 
-    <!-- Tendremos que cambiar estos por módulos de guiado y nav. del barco -->
+    <!-- TODO: Tendremos que cambiar estos por módulos de guiado y nav. del barco -->
     <module name="nav"  type="rover_base"/>
     <module name="gvf"  type="module"/>
-    <module name="guidance" type="rover_steering">
-      <define name="MAX_DELTA"            value="15.0"/>
-      <define name="DRIVE_SHAFT_DISTANCE" value="0.25"/>
-      <define name="SR_MEASURED_KF"       value="1400.0"/>
-      <define name="MIN_CMD_SHUT"         value="3800"/>
-      <define name="MAX_CMD_SHUT"         value="1350"/>
+    <module name="guidance" type="boat">
+    	<define name="BOAT_MEASURED_KF" value="10"/>
     </module>
 
   </firmware>
@@ -52,27 +48,33 @@
 
   <!-- COMMANDS SECTION ..................................................................... -->
   <servos> 
-    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
-    <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
-    <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
+    <!-- "no" 0 and 1 0, our f405 don't have power pin for these pwm outputs... -->
+    <servo name="MOTOR_LEFT"  no="0" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_RIGHT" no="1" min="1000" neutral="1500" max="2000"/>
   </servos> 
   
-  <!-- Low level commands (PWM signal) -->
-  <commands>
-    <axis name="THROTTLE" failsafe_value="0"/>
-    <axis name="STEERING" failsafe_value="0"/>
+  <!-- Low level commands -->
+  <commands> 
+  <!-- TODO: Revisar cuando desarrollemos guiado, de momento hago el mix en command laws -->
+    <axis name="THROTTLE"  failsafe_value="0"/>
+    <axis name="BEARING" failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
   <rc_commands>
     <set command="THROTTLE" value="@THROTTLE"/>
-    <set command="STEERING" value="@ROLL"/>
+    <set command="BEARING"  value="@ROLL"/>
   </rc_commands>
-
+  
+  <section name="MIXER"> <!-- TODO: Este mixer es temporal para no saturar, hay que cambiarlo -->
+    <define name="THROTTLE_RATE" value="0.8"/>
+    <define name="BEARING_RATE"  value="0.2"/>
+  </section>
+  
   <!-- When SetActuatorsFromCommands-->
   <command_laws>
-    <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
-    <set servo="MOTOR_STEERING" value="@STEERING"/>
+    <set servo="MOTOR_LEFT"  value="@THROTTLE * THROTTLE_RATE - @BEARING * BEARING_RATE" />
+    <set servo="MOTOR_RIGHT" value="@THROTTLE * THROTTLE_RATE + @BEARING * BEARING_RATE"/>
   </command_laws>
 
 
@@ -94,8 +96,8 @@
 
   <section name="AUTOPILOT">
     <define name="MODE_MANUAL" value="AP_MODE_DIRECT"/> 
-    <define name="MODE_AUTO1"  value="AP_MODE_CRUISER"/> 
-    <define name="MODE_AUTO2"  value="AP_MODE_NAV"/> <!-- Ignoring radio_control.values -->
+    <define name="MODE_AUTO1"  value="AP_MODE_AUTO1"/> 
+    <define name="MODE_AUTO2"  value="AP_MODE_NAV"/>
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
