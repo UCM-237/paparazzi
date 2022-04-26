@@ -40,7 +40,8 @@
     <module name="nav"  type="rover_base"/>
     <module name="gvf"  type="module"/>
     <module name="guidance" type="boat">
-    	<define name="BOAT_MEASURED_KF" value="10"/>
+    	<define name="BOAT_SPEED_KF" value="1000"/>
+      <define name="BOAT_BEARING_KF" value="1000"/>
     </module>
 
   </firmware>
@@ -59,18 +60,6 @@
     <axis name="MLEFT"  failsafe_value="0"/>
     <axis name="MRIGHT" failsafe_value="0"/>
   </commands>
-
-  <section name="RC_MIXER"> 
-  <!-- TODO: Este mixer es temporal para no saturar, habría que buscar una mejor solución -->
-    <define name="THROTTLE_RATE" value="0.8"/>
-    <define name="BEARING_RATE"  value="0.2"/>
-  </section>
-  
-  <!-- When SetCommandsFromRC -->
-  <rc_commands>
-    <set command="MLEFT"  value="@THROTTLE * THROTTLE_RATE - @ROLL * BEARING_RATE"/>
-    <set command="MRIGHT" value="@THROTTLE * THROTTLE_RATE + @ROLL * BEARING_RATE"/>
-  </rc_commands>
   
   <!-- When SetActuatorsFromCommands-->
   <command_laws>

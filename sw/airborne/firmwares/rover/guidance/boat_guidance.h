@@ -51,18 +51,14 @@
 
 
 /** Global variables definitions **/
-// MIN_SPEED, MAX_SPEED: Min and max state speed (m/s)
-#ifndef MAX_SPEED //TODO: Si no se usa la velocidad en el bearing control, se puede eliminar
-#define MAX_SPEED 999.0 //We don't really use that variable
-#endif
-#ifndef MIN_SPEED //TODO: Si no se usa la velocidad en el bearing control, se puede eliminar
-#define MIN_SPEED 0.2 //But this one is mandatory because we have
-#endif                //to deal with GPS noise (and 1/v in guidance control).
-
-// SR_MEASURED_KF: Lineal feed forward control constant (have to be measured in new servos)
-#ifndef BOAT_MEASURED_KF
-#define BOAT_MEASURED_KF 10
+#ifndef BOAT_SPEED_KF // Lineal feed forward speed control constant (have to be measured with new servos)
+#define BOAT_SPEED_KF 10
 #warning "Construction constant BOAT_MEASURED_KF for boat speed ctrl not defined"
+#endif
+
+#ifndef BOAT_BEARING_KF
+#define BOAT_BEARING_KF 10
+#warning "Construction constant BOAT_BEARING_KF for boat bearing ctrl not defined"
 #endif
 
 
@@ -70,17 +66,24 @@
 // High level commands
 typedef struct {
   float speed;
+  float omega;
 } guidance_cmd_t;
 
 // Main structure
 typedef struct {
   guidance_cmd_t cmd;
   float gvf_omega;
-  float throttle;
-  float bearing;
+
+  float throttle; //  Td + Ti
+  float bearing;  // |Td - Ti|
+
+  int32_t rc_throttle;
+  int32_t rc_bearing;
+
+  float kf_bearing;
+  float kf_speed;
 
   float speed_error;
-  float kf;
   float kp;
   float ki;
 } ctrl_t;
@@ -89,18 +92,15 @@ extern ctrl_t guidance_control;
 
 /** Boat guidance EXT FUNCTIONS **/
 extern void boat_guidance_init(void);
-extern void boat_guidance_bearing_ctrl(void);
+extern void boat_guidance_read_rc(void);
+extern void boat_guidance_bearing_GVF_ctrl(void);
+extern void boat_guidance_bearing_static_ctrl(void);
 extern void boat_guidance_speed_ctrl(void);
 extern void boat_guidance_pid_reset(void);
 extern void boat_guidance_kill(void);
 
 
 /** MACROS **/
-// Bound speed | TODO: Si no se usa la velocidad en el bearing control, se puede eliminar
-#define BoundSpeed(speed) (speed <  MIN_SPEED ? MIN_SPEED : \
-                          (speed >  MAX_SPEED ? MAX_SPEED : \
-                           speed));
-                           
 // Bound commands
 #define BoundCmd(cmd) TRIM_PPRZ((int)cmd);
 

@@ -14,6 +14,7 @@
       <include name="modules/radio_control/radio_control.h"/>
       <include name="guidance/boat_guidance.h"/>
       <include name="state.h"/>
+
       <define  name="RCLost()" value="(radio_control.status == RC_REALLY_LOST)"/>
     </includes>
 
@@ -22,7 +23,7 @@
     </settings>
 
     <exceptions>
-      <exception cond="nav.too_far_from_home" deroute="HOME"/>
+      <!--exception cond="nav.too_far_from_home" deroute="HOME"/-->
       <exception cond="kill_switch_is_on()"   deroute="KILL"/>
     </exceptions>
 
@@ -34,9 +35,9 @@
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
-        <call fun="SetCommandsFromRC(commands, radio_control.values)"/>
-        <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
+        <call fun="boat_guidance_read_rc()"/>
 
+        <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
       <exception cond="RCLost()" deroute="KILL"/>
@@ -49,9 +50,10 @@
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
-	<!-- TODO: Haremos toda la asignación de comandos desde el boat guidance -->
-	<call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
-        
+      	<!-- TODO: ¿Es necesario realmente este modo? -->
+        <call fun="boat_guidance_read_rc()"/>
+
+        <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
       <exception cond="RCLost()" deroute="KILL"/>
@@ -59,38 +61,33 @@
     
     <!-- Navigation: Speed crtl (from state speed on enter) + heading ctrl (from GCS & flight plans) -->
     <mode name="NAV">
-      <select cond="RCMode2()" exception="HOME"/>
+      <select cond="RCMode2()"/>
       <control freq="NAVIGATION_FREQUENCY">
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
-      	<!--TODO: Toda la asginación de comando desde el boat guidance 
-      		  Únicamente a funciones "boat_guidance_...()" -->
-      		  
+      	<!--TODO: Hay que repensarlo, necesitamos módulo de programación --> 
         <!--call fun="rover_guidance_steering_speed_ctrl()"/>
-        <call fun="rover_guidance_steering_heading_ctrl()"/>
+        <call fun="rover_guidance_steering_heading_ctrl()"/-->
 
-        <call fun="commands[COMMAND_STEERING] = GetCmdFromDelta(guidance_control.cmd.delta);"/>
-        <call fun="commands[COMMAND_THROTTLE] = GetCmdFromThrottle(guidance_control.throttle);"/-->
         <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
-        
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
       <exception cond="GpsIsLost() && autopilot_in_flight()" deroute="KILL"/>
     </mode>
     
     <!-- HOME (not yet implemented) -->
-    <mode name="HOME">
+    <!--mode name="HOME">
       <control freq="NAVIGATION_FREQUENCY">
         <call fun="nav_home()"/>
       </control>
       <control>
+
         <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
-        
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
       <exception cond="GpsIsLost()" deroute="KILL"/>
-    </mode>
+    </mode-->
 
     <!-- Kill throttle -->
     <mode name="KILL">

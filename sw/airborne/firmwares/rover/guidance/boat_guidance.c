@@ -24,6 +24,7 @@
 #include "firmwares/rover/guidance/boat_guidance.h"
 
 #include "generated/airframe.h"
+#include "generated/radio.h"
 
 #include "modules/actuators/actuators_default.h"
 #include "modules/radio_control/radio_control.h"
@@ -36,25 +37,35 @@
 #include <math.h>
 #include <stdio.h>
 
+/* error if some gains are negative */
+#if (BOAT_KF_BEARING < 0) ||                   \
+    (BOAT_KF_SPEED   < 0)
+#error "ALL control gains must be positive!!!"
+#endif
+
 // Guidance control main variables
 ctrl_t guidance_control;
 
 static struct PID_f boat_pid;
 static float time_step;
 static float last_speed_cmd;
-static uint8_t last_ap_mode;
 
 /** INIT function **/
 void boat_guidance_init(void)
 {
   guidance_control.cmd.speed = 0.0;
+  guidance_control.cmd.omega = 0.0;
   guidance_control.throttle  = 0.0;
+  guidance_control.bearing   = 0.0;
+  guidance_control.rc_throttle = 0;
+  guidance_control.rc_bearing  = 0;
 
   last_speed_cmd = 0.0;
-  last_ap_mode   = AP_MODE_KILL;
+  
+  guidance_control.kf_bearing = BOAT_BEARING_KF;
+  guidance_control.kf_speed   = BOAT_SPEED_KF;
 
   guidance_control.speed_error = 0.0;
-  guidance_control.kf = BOAT_MEASURED_KF;
   guidance_control.kp = 10;
   guidance_control.ki = 100;
 
@@ -64,9 +75,30 @@ void boat_guidance_init(void)
   time_step = 1.f/PERIODIC_FREQUENCY;
 }
 
+
+/** RC guidance function **/
+void boat_guidance_read_rc(void){
+
+  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE];
+  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL];
+
+  if (abs(guidance_control.rc_throttle) >= MAX_PPRZ) {
+    if (guidance_control.rc_bearing > 0) {
+      commands[COMMAND_MLEFT]  = MAX_PPRZ - guidance_control.rc_bearing*2;
+      commands[COMMAND_MRIGHT] = MAX_PPRZ;
+    } else {
+      commands[COMMAND_MLEFT]  = MAX_PPRZ;
+      commands[COMMAND_MRIGHT] = MAX_PPRZ - guidance_control.rc_bearing*2;
+    }
+  } else {
+    commands[COMMAND_MLEFT]  = guidance_control.rc_throttle - guidance_control.rc_bearing;
+    commands[COMMAND_MRIGHT] = guidance_control.rc_throttle + guidance_control.rc_bearing;
+  }
+}
+
+
 /** CTRL functions **/
-// Bearing control (GVF) 
-void boat_guidance_bearing_ctrl(void) // TODO: Boat bearing control
+void boat_guidance_bearing_GVF_ctrl(void) // TODO: Boat GVF bearing control
 {
   //float delta = 0.0;
   float omega = guidance_control.gvf_omega; //GVF give us this omega
@@ -75,14 +107,17 @@ void boat_guidance_bearing_ctrl(void) // TODO: Boat bearing control
   //float speed = BoundSpeed(stateGetHorizontalSpeedNorm_f()); 
 
   if (fabs(omega)>0.0) {
-      //delta = DegOfRad(-atanf(omega*DRIVE_SHAFT_DISTANCE/speed));
+      //delta = 
     }
 
   //guidance_control.cmd.delta = BoundDelta(delta);
 }
 
-// Speed control (feed feed forward + propotional + integral controler) (PID)
-void boat_guidance_speed_ctrl(void) // TODO: Boat speed control
+void boat_guidance_bearing_static_ctrl(void){ // TODO: Boat static bearing control
+
+}
+
+void boat_guidance_speed_ctrl(void) // feed feed forward + propotional + integral controler (PID) // TODO: Boat speed control
 { 
   /**
   // - Looking for setting update
@@ -97,7 +132,7 @@ void boat_guidance_speed_ctrl(void) // TODO: Boat speed control
   guidance_control.speed_error = (guidance_control.cmd.speed - stateGetHorizontalSpeedNorm_f());
   update_pid_f(&boat_pid, guidance_control.speed_error, time_step);
 
-  guidance_control.throttle = BoundCmd(guidance_control.kf*guidance_control.cmd.speed + get_pid_f(&boat_pid));
+  guidance_control.throttle = BoundCmd(guidance_control.kf_speed*guidance_control.cmd.speed + get_pid_f(&boat_pid));
   **/
 }
 
@@ -111,7 +146,10 @@ void boat_guidance_pid_reset(void)
     }
 }
 
+
+/** KILL function **/
 void boat_guidance_kill(void)
 {
+  //TODO: Comandos derecha izquierda. Speed en otra estructura
   guidance_control.cmd.speed   = 0.0;
 }
