@@ -34,7 +34,6 @@
 #include "generated/airframe.h"
 #include "generated/flight_plan.h"
 
-#include "firmwares/rover/guidance/rover_guidance_steering.h"
 #include "state.h"
 
 // Check if rover firmware 
@@ -52,12 +51,12 @@ static struct LtpDef_d ltpdef;
 static void init_ltp(void);
 
 /** Physical model structures **/
-static struct EnuCoor_d rover_pos;
-static struct EnuCoor_d rover_vel;
-static struct EnuCoor_d rover_acc;
+static struct EnuCoor_d model_pos;
+static struct EnuCoor_d model_vel;
+static struct EnuCoor_d model_acc;
 
 /** Physical model parameters **/
-static float mu = 0.01;
+static float mu[3] = {0.01, 0.1, 0.01}; //{resistence to advance, resistence to lateral displacements, resistence to rotation}
 
 
 /** NPS FDM rover init ***************************/
@@ -86,11 +85,15 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   /****************************************************************************
   PHYSICAL MODEL
   -------------
-  The physical model of your rover goes here. This physics takes place in
-  the LTP plane (so we transfer every integration step to NED and ECEF at the end).
-  */
+  The physical model of your robot (working with rover firmware) goes here. This physics takes place in
+  the LTP plane (so we transfer every integration step to NED and ECEF at the end). */
+
+  double phi    = 0;
+  double phi_d  = 0;
+  double phi_dd = 0;
 
   #ifdef COMMAND_STEERING // STEERING ROVER PHYSICS
+  #include "firmwares/rover/guidance/rover_guidance_steering.h"
 
   // Steering rover cmds: 
   //    COMMAND_STEERING -> delta parameter
@@ -100,33 +103,75 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
 
   /** Physical model for car-like robots .................. **/
   // From previous step...
-  enu_of_ecef_point_d(&rover_pos, &ltpdef, &fdm.ecef_pos);
-  enu_of_ecef_vect_d(&rover_vel, &ltpdef, &fdm.ecef_ecef_vel);
-  double speed = FLOAT_VECT2_NORM(rover_vel);
-  double phi = fdm.ltpprz_to_body_eulers.psi;
-  double phi_d  = tan(delta) / DRIVE_SHAFT_DISTANCE * speed;
+  enu_of_ecef_point_d(&model_pos, &ltpdef, &fdm.ecef_pos);
+  enu_of_ecef_vect_d(&model_vel, &ltpdef, &fdm.ecef_ecef_vel);
+  double speed = FLOAT_VECT2_NORM(model_vel);
+  phi = fdm.ltpprz_to_body_eulers.psi;
+  phi_d  = tan(delta) / DRIVE_SHAFT_DISTANCE * speed;
 
   // Setting accelerations
-  rover_acc.x = commands[COMMAND_THROTTLE] * cos(phi) - speed * (sin(phi) * phi_d + cos(phi) * mu);
-  rover_acc.y = commands[COMMAND_THROTTLE] * sin(phi) + speed * (cos(phi) * phi_d - sin(phi) * mu);
-  double phi_dd = tan(delta) / DRIVE_SHAFT_DISTANCE * commands[COMMAND_THROTTLE];
+  model_acc.x = commands[COMMAND_THROTTLE] * cos(phi) - speed * (sin(phi) * phi_d + cos(phi) * mu[0]);
+  model_acc.y = commands[COMMAND_THROTTLE] * sin(phi) + speed * (cos(phi) * phi_d - sin(phi) * mu[0]);
+  phi_dd = tan(delta) / DRIVE_SHAFT_DISTANCE * commands[COMMAND_THROTTLE];
 
   // Velocities (EULER INTEGRATION)
-  rover_vel.x += rover_acc.x * fdm.curr_dt;
-  rover_vel.y += rover_acc.y * fdm.curr_dt;
+  model_vel.x += model_acc.x * fdm.curr_dt;
+  model_vel.y += model_acc.y * fdm.curr_dt;
   phi_d  = tan(delta) / DRIVE_SHAFT_DISTANCE * speed;
 
   // Positions
-  rover_pos.x += rover_vel.x * fdm.curr_dt;
-  rover_pos.y += rover_vel.y * fdm.curr_dt;
+  model_pos.x += model_vel.x * fdm.curr_dt;
+  model_pos.y += model_vel.y * fdm.curr_dt;
+  phi += phi_d * fdm.curr_dt;
+  
+  // phi have to be contained in [-180º,180º). So:
+  phi = (phi > M_PI)? - 2*M_PI + phi : (phi < -M_PI)? 2*M_PI + phi : phi;
+
+  #endif // STEERING ROVER PHYSICS
+
+
+  #ifdef COMMAND_MRIGHT // BOAT PHYSICS
+  // Boat cmds: 
+  //    COMMAND_MRIGHT
+  //    COMMAND_MLEFT
+
+  double T1 = commands[COMMAND_MRIGHT]; 
+  double T2 = commands[COMMAND_MLEFT];
+
+  /** Physical model for boats with 2 motors .................. **/
+  // From previous step...
+  enu_of_ecef_point_d(&model_pos, &ltpdef, &fdm.ecef_pos);
+  enu_of_ecef_vect_d(&model_vel, &ltpdef, &fdm.ecef_ecef_vel);
+
+  //double speed = FLOAT_VECT2_NORM(boat_vel);
+  phi = fdm.ltpprz_to_body_eulers.psi;
+  phi_d = fdm.body_ecef_rotvel.r; //angular speed
+ 
+  // Setting drag coeficiens. 
+  double drag1 = mu[0]*cos(phi)*cos(phi) + mu[1]*sin(phi)*sin(phi);
+  double drag2 = (mu[0] - mu[1])*sin(phi)*cos(phi);
+  
+  // Setting accelerations (TODO add water velocity drag forces. They are needed for dynamic positioning simulation )
+  model_acc.x = (T1+T2) * cos(phi) - drag1 * model_vel.x - drag2 * model_vel.y;
+  model_acc.y = (T1+T2) * sin(phi) - drag1 * model_vel.y - drag2 * model_vel.x;
+  phi_dd = T1 - T2 - mu[2]*phi_d; //angular accelaration
+
+  // Velocities (EULER INTEGRATION)
+  model_vel.x += model_acc.x * fdm.curr_dt;
+  model_vel.y += model_acc.y * fdm.curr_dt;
+  phi_d += phi_dd * fdm.curr_dt;
+
+  // Positions
+  model_pos.x += model_vel.x * fdm.curr_dt;
+  model_pos.y += model_vel.y * fdm.curr_dt;
   phi += phi_d * fdm.curr_dt;
   
   // phi have to be contained in [-180º,180º). So:
   phi = (phi > M_PI)? - 2*M_PI + phi : (phi < -M_PI)? 2*M_PI + phi : phi;
 
   #else
-  #warning "The physics of this rover are not yet implemented in nps_fdm_rover!!"
-  #endif // STEERING ROVER PHYSICS
+  #warning "The physics of this airframe are not yet implemented in nps_fdm_rover!!"
+  #endif // BOAT PHYSICS
 
 
   /****************************************************************************/
@@ -134,9 +179,9 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   // ----------------------------|
 
   /* in ECEF */
-  ecef_of_enu_point_d(&fdm.ecef_pos, &ltpdef, &rover_pos);
-  ecef_of_enu_vect_d(&fdm.ecef_ecef_vel, &ltpdef, &rover_vel);
-  ecef_of_enu_vect_d(&fdm.ecef_ecef_accel, &ltpdef, &rover_acc);
+  ecef_of_enu_point_d(&fdm.ecef_pos, &ltpdef, &model_pos);
+  ecef_of_enu_vect_d(&fdm.ecef_ecef_vel, &ltpdef, &model_vel);
+  ecef_of_enu_vect_d(&fdm.ecef_ecef_accel, &ltpdef, &model_acc);
 
   /* in NED */
   ned_of_ecef_point_d(&fdm.ltpprz_pos, &ltpdef, &fdm.ecef_pos);
