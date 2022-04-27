@@ -95,7 +95,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   #ifdef COMMAND_STEERING // STEERING ROVER PHYSICS
   #include "firmwares/rover/guidance/rover_guidance_steering.h"
 
-  // Steering rover cmds: 
+  // Steering rover cmds (normalized): 
   //    COMMAND_STEERING -> delta parameter
   //    COMMAND_TRHOTTLE -> acceleration in heading direction
 
@@ -134,9 +134,9 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   // Boat cmds: 
   //    COMMAND_MRIGHT
   //    COMMAND_MLEFT
-
-  double T1 = commands[COMMAND_MRIGHT]; 
-  double T2 = commands[COMMAND_MLEFT];
+  
+  float T1 = commands[COMMAND_MRIGHT]; 
+  float T2 = commands[COMMAND_MLEFT];
 
   /** Physical model for boats with 2 motors .................. **/
   // From previous step...

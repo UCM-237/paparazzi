@@ -29,37 +29,34 @@
 
     <!-- * AP MODES * ...................................................................... -->
     <!-- RC Manual -->
-    <mode name="DIRECT" shortname="MANUAL">
+    <mode name="DIRECT" shortname="MANUAL_RC">
       <select cond="RCMode0()"/>
       <control freq="NAVIGATION_FREQUENCY"> <!-- Only for display -->
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
-        <call fun="boat_guidance_read_rc()"/>
-
+	<call fun="SetCommandsFromRC(commands, radio_control.values)"/>
         <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
       <exception cond="RCLost()" deroute="KILL"/>
     </mode>
 
-    <!-- AUTO1: -->
-    <mode name="AUTO1" shortname="AUTO1">
+    <!-- ASSISTED RC -->
+    <mode name="ASSISTED" shortname="ASSISTED_RC">
       <select cond="RCMode1()"/>
       <control freq="NAVIGATION_FREQUENCY">
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
-      	<!-- TODO: ¿Es necesario realmente este modo? -->
         <call fun="boat_guidance_read_rc()"/>
-
         <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
       <exception cond="RCLost()" deroute="KILL"/>
     </mode>
     
-    <!-- Navigation: Speed crtl (from state speed on enter) + heading ctrl (from GCS & flight plans) -->
+    <!-- NAV mode: Speed crtl (from state speed on enter) + heading ctrl (from GCS & flight plans) -->
     <mode name="NAV">
       <select cond="RCMode2()"/>
       <control freq="NAVIGATION_FREQUENCY">
@@ -89,7 +86,7 @@
       <exception cond="GpsIsLost()" deroute="KILL"/>
     </mode-->
 
-    <!-- Kill throttle -->
+    <!-- KILL throttle -->
     <mode name="KILL">
       <select cond="$DEFAULT_MODE"/>
       <select cond="kill_switch_is_on()"/>

@@ -174,7 +174,7 @@ void nps_autopilot_run_step(double time)
     nps_autopilot.commands[i] = (double)commands[i] / MAX_PPRZ;
   }
 
-  PRINT_CONFIG_MSG("Using throttle, steering commands because rover's fdm don't have explicit actuators.")
+  PRINT_CONFIG_MSG("Using commands because rover's fdm don't have explicit actuators.")
 }
 
 

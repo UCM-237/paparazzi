@@ -88,7 +88,7 @@ void boat_guidance_read_rc(void){
       commands[COMMAND_MRIGHT] = MAX_PPRZ;
     } else {
       commands[COMMAND_MLEFT]  = MAX_PPRZ;
-      commands[COMMAND_MRIGHT] = MAX_PPRZ - guidance_control.rc_bearing*2;
+      commands[COMMAND_MRIGHT] = MAX_PPRZ + guidance_control.rc_bearing*2;
     }
   } else {
     commands[COMMAND_MLEFT]  = guidance_control.rc_throttle - guidance_control.rc_bearing;

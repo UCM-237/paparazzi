@@ -7,10 +7,10 @@
     </description>
   </doc>
 
-  <settings name="SR Guidance">
+  <settings name="boat_guidance">
     <dl_settings>
-      <dl_settings NAME="SR Guidance">
-        <dl_settings NAME="Steering control">
+      <dl_settings NAME="Boat guidance">
+        <dl_settings NAME="Bearing control">
           <!-- Ajuste de contantes para el control de bearing (w -> torque formato de comando) -->
           <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="guidance_control.cmd.omega" shortname="boat_guidance_omega"/>
           <dl_setting MAX="2000.0" MIN="0.0" STEP="1" VAR="guidance_control.kf_bearing" shortname="kf"/>
