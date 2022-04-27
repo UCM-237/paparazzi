@@ -254,9 +254,6 @@ void gvf_control_2D(float ke, float kn, float e,
   
   //TODO: Tengo que modificar el guiado del rover y el barco para elimitar esta condición.
   //      La idea es que estos .c accedan directamente a la variable global gvf_omge.
-  #if defined(ROVER_FIRMWARE) 
-    guidance_control.gvf_omega = omega; 
-  #endif
 
   gvf_omega = omega;
 }
