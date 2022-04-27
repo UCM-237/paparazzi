@@ -47,6 +47,7 @@ typedef struct {
 } gvf_con;
 
 extern gvf_con gvf_control;
+extern float gvf_omega;
 
 enum trajectories {
   LINE = 0,
