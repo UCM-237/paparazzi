@@ -72,7 +72,7 @@ void rover_guidance_steering_init(void)
 void rover_guidance_steering_heading_ctrl(void)
 {
   float delta = 0.0;
-  float omega = gvf_omega; //GVF give us this omega
+  float omega = gvf_control.omega; //GVF give us this omega
 
   // Speed is bounded to avoid GPS noise while driving at small velocity
   float speed = BoundSpeed(stateGetHorizontalSpeedNorm_f()); 

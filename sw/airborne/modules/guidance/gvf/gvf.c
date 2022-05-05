@@ -24,46 +24,17 @@
 #include "std.h"
 
 #include "modules/guidance/gvf/gvf.h"
+#include "modules/guidance/gvf/gvf_low_level_control.h"
 #include "modules/guidance/gvf/trajectories/gvf_ellipse.h"
 #include "modules/guidance/gvf/trajectories/gvf_line.h"
 #include "modules/guidance/gvf/trajectories/gvf_sin.h"
 #include "autopilot.h"
 
-#ifdef FIXEDWING_FIRMWARE
-#include "firmwares/fixedwing/nav.h"
-#include "modules/nav/common_nav.h"
-#include "firmwares/fixedwing/stabilization/stabilization_attitude.h"
-#define gvf_setNavMode(_navMode) (horizontal_mode = _navMode)
-#define GVF_MODE_ROUTE HORIZONTAL_MODE_ROUTE
-#define GVF_MODE_WAYPOINT HORIZONTAL_MODE_WAYPOINT
-#define GVF_MODE_CIRCLE HORIZONTAL_MODE_CIRCLE
-
-#elif defined(ROTORCRAFT_FIRMWARE)
-#include "firmwares/rotorcraft/navigation.h"
-#include "modules/nav/common_nav.h"
-#include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
-#define gvf_setNavMode(_navMode) (horizontal_mode = _navMode)
-#define GVF_MODE_ROUTE HORIZONTAL_MODE_ROUTE
-#define GVF_MODE_WAYPOINT HORIZONTAL_MODE_WAYPOINT
-#define GVF_MODE_CIRCLE HORIZONTAL_MODE_CIRCLE
-
-#elif defined(ROVER_FIRMWARE)
-#include "state.h"
-#include "firmwares/rover/navigation.h"
-#define gvf_setNavMode(_navMode) (nav.mode = _navMode)
-#define GVF_MODE_ROUTE NAV_MODE_ROUTE
-#define GVF_MODE_WAYPOINT NAV_MODE_WAYPOINT
-#define GVF_MODE_CIRCLE NAV_MODE_CIRCLE
-
-#else
-#error "Firmware not supported by GVF!"
-#endif
-
 // Control
 gvf_con gvf_control;
 
-// GVF output variable
-float gvf_omega;
+// State
+gvf_st gvf_state;
 
 // Trajectory
 gvf_tra gvf_trajectory;
@@ -184,19 +155,11 @@ void gvf_control_2D(float ke, float kn, float e,
                     struct gvf_grad *grad, struct gvf_Hess *hess)
 {
   gvf_t0 = get_sys_time_msec();
-
-  #if defined(FIXEDWING_FIRMWARE) || defined(ROTORCRAFT_FIRMWARE)
-    float ground_speed = stateGetHorizontalSpeedNorm_f();
-    float course = stateGetHorizontalSpeedDir_f();
-    float px_dot = ground_speed * sinf(course);
-    float py_dot = ground_speed * cosf(course);
-  #elif defined(ROVER_FIRMWARE)
-    // We assume that the course and psi
-    // of the rover (steering wheel) are the same
-    float course = stateGetNedToBodyEulers_f()->psi;
-    float px_dot = stateGetSpeedEnu_f()->x;
-    float py_dot = stateGetSpeedEnu_f()->y;
-  #endif
+  
+  gvf_low_level_getState();
+  float course = gvf_state.course;
+  float px_dot = gvf_state.px_dot;
+  float py_dot = gvf_state.py_dot;
 
   int s = gvf_control.s;
 
@@ -245,26 +208,8 @@ void gvf_control_2D(float ke, float kn, float e,
   float mr_y = cosf(course);
 
   float omega = omega_d + kn * (mr_x * md_y - mr_y * md_x);
-
-  #if defined(FIXEDWING_FIRMWARE) || defined(ROTORCRAFT_FIRMWARE)
-  if (autopilot_get_mode() == AP_MODE_AUTO2) {
-
-    // Coordinated turn
-    struct FloatEulers *att = stateGetNedToBodyEulers_f();
-    float ground_speed = stateGetHorizontalSpeedNorm_f();
-
-    lateral_mode = LATERAL_MODE_ROLL;
-
-    h_ctl_roll_setpoint =
-      -atanf(omega * ground_speed / GVF_GRAVITY / cosf(att->theta));
-    BoundAbs(h_ctl_roll_setpoint, h_ctl_roll_max_setpoint);
-  }
-  #endif
   
-  //TODO: Tengo que modificar el guiado del rover y el barco para elimitar esta condición.
-  //      La idea es que estos .c accedan directamente a la variable global gvf_omge.
-
-  gvf_omega = omega;
+  gvf_low_level_control_2D(omega);
 }
 
 void gvf_set_direction(int8_t s)

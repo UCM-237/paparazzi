@@ -101,16 +101,8 @@ void boat_guidance_read_rc(void){
 /** CTRL functions **/
 void boat_guidance_bearing_GVF_ctrl(void) // TODO: Boat GVF bearing control
 {
-  guidance_control.cmd.gvf_omega = gvf_omega; //GVF give us this omega
+  guidance_control.cmd.omega = gvf_control.omega; //GVF give us this omega
 
-  // Speed is bounded to avoid GPS noise while sailing at small velocity
-  //float speed = BoundSpeed(stateGetHorizontalSpeedNorm_f()); 
-
-  if (fabs(omega)>0.0) {
-      //delta = 
-    }
-
-  //guidance_control.cmd.delta = BoundDelta(delta);
 }
 
 void boat_guidance_bearing_static_ctrl(void){ // TODO: Boat static bearing control
