@@ -96,6 +96,9 @@ extern void boat_guidance_read_rc(void);
 extern void boat_guidance_bearing_GVF_ctrl(void);
 extern void boat_guidance_bearing_static_ctrl(void);
 extern void boat_guidance_speed_ctrl(void);
+
+extern void boat_guidance_read_NAV(void); //JJC
+
 extern void boat_guidance_pid_reset(void);
 extern void boat_guidance_kill(void);
 
