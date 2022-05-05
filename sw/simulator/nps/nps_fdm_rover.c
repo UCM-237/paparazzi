@@ -56,7 +56,7 @@ static struct EnuCoor_d model_vel;
 static struct EnuCoor_d model_acc;
 
 /** Physical model parameters **/
-static float mu[3] = {0.01, 0.1, 0.01}; //{resistence to advance, resistence to lateral displacements, resistence to rotation}
+static float mu[3] = {1, 10, 1}; //{resistence to advance, resistence to lateral displacements, resistence to rotation}
 
 
 /** NPS FDM rover init ***************************/
@@ -135,8 +135,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   //    COMMAND_MRIGHT
   //    COMMAND_MLEFT
   
-  float T1 = commands[COMMAND_MRIGHT]; 
-  float T2 = commands[COMMAND_MLEFT];
+
 
   /** Physical model for boats with 2 motors .................. **/
   // From previous step...
@@ -149,12 +148,13 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
  
   // Setting drag coeficiens. 
   double drag1 = mu[0]*cos(phi)*cos(phi) + mu[1]*sin(phi)*sin(phi);
-  double drag2 = (mu[0] - mu[1])*sin(phi)*cos(phi);
+  double drag2 = mu[1]*cos(phi)*cos(phi) + mu[0]*sin(phi)*sin(phi);
+  double drag3 = (mu[0] - mu[1])*sin(phi)*cos(phi);
   
   // Setting accelerations (TODO add water velocity drag forces. They are needed for dynamic positioning simulation )
-  model_acc.x = (T1+T2) * cos(phi) - drag1 * model_vel.x - drag2 * model_vel.y;
-  model_acc.y = (T1+T2) * sin(phi) - drag1 * model_vel.y - drag2 * model_vel.x;
-  phi_dd = T1 - T2 - mu[2]*phi_d; //angular accelaration
+  model_acc.x = (commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT]) * cos(phi) - drag1 * model_vel.x - drag3 * model_vel.y;
+  model_acc.y = (commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT]) * sin(phi) - drag2 * model_vel.y - drag3 * model_vel.x;
+  phi_dd = commands[COMMAND_MRIGHT] - commands[COMMAND_MLEFT] - mu[2]*phi_d; //angular accelaration
 
   // Velocities (EULER INTEGRATION)
   model_vel.x += model_acc.x * fdm.curr_dt;
