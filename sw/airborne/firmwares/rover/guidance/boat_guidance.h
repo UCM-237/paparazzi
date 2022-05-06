@@ -72,7 +72,6 @@ typedef struct {
 // Main structure
 typedef struct {
   guidance_cmd_t cmd;
-  float gvf_omega;
 
   float throttle; //  Td + Ti
   float bearing;  // |Td - Ti|

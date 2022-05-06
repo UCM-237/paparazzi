@@ -28,6 +28,7 @@
 
 #include "modules/actuators/actuators_default.h"
 #include "modules/radio_control/radio_control.h"
+#include "modules/guidance/gvf/gvf.h"
 #include "autopilot.h"
 #include "navigation.h"
 #include "state.h"
@@ -151,19 +152,8 @@ void boat_guidance_read_NAV(void)
 /** CTRL functions **/
 void boat_guidance_bearing_GVF_ctrl(void) // TODO: Boat GVF bearing control
 {
-  //float delta = 0.0;
-  float omega = guidance_control.gvf_omega; //GVF give us this omega
-  guidance_control.bearing = BoundCmd(guidance_control.kf_bearing*omega);
-  guidance_control.cmd.omega = omega; //¿?
-  // Speed is bounded to avoid GPS noise while sailing at small velocity
-  //float speed = BoundSpeed(stateGetHorizontalSpeedNorm_f()); 
-  
-  if (fabs(omega)>0.0) {
-      //delta = 
-      
-    }
-
-  //guidance_control.cmd.delta = BoundDelta(delta);
+  guidance_control.cmd.omega = gvf_control.omega; //GVF give us this omega
+  guidance_control.bearing = BoundCmd(guidance_control.kf_bearing*guidance_control.cmd.gvf_omega);
 }
 
 void boat_guidance_bearing_static_ctrl(void){ // TODO: Boat static bearing control
