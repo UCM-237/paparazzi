@@ -209,6 +209,7 @@ void gvf_control_2D(float ke, float kn, float e,
 
   float omega = omega_d + kn * (mr_x * md_y - mr_y * md_x);
   
+  gvf_control.omega = omega;
   gvf_low_level_control_2D(omega);
 }
 

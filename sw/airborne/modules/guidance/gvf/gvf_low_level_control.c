@@ -51,8 +51,6 @@ void gvf_low_level_getState(void)
 
 void gvf_low_level_control_2D(float omega)
 {
-
-  gvf_control.omega = omega;
   
 #if defined(FIXEDWING_FIRMWARE)
   if (autopilot_get_mode() == AP_MODE_AUTO2) {
