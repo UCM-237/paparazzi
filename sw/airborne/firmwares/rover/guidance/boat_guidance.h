@@ -23,6 +23,7 @@
 
 #include "std.h"
 #include <math.h>
+#include <stdio.h>
 
 /** Generated airframe.h from airframe.xml
  * - fun: SetActuatorsFromCommands
@@ -50,7 +51,7 @@
 #endif
 
 
-/** Global variables definitions **/
+// Controller gains
 #ifndef BOAT_SPEED_KF // Lineal feed forward speed control constant (have to be measured with new servos)
 #define BOAT_SPEED_KF 10
 #warning "Construction constant BOAT_MEASURED_KF for boat speed ctrl not defined"
@@ -59,6 +60,12 @@
 #ifndef BOAT_BEARING_KF
 #define BOAT_BEARING_KF 10
 #warning "Construction constant BOAT_BEARING_KF for boat bearing ctrl not defined"
+#endif
+
+// Check controller gains values (error if they are negative)
+#if (BOAT_KF_BEARING < 0) ||                   \
+    (BOAT_KF_SPEED   < 0)
+#error "ALL control gains must be positive!!!"
 #endif
 
 
@@ -104,7 +111,7 @@ extern void boat_guidance_kill(void);
 
 /** MACROS **/
 // Bound commands
-#define BoundCmd(cmd) TRIM_PPRZ((int)cmd);
+#define BoundCmd(cmd) 2*TRIM_PPRZ((int)cmd/2);
 
 // Set AP throttle value
 #define SetAPThrottleFromCommands(void) { \

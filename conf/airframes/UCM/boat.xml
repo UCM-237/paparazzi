@@ -2,7 +2,7 @@
 
 <airframe name="boat">
 
-  <firmware name="rover">
+  <firmware name="rover"> <!-- Firmware propio del barco?? -->
     <autopilot name="boat_autopilot.xml"/>
 
     <target name="ap" board="matek_f405_wing_v1">
@@ -14,7 +14,7 @@
     
     <target name="nps" board="pc">
       <module name="radio_control" type="ppm"/>
-      <module name="fdm"           type="rover"/> <!-- TODO: Retocar físicas del barco en NPS -->
+      <module name="fdm"           type="rover"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
     </target>    
@@ -31,13 +31,15 @@
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
-    <!-- Nuestros módulos: Drivers del sonar... -->
+    <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
     <module name="sonar" type="bluerobotics">
     	<configure name="SONAR_UART" value="UART3"/>
     </module>
 
-    <!-- TODO: Tendremos que cambiar estos por módulos de guiado y nav. del barco -->
-    <module name="nav"  type="rover_base"/>
+    <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
+      <define name="ROVER_BASE_SEND_TRAJECTORY" value="FALSE"/>
+    </module>
+    
     <module name="gvf"  type="module"/>
     <module name="guidance" type="boat">
     	<define name="BOAT_SPEED_KF" value="1000"/>
@@ -56,7 +58,6 @@
   
   <!-- Low level commands -->
   <commands> 
-  <!-- TODO: Revisar cuando desarrollemos guiado, puede interesar comandos THROTTLE y BEARING -->
     <axis name="MLEFT"  failsafe_value="0"/>
     <axis name="MRIGHT" failsafe_value="0"/>
   </commands>

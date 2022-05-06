@@ -28,28 +28,23 @@
 
 #include "modules/actuators/actuators_default.h"
 #include "modules/radio_control/radio_control.h"
-#include "modules/guidance/gvf/gvf.h"
-#include "autopilot.h"
 #include "navigation.h"
+#include "autopilot.h"
 #include "state.h"
 
-#include "filters/pid.h" // Used for p+i speed controller
+#include "modules/guidance/gvf/gvf.h"
+#include "filters/pid.h"
 
-#include <math.h>
-#include <stdio.h>
-static uint8_t dummy = 0;
-//static int32_t prueba = 12;
+
+// Debugging telemetry
+#ifdef BOAT_DEBUG
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
+static uint8_t dummy = 0;
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
-  pprz_msg_send_INFO_MSG(trans, dev, AC_ID,&dummy ,&guidance_control.bearing, &guidance_control.throttle, &commands[COMMAND_MLEFT], &commands[COMMAND_MRIGHT]);
-  }
-  						
+  pprz_msg_send_INFO_MSG(trans, dev, AC_ID, &dummy ,&guidance_control.bearing, &guidance_control.throttle, &commands[COMMAND_MLEFT], &commands[COMMAND_MRIGHT]);
+  }					
 #endif
-/* error if some gains are negative */
-#if (BOAT_KF_BEARING < 0) ||                   \
-    (BOAT_KF_SPEED   < 0)
-#error "ALL control gains must be positive!!!"
 #endif
 
 // Guidance control main variables
@@ -58,6 +53,7 @@ ctrl_t guidance_control;
 static struct PID_f boat_pid;
 static float time_step;
 static float last_speed_cmd;
+
 
 /** INIT function **/
 void boat_guidance_init(void)
@@ -82,32 +78,38 @@ void boat_guidance_init(void)
 
   // Based on autopilot state machine frequency
   time_step = 1.f/PERIODIC_FREQUENCY;
+  
+  #ifdef BOAT_DEBUG
   #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INFO_MSG, send_telemetry);
   #endif
+  #endif
 }
 
+void boat_bound_cmds(void)
+{
+ //Protejemos de la saturación, pero solo positiva... 
+  if (commands[COMMAND_MRIGHT] > MAX_PPRZ){
+   commands[COMMAND_MRIGHT] = MAX_PPRZ;
+   commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.throttle - guidance_control.bearing)/(guidance_control.throttle + guidance_control.bearing);
+  }
+  
+  if (commands[COMMAND_MLEFT] > MAX_PPRZ){
+   commands[COMMAND_MLEFT] = MAX_PPRZ;
+   commands[COMMAND_MRIGHT]  = MAX_PPRZ*(guidance_control.throttle + guidance_control.bearing)/(guidance_control.throttle - guidance_control.bearing);
+  }
+}
 
 /** RC guidance function **/
 void boat_guidance_read_rc(void){
 
   guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE];
   guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL];
-
-  if (abs(guidance_control.rc_throttle)+abs(guidance_control.rc_bearing) >= MAX_PPRZ) {
-    if (guidance_control.rc_bearing > 0) {
-      commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.rc_throttle - guidance_control.rc_bearing)/
-      (guidance_control.rc_throttle + guidance_control.rc_bearing);
-      commands[COMMAND_MRIGHT] = MAX_PPRZ;
-    } else {
-      commands[COMMAND_MLEFT]  = MAX_PPRZ;
-      commands[COMMAND_MRIGHT] = MAX_PPRZ*(guidance_control.rc_throttle + guidance_control.rc_bearing)/
-      (guidance_control.rc_throttle - guidance_control.rc_bearing);
-    }
-  } else {
-    commands[COMMAND_MLEFT]  = (guidance_control.rc_throttle - guidance_control.rc_bearing)/2;
-    commands[COMMAND_MRIGHT] = (guidance_control.rc_throttle + guidance_control.rc_bearing)/2;
-  }
+  
+  commands[COMMAND_MLEFT]  = (guidance_control.rc_throttle - guidance_control.rc_bearing)/2;
+  commands[COMMAND_MRIGHT] = (guidance_control.rc_throttle + guidance_control.rc_bearing)/2;
+  
+  boat_bound_cmds();
 }
 
 
@@ -120,49 +122,24 @@ void boat_guidance_read_NAV(void)
   //Definimos las ordones suponiendo que no hay saturacion
   commands[COMMAND_MLEFT]  = (guidance_control.throttle - guidance_control.bearing)/2;
   commands[COMMAND_MRIGHT] = (guidance_control.throttle + guidance_control.bearing)/2;
- //protejemos de la saturación, peor solo positiva... 
-  if (commands[COMMAND_MRIGHT] > MAX_PPRZ){
-   commands[COMMAND_MRIGHT] = MAX_PPRZ;
-   commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.throttle - guidance_control.bearing)/(guidance_control.throttle +   guidance_control.bearing);
-  }
   
-  if (commands[COMMAND_MLEFT] > MAX_PPRZ){
-   commands[COMMAND_MLEFT] = MAX_PPRZ;
-   commands[COMMAND_MRIGHT]  = MAX_PPRZ*(guidance_control.throttle + guidance_control.bearing)/(guidance_control.throttle - guidance_control.bearing);
-  }
-
-  //y ahora ajustamos los comandos de bajo nivel igual que en el caso de rc
-  /* if (fabs(guidance_control.throttle)+fabs(guidance_control.bearing) >= MAX_PPRZ) {
-    if (guidance_control.rc_bearing > 0) {
-      commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.throttle - guidance_control.bearing)/
-      (guidance_control.throttle + guidance_control.bearing);
-      commands[COMMAND_MRIGHT] = MAX_PPRZ;
-    } else {
-      commands[COMMAND_MLEFT]  = MAX_PPRZ;
-      commands[COMMAND_MRIGHT] = MAX_PPRZ*(guidance_control.throttle + guidance_control.bearing)/
-      (guidance_control.throttle - guidance_control.bearing);
-    }
-  } else {
-    commands[COMMAND_MLEFT]  = (guidance_control.throttle - guidance_control.bearing)/2;
-    commands[COMMAND_MRIGHT] = (guidance_control.throttle + guidance_control.bearing)/2;
-  }*/
+  boat_bound_cmds();
 }
 
 
 /** CTRL functions **/
-void boat_guidance_bearing_GVF_ctrl(void) // TODO: Boat GVF bearing control
+void boat_guidance_bearing_GVF_ctrl(void)
 {
   guidance_control.cmd.omega = gvf_control.omega; //GVF give us this omega
-  guidance_control.bearing = BoundCmd(guidance_control.kf_bearing*guidance_control.cmd.gvf_omega);
+  guidance_control.bearing = BoundCmd(guidance_control.kf_bearing * guidance_control.cmd.omega);
 }
 
 void boat_guidance_bearing_static_ctrl(void){ // TODO: Boat static bearing control
 
 }
 
-void boat_guidance_speed_ctrl(void) // feed feed forward + propotional + integral controler (PID) // TODO: Boat speed control
+void boat_guidance_speed_ctrl(void) // Feed forward + Integral controler + Propotional (PID)
 { 
-  
   // - Looking for setting update
   if (guidance_control.kp != boat_pid.g[0] || guidance_control.ki != boat_pid.g[2]) {
     set_gains_pid_f(&boat_pid, guidance_control.kp, 0.f, guidance_control.ki);
@@ -174,10 +151,9 @@ void boat_guidance_speed_ctrl(void) // feed feed forward + propotional + integra
   // - Updating PID
   guidance_control.speed_error = (guidance_control.cmd.speed - stateGetHorizontalSpeedNorm_f());
   update_pid_f(&boat_pid, guidance_control.speed_error, time_step);
-
-  //guidance_control.throttle = BoundCmd(guidance_control.kf_speed*guidance_control.cmd.speed + get_pid_f(&boat_pid));
-  //dejo que la limite la funcion read_NAV
-  guidance_control.throttle = guidance_control.kf_speed*guidance_control.cmd.speed + get_pid_f(&boat_pid);
+  
+  // - Set throttle
+  guidance_control.throttle = BoundCmd(guidance_control.kf_speed * guidance_control.cmd.speed + get_pid_f(&boat_pid));
 }
 
 
@@ -194,6 +170,7 @@ void boat_guidance_pid_reset(void)
 /** KILL function **/
 void boat_guidance_kill(void)
 {
-  //TODO: Comandos derecha izquierda. Speed en otra estructura
-  guidance_control.cmd.speed   = 0.0;
+  guidance_control.cmd.speed = 0.0;
+  commands[COMMAND_MLEFT]  = 0;
+  commands[COMMAND_MRIGHT] = 0;
 }
