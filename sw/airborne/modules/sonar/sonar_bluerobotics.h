@@ -47,6 +47,8 @@
 #define BR_SET_DEVICE_ID 1000
 #define BR_DEVICE_ID 1201
 #define BR_DISTANCE_SIMPLE 1211
+#define BR_FIRMWARE 5
+#define BR_SOUND_SPEED 1203
 
 // Variable to start/stop requesting stream
 extern bool sonar_stream_setting;
@@ -66,32 +68,34 @@ struct sonar_parse_t {
   uint8_t msgData[SONAR_MAX_PAYLOAD] __attribute__((aligned));
   uint8_t status;
   
+  uint8_t error_cnt;
+  uint8_t error_last;
+  
   uint16_t ck;
   bool msg_available;
+  
+  uint8_t protocol_version;
+  uint8_t protocol_subversion;
+  uint8_t protocol_patch;
+  
+  uint32_t sound_vel;
+  uint32_t distance;
+  uint8_t confidence;
 };
+
+void sonar_read_message(void);
+
+unsigned int byteToint(uint8_t * bytes,int length);
+
+
 
 extern struct sonar_parse_t br_sonar;
 
-/* Message structure (information) 
-struct SonarMsg {
-  uint8_t start1;
-  uint8_t start2;
-  uint8_t payloadLen_L;
-  uint8_t payloadLen_H;
-  uint8_t msgId_L;
-  uint8_t msgId_H;
-  uint8_t srcID;
-  uint8_t devID;
-
-  uint8_t payload[SONAR_MAX_PAYLOAD] __attribute__((aligned));
-
-  uint8_t checksum_L;
-  uint8_t checksum_H;
-};*/
-
+	
 /* External functions (called by the autopilot)*/
 extern void sonar_init(void);
 extern void sonar_ping(void);
 extern void sonar_event(void);
+extern struct sonar_parse_t * sonar_get(void);
 
 #endif //SONAR_BLUEROBOTICS_H

@@ -23,17 +23,23 @@
     <module name="board" type="matek_f405_boat"/> <!-- IMU included -->
     
     <module name="actuators" type="pwm"/>
-    <module name="telemetry" type="xbee_api"/>
+
     <module name="gps" type="ublox"/>
     <module name="gps_ubx_ucenter"/>
     <module name="ins"/>
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
+   <module name="telemetry" type="xbee_api">
+    	<configure name="MODEM_PORT"  value="UART4"/>
+    </module>
     
     <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
     <module name="sonar" type="bluerobotics">
     	<configure name="SONAR_UART" value="UART3"/>
+    </module>
+    <module name="serial" type="com">
+    	<configure name="SERIAL_UART" value="UART5"/>
     </module>
 
     <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
