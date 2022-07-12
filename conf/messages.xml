@@ -1710,7 +1710,21 @@
       <field name="ins_zdd"   type="int32" alt_unit="m/s2" alt_unit_coef="0.0009766"/>
     </message>
 
-    <!-- 199 is free -->
+    <message name="BR_SONAR" 	id="199">
+      <field name="protocol_ver"	type="uint8"/>
+      <field name="protocol_subver"	type="uint8"/>
+      <field name="protocol_patch"	type="uint8"/>
+      <field name="payload_len" 	type="uint16"/>
+      <field name="msg_id"	 	type="uint16"/>
+      <field name="src_id" 		type="uint8"/>
+      <field name="dev_id" 		type="uint8"/>
+      <field name="status" 		type="uint8"/>      
+      <field name="error_last"	type="uint8"/>
+      <field name="ck" 		type="uint16"/>
+      <field name="distance" 		type="uint32"/>
+      <field name="confidence" 	type="uint8"/>
+      <field name="sound_vel"	        type="uint32"/>     
+    </message>
 
     <message name="IMU_GYRO" id="200">
       <field name="gp" type="float" unit="rad/s" alt_unit="deg/s" alt_unit_coef="57.29578"/>
@@ -1791,7 +1805,25 @@
       <field name="commands" type="int32[]">Commands send to actuators</field>
     </message>
 
-    <!-- 212 is free -->
+    <message name="SERIAL_COM" id="212">
+     	 <field name="time"		alt_unit="s"		type="uint16"/>
+    	 <field name="lat"		alt_unit="1e7deg"	type="int32"/>
+    	 <field name="lon"		alt_unit="1e7deg"	type="int32"/>
+    	 <field name="alt"		alt_unit="mm"		type="int32"/>
+    	 <field name="distance"	alt_unit="mm"		type="uint32"/> 
+    	 <field name="confidence"	alt_unit="%"		type="uint8"/>
+    	  <field name="msg_snd_error"				type="uint8"/> 
+    	 <field name="msg_snd_length"				type="uint8"/>
+    	 <field name="checksum"				type="uint16"/>
+    	 <field name="recv_id"					type="uint8"/>
+    	 <field name="recv_status"				type="uint8"/>
+    	 <field name="recv_payld_len"				type="uint8"/>
+    	 <field name="recv_time"	alt_unit="s"		type="uint16"/>
+    	 <field name="recv_depth"	alt_unit="mm"		type="uint16"/>
+    	  <field name="msg_recv_error"			type="uint8"/> 
+    	  <field name="msg_snd_chks"				type="uint16"/> 
+    	  
+    </message>
 
     <message name="TUNE_VERT" id="213">
       <field name="z_sp"      type="int32" alt_unit="m"    alt_unit_coef="0.0039063"/>
