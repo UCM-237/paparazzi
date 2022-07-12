@@ -39,14 +39,13 @@ extern bool serial_msg_setting;
 
 
 /* Parser msg struct */
-#define SERIAL_MAX_PAYLOAD 25
+#define SERIAL_MAX_PAYLOAD 26
 #define SERIAL_MAX_MSG 8
 
 struct serial_send_t {
 
   uint8_t msg_length;
 
- // uint8_t msgData[SERIAL_MAX_PAYLOAD] __attribute__((aligned));
   uint8_t msgData[SERIAL_MAX_PAYLOAD];
   uint8_t error_cnt;
   uint8_t error_last;
@@ -101,3 +100,4 @@ extern void serial_ping(void);
 extern void serial_event(void);
 
 #endif //SERIAL_COM_H
+

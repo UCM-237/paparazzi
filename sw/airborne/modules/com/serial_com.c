@@ -51,7 +51,7 @@ static uint8_t PPZ_START_BYTE = 0x50; // "P"
 static uint8_t COM_START_BYTE = 0x52; // "R"
 static uint8_t PPZ_SONAR_BYTE = 0x53; // "S"
 static uint8_t PPZ_TELEMETRY_BYTE = 0x54; // "T"
-static uint8_t PPZ_MEASURE_BYTE = 0x47; // "M"
+static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SEND_INTERVAL 1000 // time between sending messages
@@ -82,10 +82,19 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SR_MEASURE 77
 #define SR_FIN 70
 #define SR_POS 80
+#define SR_ERR_L 76
+#define SR_ERR_D 78
 
+//Measuring mode
+#define BR_SONAR_MS_1 1
+#define BR_SONAR_MS_0 0
 
+uint8_t message_type=TELEMETRY_SN;
+/*Quitar*/
+int cont=0;
+/*-------------------*/
 
-uint8_t message_type=MEASURE_SN;
+int modo_medida=BR_SONAR_MS_0;
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -213,6 +222,7 @@ void itoh(int value, unsigned char* str, int nbytes){
 
 }
 
+
 static void message_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
@@ -253,21 +263,29 @@ void serial_read_message(void){
  		case SR_OK:
  			message_OK_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
+ 			message_type = 10;
  			break;
  		case SR_FIN:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
-
+			message_type = TELEMETRY_SN;
+			modo_medida = BR_SONAR_MS_0;
  			break;
  		case SR_MEASURE:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
-
+			message_type = 10;
  			break;
  		case SR_POS:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
-
+ 			message_type = 10;
+ 			break;
+ 		case SR_ERR_L:
+ 			serial_msg.error_last = SR_ERR_L;
+ 			break;
+ 		case SR_ERR_D:
+ 			serial_msg.error_last = SR_ERR_D;
  			break;
  		default:
  			serial_msg.error_last = SERIAL_ERR_UNEXPECTED;
@@ -317,14 +335,17 @@ static void serial_parse(uint8_t byte){
 			serial_msg.msgData[3]=byte;
 			break;
 		case SR_PAYLOAD3:
+			serial_msg.error_last = 0;
 			serial_msg.status++;
 			serial_msg.msgData[4]=byte;
 			break;
 		case SR_PAYLOAD4:
+			serial_msg.error_last = 0;
 			serial_msg.status++;
 			serial_msg.msgData[5]=byte;
 			break;
 		case SR_CHECKSUM1:
+			serial_msg.error_last = 0;
 			serial_msg.status++;
 			if (serial_msg.msg_id==SR_OK)
 				serial_msg.msgData[4]=byte;
@@ -333,6 +354,7 @@ static void serial_parse(uint8_t byte){
 				
 			break;
 		case SR_CHECKSUM2:
+			serial_msg.error_last = 0;
 			serial_msg.status++;
 			if (serial_msg.msg_id==SR_OK)
 				serial_msg.msgData[5]=byte;
@@ -350,6 +372,7 @@ static void serial_parse(uint8_t byte){
 	if(error){
 		serial_msg.error_cnt++;
 		serial_msg.status=0;
+		serial_msg.msg_available = true;
 		return;
 		}
 	if (restart){
@@ -366,6 +389,7 @@ void serial_event(void)
  
  while(uart_char_available(&(SERIAL_DEV))){
  	uint8_t ch= uart_getch(&(SERIAL_DEV));
+	
  	serial_parse(ch);
 	
  	if (serial_msg.msg_available) {
@@ -391,7 +415,7 @@ struct LlaCoor_i *gps_coord;
 struct sonar_parse_t *sonar_data;
 uint8_t msg_gps[5]={0,0,0,0,0};
 uint8_t msg_time[2]={0,0};
-uint8_t msg_dist[4]={0,0,0,0};
+uint8_t msg_dist[5]={0,0,0,0,0};
 if (now_s > (last_s+ SEND_INTERVAL)) {
     	last_s = now_s; 
 
@@ -404,11 +428,13 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				serial_snd.msgData[0]=PPZ_START_BYTE;
 				serial_snd.msgData[1]=PPZ_SONAR_BYTE;
 				serial_snd.time=sys_time.nb_sec;
-				
-				itoh(serial_snd.time, msg_time,2);
+				message_type=TELEMETRY_SN;
+				ito2h(serial_snd.time, msg_time);
 				serial_snd.msgData[2]=msg_time[0];
 				serial_snd.msgData[3]=msg_time[1];
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
+				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
+				
 				break;
 			case TELEMETRY_SN:
 				serial_snd.msg_length=25;
@@ -417,7 +443,7 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				serial_snd.msgData[1]=PPZ_TELEMETRY_BYTE;
 				serial_snd.time=sys_time.nb_sec;
 				
-				itoh(serial_snd.time, msg_time,2);
+				ito2h(serial_snd.time, msg_time);
 				serial_snd.msgData[2]=msg_time[0];
 				serial_snd.msgData[3]=msg_time[1];
 				// Get Position
@@ -432,26 +458,43 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				itoh(gps_coord->lat,msg_gps,5);
 				for(int i=0;i<5;i++) serial_snd.msgData[i+9]=msg_gps[i];
 				memset(msg_gps,0,5);
-				itoh(serial_snd.alt,msg_gps,4);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i];
+				/*NOTE: serial_snd.alt is an unsigned int. It is codified as 
+				an signed (using one extra byte) int but sign byte is discarded
+				*/
+				itoh(serial_snd.alt,msg_gps,5);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i+1];
 				// Get Sonar
 				
 				sonar_data= sonar_get();
 				serial_snd.distance=sonar_data->distance;
 				serial_snd.confidence=sonar_data->confidence;
-				itoh(sonar_data->distance,msg_dist,4);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i];
+				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
+				an signed (using one extra byte) int but sign byte is discarded
+				*/
+				
+				itoh(sonar_data->distance,msg_dist,5);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
 				serial_snd.msgData[22]=sonar_data->confidence;
+
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
+				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
+				cont++;
+				/*QUITAR:Para hacer pruebas*/
+				if(cont>=20){
+					message_type=MEASURE_SN;
+					cont=0;
+				}
+				/*------------------------------*/
 				break;
 			case MEASURE_SN:
-				serial_snd.msg_length=25;
-				memset(serial_snd.msgData,0,25);
+				message_type=10;
+				serial_snd.msg_length=26;
+				memset(serial_snd.msgData,0,26);
 				serial_snd.msgData[0]=PPZ_START_BYTE;
 				serial_snd.msgData[1]=PPZ_MEASURE_BYTE;
 				serial_snd.time=sys_time.nb_sec;
 				
-				itoh(serial_snd.time, msg_time,2);
+				ito2h(serial_snd.time, msg_time);
 				serial_snd.msgData[2]=msg_time[0];
 				serial_snd.msgData[3]=msg_time[1];
 				// Get Position
@@ -466,26 +509,36 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				itoh(gps_coord->lat,msg_gps,5);
 				for(int i=0;i<5;i++) serial_snd.msgData[i+9]=msg_gps[i];
 				memset(msg_gps,0,5);
-				itoh(serial_snd.alt,msg_gps,4);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i];
+				/*NOTE: serial_snd.alt is an unsigned int. It is codified as 
+				an signed (using one extra byte) int but sign byte is discarded
+				*/
+				itoh(serial_snd.alt,msg_gps,5);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i+1];
 				// Get Sonar
 				
 				sonar_data= sonar_get();
 				serial_snd.distance=sonar_data->distance;
 				serial_snd.confidence=sonar_data->confidence;
-				itoh(sonar_data->distance,msg_dist,4);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i];
+				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
+				an signed (using one extra byte) int but sign byte is discarded
+				*/
+				
+				itoh(sonar_data->distance,msg_dist,5);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
 				serial_snd.msgData[22]=sonar_data->confidence;
+				serial_snd.msgData[23]=modo_medida;
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
-				break;
+				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 
+				break;
+				
 			default:
-				serial_snd.error_last=SERIAL_ERR_UNEXPECTED ;
+				serial_snd.error_last=10 ;
 				}
-	serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 
 		}
 	}
 }
+
 
 
