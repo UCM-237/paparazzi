@@ -28,16 +28,19 @@
 #define HMC58XX_REGS_H
 
 /* default I2C address */
-#define HMC58XX_ADDR 0x3C
+#define HMC58XX_ADDR 0x0D
 
 /* Registers */
-#define HMC58XX_REG_CFGA   0x00
+#define HMC58XX_REG_CFGA   0x0B
 #define HMC58XX_REG_CFGB   0x01
-#define HMC58XX_REG_MODE   0x02
-#define HMC58XX_REG_DATXM  0x03
+/*#define HMC58XX_REG_MODE   0x02
+#define HMC58XX_REG_DATXM  0x03*/
 #define HMC58XX_REG_DATXL  0x04
 
-
+/* LIA*/
+#define QMC5883_REG_MODE   0x09
+#define QMC5883_SET_REG 0x1D
+#define QMC5883_REG_DATXM  0x00
 
 
 /* Warning!

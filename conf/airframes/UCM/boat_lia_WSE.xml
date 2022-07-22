@@ -25,7 +25,7 @@
     <module name="actuators" type="pwm"/>
 
     <module name="gps" type="ublox">
-    	<configure name="MODEM_PORT"  value="UART4"/>
+    	<configure name="GPS_PORT"  value="UART4"/>
     </module>
     <module name="gps_ubx_ucenter"/>
     <module name="ins"/>
@@ -35,8 +35,10 @@
    <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>
     </module>
+    
     <!-- LIA: pruebas para incluir la brujula. No estoy segura ni de que sea este módulo-->
-    <module name="mag" type="qmc5883">
+
+    <module name="mag_qmc5883">
     	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>

@@ -25,7 +25,7 @@
  * Module wrapper for Honeywell HMC5843 and HMC5883 magnetometers.
  */
 
-#include "modules/sensors/mag_hmc58xx.h"
+#include "modules/sensors/mag_qmc5883.h"
 #include "mcu_periph/uart.h"
 #include "pprzlink/messages.h"
 #include "modules/datalink/downlink.h"

@@ -26,15 +26,15 @@
  * Driver for Honeywell HMC5843 and HMC5883 magnetometers.
  */
 
-#ifndef HMC58XX_H
-#define HMC58XX_H
+#ifndef QMC5883_H
+#define QMC5883_H
 
 #include "std.h"
 #include "mcu_periph/i2c.h"
 #include "math/pprz_algebra_int.h"
 
 /* Address and register definitions */
-#include "peripherals/hmc58xx_regs.h"
+#include "peripherals/qmc5883_regs.h"
 
 struct Hmc58xxConfig {
   uint8_t rate;  ///< Data Output Rate Bits(6 -> 50Hz with HMC5843, 75Hz with HMC5883)
@@ -92,4 +92,4 @@ static inline void hmc58xx_periodic(struct Hmc58xx *hmc)
   }
 }
 
-#endif /* HMC58XX_H */
+#endif /* QMC5833_H */
