@@ -38,18 +38,24 @@
     
     <!-- LIA: pruebas para incluir la brujula. No estoy segura ni de que sea este módulo-->
 
-    <module name="mag_qmc5883">
+    <!--module name="mag_qmc588">
     	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
     	
-    </module>
+    </module-->
+    
     <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
     <module name="sonar" type="bluerobotics">
     	<configure name="SONAR_UART" value="UART3"/>
     </module>
     <module name="serial" type="com">
     	<configure name="SERIAL_UART" value="UART5"/>
+    </module>
+        
+   <module name="lidar" type="tfmini_i2c">
+    	<configure name="TFMINI_I2C_DEV" value="I2C1"/>
+    	<configure name="TFMINI_I2C_ADDR" value="0x20"/>
     </module>
 
     <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
