@@ -46,10 +46,15 @@
     </module>
     <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
     <module name="sonar" type="bluerobotics">
-    	<configure name="SONAR_UART" value="UART3"/>
+    	<configure name="SONAR_UART" value="UART6"/>
     </module>
     <module name="serial" type="com">
     	<configure name="SERIAL_UART" value="UART5"/>
+    </module>
+    <!--LIDAR-->
+    <module name="lidar" type="tfmini">
+    	<configure name="TFMINI_PORT" value="UART3"/>
+    	<configure name="TFMINI_BAUD" value="B115200"/>
     </module>
 
     <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
