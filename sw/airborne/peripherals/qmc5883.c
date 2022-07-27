@@ -113,7 +113,7 @@ static void hmc58xx_send_config(struct Hmc58xx *hmc)
 {
 
 	hmc58xx_i2c_tx_reg(hmc, 0x0B,0x01);
-	hmc58xx_i2c_tx_reg(hmc, 0x09,);
+	hmc58xx_i2c_tx_reg(hmc, 0x09,0x1D);
 /*
   switch (hmc->init_status) {
     case HMC_CONF_CRA:
@@ -172,7 +172,7 @@ void hmc58xx_event(struct Hmc58xx *hmc)
     if (hmc->i2c_trans.status == I2CTransFailed) {
       hmc->i2c_trans.status = I2CTransDone;
     } else if (hmc->i2c_trans.status == I2CTransSuccess) {
-      if (hmc->type == HMC_TYPE_5843) {
+      if (hmc->type == HMC_TYPE_QMC5883) {
         hmc->data.vect.x = Int16FromBuf(hmc->i2c_trans.buf, 0);
         hmc->data.vect.y = Int16FromBuf(hmc->i2c_trans.buf, 2);
         hmc->data.vect.z = Int16FromBuf(hmc->i2c_trans.buf, 4);

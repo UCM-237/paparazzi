@@ -5,10 +5,10 @@
   <firmware name="rover">
     <autopilot name="rover_steering.xml"/>
 
-    <target name="ap" board="matek_f765_wing">
+    <target name="ap" board="matek_f405_wing_v1">
       <configure name="PERIODIC_FREQUENCY" value="100"/>
       <module name="radio_control" type="sbus">
-        <!--configure name="SBUS_PORT" value="UART6"/-->
+        <configure name="SBUS_PORT" value="UART2"/>
       </module>
     </target>
     
@@ -23,7 +23,7 @@
     <module name="telemetry" type="xbee_api"/>
     
     <!-- Same board module as matek_f765_wind but without OSD -->
-    <module name="board" type="matek_f765_car"/> <!-- IMU included -->
+    <module name="board" type="matek_f405_boat"/> <!-- IMU included -->
 
     <!-- GPS_BAUD can be manually configured, but gps_ubx_ucenter automatically do that -->
     <module name="gps" type="ublox">
@@ -63,8 +63,8 @@
   <!-- COMMANDS SECTION ..................................................................... -->
   <servos> 
     <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
-    <servo name="MOTOR_THROTTLE" no="1" min="1000" neutral="1500" max="2000"/>
-    <servo name="MOTOR_STEERING" no="2" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
   </servos> 
   
   <!-- Low level commands (PWM signal) -->

@@ -24,45 +24,21 @@
  * Register defs for Honeywell HMC5843 and HMC5883 magnetometers.
  */
 
-#ifndef HMC58XX_REGS_H
-#define HMC58XX_REGS_H
+#ifndef QMC5883_REGS_H
+#define QMC5883_REGS_H
 
 /* default I2C address */
-#define HMC58XX_ADDR 0x0D
+#define QMC5883_ADDR 0x0D
 
 /* Registers */
-#define HMC58XX_REG_CFGA   0x0B
-#define HMC58XX_REG_CFGB   0x01
-/*#define HMC58XX_REG_MODE   0x02
-#define HMC58XX_REG_DATXM  0x03*/
-#define HMC58XX_REG_DATXL  0x04
+//DANI
 
-/* LIA*/
-#define QMC5883_REG_MODE   0x09
-#define QMC5883_SET_REG 0x1D
-#define QMC5883_REG_DATXM  0x00
+#define QMC5883_REG_DATXL  0x00
+#define QMC5883_REG_DATXM  0x01
+#define QMC5883_REG_DATYL  0x02
+#define QMC5883_REG_DATYM  0x03
+#define QMC5883_REG_DATZL  0x04
+#define QMC5883_REG_DATZM  0x05
 
 
-/* Warning!
- * The HMC5843 and HMC5883 differ here.
- * - HMC5843 order: Y,Z
- * - HMC5883 order: Z,Y
- * So we make defines for each version explicitly.
- */
-#define HMC5843_REG_DATYM  0x05
-#define HMC5843_REG_DATYL  0x06
-#define HMC5843_REG_DATZM  0x07
-#define HMC5843_REG_DATZL  0x08
-
-#define HMC5883_REG_DATZM  0x05
-#define HMC5883_REG_DATZL  0x06
-#define HMC5883_REG_DATYM  0x07
-#define HMC5883_REG_DATYL  0x08
-
-
-#define HMC58XX_REG_STATUS 0x09
-#define HMC58XX_REG_IDA    0x0A
-#define HMC58XX_REG_IDB    0x0B
-#define HMC58XX_REG_IDC    0x0C
-
-#endif // HMC58XX_REGS_H
+#endif // QMC5883_REGS_H
