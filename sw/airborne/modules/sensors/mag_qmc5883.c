@@ -67,7 +67,7 @@ struct Hmc58xx mag_hmc58xx;
 
 void mag_hmc58xx_module_init(void)
 {
-  hmc58xx_init(&mag_hmc58xx, &(MAG_HMC58XX_I2C_DEV), HMC58XX_ADDR);
+  hmc58xx_init(&mag_hmc58xx, &(MAG_HMC58XX_I2C_DEV), QMC5883_ADDR);
 
 #if MODULE_HMC58XX_UPDATE_AHRS && USE_MAG_TO_IMU
   struct Int32Eulers mag_to_imu_eulers = {

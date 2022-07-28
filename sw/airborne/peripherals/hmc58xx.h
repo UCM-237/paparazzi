@@ -55,7 +55,6 @@ enum Hmc58xxConfStatus {
 enum Hmc58xxType {
   HMC_TYPE_5843,
   HMC_TYPE_5883,
-  HMC_TYPE_QMC5883 //LIA
 };
 
 struct Hmc58xx {

@@ -3,7 +3,7 @@
 <airframe name="boat">
 
   <firmware name="rover"> <!-- Firmware propio del barco?? -->
-    <autopilot name="boat_autopilot.xml"/>
+    <autopilot name="rover_steering.xml"/>
 
     <target name="ap" board="matek_f405_wing_v1">
       <configure name="PERIODIC_FREQUENCY" value="100"/>
@@ -38,19 +38,15 @@
     
     <!-- LIA: pruebas para incluir la brujula. No estoy segura ni de que sea este módulo-->
 
-    <module name="mag_qmc5883">
-    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
+    <module name="mag_hmc58xx">
+    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C1"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
     	
     </module>
-    <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
-    <module name="sonar" type="bluerobotics">
-    	<configure name="SONAR_UART" value="UART6"/>
-    </module>
-    <module name="serial" type="com">
-    	<configure name="SERIAL_UART" value="UART5"/>
-    </module>
+    <!-- Nuestros módulos: Lidar -->
+
+
     <!--LIDAR-->
     <module name="lidar" type="tfmini">
     	<configure name="TFMINI_PORT" value="UART3"/>
@@ -62,37 +58,40 @@
     </module>
 	    
     <module name="gvf"  type="module"/>
-    <module name="guidance" type="boat">
-    	<define name="BOAT_SPEED_KF" value="1000"/>
-      <define name="BOAT_BEARING_KF" value="1000"/>
+    <module name="guidance" type="rover_steering">
+      <define name="MAX_DELTA"            value="15.0"/>
+      <define name="DRIVE_SHAFT_DISTANCE" value="0.25"/>
+      <define name="SR_MEASURED_KF"       value="1400.0"/>
+      <define name="MIN_CMD_SHUT"         value="3800"/>
+      <define name="MAX_CMD_SHUT"         value="1350"/>
     </module>
 
   </firmware>
 
 
   <!-- COMMANDS SECTION ..................................................................... -->
-  <servos> 
-    <!-- "no" 0 and 1 0, our f405 don't have power pin for these pwm outputs... -->
-    <servo name="MOTOR_LEFT"  no="2" min="1100" neutral="1500" max="1900"/>
-    <servo name="MOTOR_RIGHT" no="3" min="1100" neutral="1500" max="1900"/>
+   <servos> 
+    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
+    <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
   </servos> 
   
-  <!-- Low level commands -->
-  <commands> 
-    <axis name="MLEFT"  failsafe_value="0"/>
-    <axis name="MRIGHT" failsafe_value="0"/>
+  <!-- Low level commands (PWM signal) -->
+  <commands>
+    <axis name="THROTTLE"    failsafe_value="0"/>
+    <axis name="STEERING" failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
   <rc_commands>
-    <set command="MLEFT"  value="@THROTTLE - @ROLL"/>
-    <set command="MRIGHT" value="@THROTTLE + @ROLL"/>
+    <set command="THROTTLE" value="@THROTTLE"/>
+    <set command="STEERING" value="@ROLL"/>
   </rc_commands>
 
   <!-- When SetActuatorsFromCommands-->
   <command_laws>
-    <set servo="MOTOR_LEFT"  value="@MLEFT" />
-    <set servo="MOTOR_RIGHT" value="@MRIGHT"/>
+    <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
+    <set servo="MOTOR_STEERING" value="@STEERING"/>
   </command_laws>
 
 
@@ -138,10 +137,10 @@
 
   <section name="AUTOPILOT">
     <define name="MODE_MANUAL" value="AP_MODE_DIRECT"/> 
-    <define name="MODE_AUTO1"  value="AP_MODE_ASSISTED"/> 
-    <define name="MODE_AUTO2"  value="AP_MODE_NAV"/>
+    <define name="MODE_AUTO1"  value="AP_MODE_CRUISER"/> 
+    <define name="MODE_AUTO2"  value="AP_MODE_NAV"/> <!-- Ignoring radio_control.values -->
   </section>
-
+  
   <section name="SIMULATOR" prefix="NPS_">
     <define name="SENSORS_PARAMS" value="nps_sensors_params_default.h" type="string"/>
   </section>
