@@ -49,10 +49,10 @@
 //LIA:Test
 
 #ifndef HMC58XX_TYPE
-#define HMC58XX_TYPE HMC_TYPE_QMC5883
+#define HMC58XX_TYPE
 #endif
 
-#define QMC5883_DEFAULT_MD 0x1D // Continious measurement mode
+
 
 
 /** HMC58XX startup delay
@@ -73,9 +73,7 @@ static void hmc58xx_set_default_config(struct Hmc58xxConfig *c)
   c->meas = HMC58XX_DEFAULT_MS;
   c->gain = HMC58XX_DEFAULT_GN;
   c->mode = HMC58XX_DEFAULT_MD;
-  if (HMC58XX_TYPE == HMC_TYPE_QMC5883){
-  	c->mode = QMC5883_DEFAULT_MD;
-  }
+  
 }
 
 /**
@@ -93,8 +91,8 @@ void hmc58xx_init(struct Hmc58xx *hmc, struct i2c_periph *i2c_p, uint8_t addr)
   hmc->i2c_trans.status = I2CTransDone;
   /* set default config options */
   hmc58xx_set_default_config(&(hmc->config));
-  /*hmc->type = HMC_TYPE_5883; QUITADO LIA*/
-  hmc->type = HMC_TYPE_QMC5883;
+  hmc->type = HMC_TYPE_5883;
+  
   hmc->initialized = false;
   hmc->init_status = HMC_CONF_UNINIT;
   hmc->adc_overflow_cnt = 0;
@@ -123,13 +121,8 @@ static void hmc58xx_send_config(struct Hmc58xx *hmc)
       hmc->init_status++;
       break;
     case HMC_CONF_MODE:
-    	//LIA
-      if(HMC58XX_TYPE == HMC_TYPE_QMC5883){
-      		hmc58xx_i2c_tx_reg(hmc, QMC5883_REG_MODE, hmc->config.mode);
-      		}
-      else{
-      		hmc58xx_i2c_tx_reg(hmc, HMC58XX_REG_MODE, hmc->config.mode);
-      		}
+
+      hmc58xx_i2c_tx_reg(hmc, HMC58XX_REG_MODE, hmc->config.mode);		
       hmc->init_status++;
       break;
     case HMC_CONF_DONE:
@@ -158,13 +151,8 @@ void hmc58xx_start_configure(struct Hmc58xx *hmc)
 void hmc58xx_read(struct Hmc58xx *hmc)
 {
   if (hmc->initialized && hmc->i2c_trans.status == I2CTransDone) {
-    	//LIA
-    if(HMC58XX_TYPE == HMC_TYPE_QMC5883){
-    	hmc->i2c_trans.buf[0] = QMC5883_REG_DATXM;
-    }
-    else{ 	
-    	hmc->i2c_trans.buf[0] = HMC58XX_REG_DATXM;
-    }
+
+    hmc->i2c_trans.buf[0] = HMC58XX_REG_DATXM;
     hmc->i2c_trans.type = I2CTransTxRx;
     hmc->i2c_trans.len_r = 6;
     hmc->i2c_trans.len_w = 1;
