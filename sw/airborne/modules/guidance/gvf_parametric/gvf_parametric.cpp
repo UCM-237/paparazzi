@@ -237,8 +237,11 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
 
   // Ctrl purposes
   gvf_parametric_control.omega = heading_rate;
-  // From gvf_common.h
-  gvf_c_omega.omega = heading_rate; 
+  
+  // From gvf_common.h TODO: implement d/dt of kppa and ori_err
+  gvf_c_omega.omega   = heading_rate; 
+  gvf_c_info.kappa    = (f1d*f2dd - f1dd*f2d)/powf(f1d*f1d + f2d*f2d, 1.5);
+  gvf_c_info.ori_err  = 1 - (Xh(0)*cosf(course) + Xh(1)*sinf(course));
   
   // Virtual coordinate update, even if the vehicle is not in autonomous mode, the parameter w will get "closer" to
   // the vehicle. So it is not only okei but advisable to update it.
@@ -398,7 +401,6 @@ bool gvf_parametric_2D_splines_XY()
 {
 	gvf_parametric_trajectory.type = SPLINES_2D;
 	float fx, fy, fxd, fyd, fxdd, fydd;
-	
 	gvf_parametric_2d_splines_info(gvf_splines_2D_x, gvf_splines_2D_y, &fx, &fy, &fxd, &fyd, &fxdd, &fydd);
 	gvf_parametric_control_2D(gvf_parametric_2d_splines_par.kx, gvf_parametric_2d_splines_par.ky, fx, fy, fxd, fyd, fxdd, fydd);
 	return true;
@@ -463,6 +465,9 @@ bool gvf_parametric_2D_splines_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t
 	gvf_parametric_plen = 27;
 	gvf_parametric_plen_wps = 0;
 	
+	// Restart the spline
+	if(gvf_parametric_control.w >= t8)
+		gvf_parametric_control.w = 0;
 	gvf_parametric_2D_splines_XY();
 	return true;
 }

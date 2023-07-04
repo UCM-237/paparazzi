@@ -15,15 +15,37 @@
   <settings name="SR Guidance">
     <dl_settings>
       <dl_settings NAME="SR Guidance">
+      
         <dl_settings NAME="Steering control">
           <!--TODO: Set MIN_DELTA/MAX_DELTA config limits-->
           <dl_setting MAX="15.0" MIN="-15.0" STEP="0.1" VAR="guidance_control.cmd.delta" shortname="sr_delta" param="SR_GUIDANCE_DELTA"/>
         </dl_settings>
         <dl_settings NAME="Speed control">
-          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="guidance_control.cmd.speed" shortname="sr_speed" param="SR_GUIDANCE_SPEED"/>
+          <dl_setting MAX="1"    MIN="0" STEP="1" VAR="guidance_control.use_non_linear" shortname="use_non_linear"/>
+          
+          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="guidance_control.cmd.min_speed" shortname="min_speed"/>
+          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="guidance_control.cmd.max_speed" shortname="max_speed"/>
+          
+          <dl_setting MAX="9600.0" MIN="1.0" STEP="1" VAR="guidance_control.cmd_nonlinear.k" shortname="k_nonlinear"/>
           <dl_setting MAX="2000.0" MIN="0.0" STEP="1" VAR="guidance_control.kf" shortname="kf"/>
           <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.kp" shortname="kp"/>
           <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.ki" shortname="ki"/>
+          
+          <dl_setting MAX="100.0" MIN="0.0" STEP="1" VAR="guidance_control.cmd.z_kappa" shortname="z kappa"/>
+          <dl_setting MAX="100.0" MIN="0.0" STEP="1" VAR="guidance_control.cmd.z_ori"   shortname="z orierr"/>
+        </dl_settings>
+        <dl_settings NAME="Obstacle avoidance">
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="obstacle_avoidance.use_obstacle_avoidance" shortname="use obst avoidance"/>
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="obstacle_avoidance.use_speed_function" shortname="use speed function"/>
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="obstacle_avoidance.choose_direction" shortname="direction: 0(L); 1(R)"/>
+          <dl_setting MAX="10" MIN="0.1" STEP="0.1" VAR="obstacle_avoidance.max_distance" shortname="max distance"/>
+          <dl_setting MAX="10" MIN="0.1" STEP="0.1" VAR="obstacle_avoidance.min_distance" shortname="min distance"/>
+        </dl_settings>
+        <dl_settings NAME="Rollover Protection">
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="rollover_protection.protect_curvature" shortname="protect_curvature"/>
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="rollover_protection.use_cbf" shortname="use cbf"/>
+          <dl_setting MAX="100" MIN="1" STEP="0.1" VAR="rollover_protection.beta" shortname="beta"/>
+          <dl_setting MAX="10" MIN="0" STEP="0.1" VAR="rollover_protection.max_lateral_accel" shortname="max lat acceleration"/>
         </dl_settings>
       </dl_settings>
     </dl_settings>

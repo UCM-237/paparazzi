@@ -1706,8 +1706,23 @@
     	<field name="speed_measured"   type="float"/>
     </message>
     
+    <!-- Obstacle telemetry -->
+    <!--
+    <message name="OBSTACLE_GRID" id="182">
+    	<description>
+    		Obstacle grid telemetry
+    	</description>
+    	<field name="cell width" type="float"/>
+    	<field name="cell height" type="float"/>
+    	<field name="xmin" type="float"/>
+    	<field name="xmax" type="float"/>
+    	<field name="ymin" type="float"/>
+    	<field name="ymax" type="float"/>
+    	<field name="row_number" type="uint16"/>
+    	<field name="columns" type="uint8[]"/>
+    </message>
+    -->
     
-    <!-- 182 is free -->
     <!-- 183 is free -->
     <!-- 184 is free -->
     <!-- 185 is free -->

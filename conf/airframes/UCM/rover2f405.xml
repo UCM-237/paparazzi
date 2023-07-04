@@ -6,7 +6,7 @@
     <autopilot name="rover_steering.xml"/>
     <define name="USE_INS_NAV_INIT"/>
 
-    <target name="ap" board="matek_f765_wing">
+    <target name="ap" board="matek_f405_wing_v1">
       <configure name="PERIODIC_FREQUENCY" value="100"/>
       <module name="radio_control" type="sbus">
         <configure name="SBUS_PORT" value="UART2"/>
@@ -21,7 +21,7 @@
     </target>    
     
     <!-- Same board module as matek_f765_wing but without OSD -->
-    <module name="board" type="matek_f765_car"/> <!-- IMU included -->
+    <module name="board" type="matek_f405_car"/> <!-- IMU included -->
     
     <module name="actuators" type="pwm"/>
 
@@ -51,8 +51,8 @@
     
     
     <!-- Our modules: Lidar -->
-    <!--LIDAR-->
-    <module name="lidar" type="tfmini">
+    <!--LIDAR UART-->
+    <module name="lidar_tfmini">
     	<configure name="TFMINI_PORT" value="UART3"/>
     	<configure name="TFMINI_BAUD" value="B115200"/>
     </module>
@@ -62,9 +62,17 @@
     </module>
 	    
     <module name="gvf" type="module"/>
-    <module name="gvf_parametric">
+    <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
+    </module-->
+    
+    <!-- Obstacle grid -->
+    <!--
+    <module name="obstacle_rover">
+    	<define name="N_COL_GRID" value="50"/>
+    	<define name="N_ROW_GRID" value="50"/>
     </module>
+    -->
     
     <module name="guidance" type="rover_steering">
       <define name="MAX_DELTA"            value="15.0"/>
@@ -73,6 +81,7 @@
       <define name="MIN_CMD_SHUT"         value="3800"/>
       <define name="MAX_CMD_SHUT"         value="1350"/>
       <define name="MOV_AVG_M"            value="20"/>
+      <!--define name="USE_GRID"             value="1"/-->
     </module>
 
   </firmware>
