@@ -129,6 +129,7 @@ extern bool gvf_line_wp_heading(uint8_t wp, float heading);
 
 // Array of straight lines
 extern bool gvf_lines_array_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6);
+extern bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2);
 
 // Ellipse
 extern bool gvf_ellipse_wp(uint8_t wp, float a, float b, float alpha);
