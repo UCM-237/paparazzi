@@ -1,0 +1,14 @@
+<!DOCTYPE module SYSTEM "../module.dtd">
+
+<module name="matek_f405_wing_v1_chibios" dir="boards">
+  <doc>
+    <description>
+      Specific configuration for matek_f405_wing_v1 with ChibiOS
+    </description>
+  </doc>
+  <dep>
+    <depends>spi_master,hard_fault_recovery</depends>
+  </dep>
+  <makefile target="!sim|nps|fbw"/>
+</module>
+
