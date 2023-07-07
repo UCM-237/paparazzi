@@ -260,7 +260,26 @@
                                      PIN_ODR_LOW(13) | \
                                      PIN_ODR_LOW(14) | \
                                      PIN_ODR_LOW(15))
-                                     
+              /* PORT A SETUP: */
+/*
+ GPIA0: UART4_RX
+ GPIOA0 : UART4_TX (ALT)
+ GPIOA1 : UART4_RX (ALT)
+ GPIOA2 : UART2_TX (ALT)
+ GPIOA3 : UART2_RX (ALT)
+ GPIOA4 : SPI1 CS  (OUT)
+ GPIOA5 : SPI1 SCK (ALT)
+ GPIOA6 : SPI1 MISO (ALT)
+ GPIOA7 : SPI1 MOSI (ALT)
+ GPIOA8 : SERVO 9   (ALT)
+ GPIOA9 : UART1_TX  (ALT)
+ GPIOA10: UART1_RX  (ALT)
+ GPIOA11: --
+ GPIOA12: --
+ GPIOA13: --
+ GPIOA14: LED1	     (OUT)
+ GPIOA15: --
+*/                       
 // Here the alternating functions from the TODO above                                     
 #define VAL_GPIOA_AFRL              (PIN_AFIO_AF(0, 8) | \
                                      PIN_AFIO_AF(1, 8)  | \
@@ -275,9 +294,9 @@
                                      PIN_AFIO_AF(10, 7) | \
                                      PIN_AFIO_AF(11, 0) | \
                                      PIN_AFIO_AF(12, 0) | \
-                                     PIN_AFIO_AF(13, 0)  | \
-                                     PIN_AFIO_AF(14, 0)  | \
-                                     PIN_AFIO_AF(15, 0))
+                                     PIN_AFIO_AF(13, 1)  | \
+                                     PIN_AFIO_AF(14, 1)  | \
+                                     PIN_AFIO_AF(15, 2))
                                      
                                      
                                      
@@ -386,19 +405,38 @@
                                      PIN_ODR_LOW(15))
                                      
 // Here the alternating functions from the TODO above
-                                   
+/* PORT B SETUP: */
+/* 
+ GPIOB0 : SERVO 3 (ALT)
+ GPIOB1 : SERVO 4 (ALT)
+ GPIOB2 :  --
+ GPIOB3 : SPI3 SCK (ALT)
+ GPIOB4 : SPI3 MISO (ALT) 
+ GPIOB5 : SPI3 MOSI (ALT)
+ GPIOB6 : SERVO 2 (ALT)
+ GPIOB7 : SERVO 1 (ALT)
+ GPIOB8 : IC1 SCL (ALT)
+ GPIOB9 : IC1 SDA (ALT)
+ GPIOB10: IC2 SCL (ALT)
+ GPIOB11: IC2 SDA (ALT) 
+ GPIOB12: SPI2 CS (OUT)
+ GPIOB13: SPI2 SCK (ALT)
+ GPIOB14: SERVO 7  (ALT)
+ GPIOB15: SERVO 8  (ALT)
+*/
+
 #define VAL_GPIOB_AFRL              (PIN_AFIO_AF(0, 2) |           \
                                      PIN_AFIO_AF(1, 2) |           \
                                      PIN_AFIO_AF(2, 0) |           \
-                                     PIN_AFIO_AF(3, 5) |            \
-                                     PIN_AFIO_AF(4, 5) |           \
-                                     PIN_AFIO_AF(5, 5) |           \
+                                     PIN_AFIO_AF(3, 6) |            \
+                                     PIN_AFIO_AF(4, 6) |           \
+                                     PIN_AFIO_AF(5, 6) |           \
                                      PIN_AFIO_AF(6, 2) |            \
                                      PIN_AFIO_AF(7, 2))
-#define VAL_GPIOB_AFRH              (PIN_AFIO_AF(8, 0) |           \
-                                     PIN_AFIO_AF(9, 0) |            \
-                                     PIN_AFIO_AF(10, 0) |         \
-                                     PIN_AFIO_AF(11, 0) |          \
+#define VAL_GPIOB_AFRH              (PIN_AFIO_AF(8, 4) |           \
+                                     PIN_AFIO_AF(9, 4) |            \
+                                     PIN_AFIO_AF(10, 4) |         \
+                                     PIN_AFIO_AF(11, 4) |          \
                                      PIN_AFIO_AF(12, 5) |          \
                                      PIN_AFIO_AF(13, 5) |          \
                                      PIN_AFIO_AF(14, 9) |          \
@@ -503,7 +541,25 @@
                                      PIN_ODR_HIGH(13) |            \
                                      PIN_ODR_HIGH(14) |            \
                                      PIN_ODR_LOW(15))
-                                                                
+          /* PORT C SETUP: */
+/* 
+ GPIOC0 : LINE_VBAT_MEAS (ANALOG)
+ GPIOC1 : LINE_CURRENT_MEAS (ANALOG)
+ GPIOC2 : SPI2 MISO (ALT)
+ GPIOC3 : SPI2 MOSI (ALT)
+ GPIOC4 : --
+ GPIOC5 : --
+ GPIOC6 : UART6 TX (ALT)
+ GPIOC7 : UART6 RX (ALT)
+ GPIOC8 : SERVO 5 (ATL)
+ GPIOC9 : SERVO 6 (ALT)
+ GPIOC10: UART3 TX (ALT)
+ GPIOC11: UART3 RX (ALT)
+ GPIOC12: UART5 TX (ALT)
+ GPIOC13: UART5 RX (ALT)
+ GPIOC14: SPI3 CS (OUTPUT)
+ GPIOC15: --
+*/                                                      
 #define VAL_GPIOC_AFRL              (PIN_AFIO_AF(0, 0) |\
                                      PIN_AFIO_AF(1, 0) |           \
                                      PIN_AFIO_AF(2, 5) |           \
@@ -805,9 +861,10 @@
 
 // SPI1_SLAVE0 -> slave select pin for the  (gyro AND ACC)
 #define SPI_SELECT_SLAVE0_PORT GPIOC
-#define SPI_SELECT_SLAVE0_PIN GPIO2
+#define SPI_SELECT_SLAVE0_PIN GPIO3
 // SPI1_SLAVE1 -> slave select pin for the  (i2C BARO MAG)
 
+/*
 #define AF_S1                            2U
 #define AF_LINE_S1                       2U
 #define AF_S2                            2U
@@ -926,6 +983,7 @@
 #define S9_TIM_FN	 CH
 #define S9_TIM_CH	 1
 #define S9_TIM_AF	 1
+*/
 
 /*
 #define VBAT_MEAS_ADC	 	 1
