@@ -6,20 +6,20 @@
 </header>
   <waypoints>
     <waypoint name="HOME" x="0" y="0"/>
-    <waypoint name="STDBY" x="0" y="-4"/>
-    <waypoint name="ELLIPSE" x="-3" y="-3"/>
-    <waypoint name="P1" x="-2" y="-4"/>
-    <waypoint name="P2" x="2" y="-4"/>
-    <waypoint name="SPL0" x="-5.0" y="6.4"/>
-    <waypoint name="SPL1" x="-1.6" y="4.7"/>
-    <waypoint name="SPL2" x="1.2" y="6.3"/>
-    <waypoint name="SPL3" x="0.8" y="9.1"/>
-    <waypoint name="SPL4" x="2.3" y="13.1"/>
-    <waypoint name="SPL5" x="0.4" y="15.8"/>
-    <waypoint name="SPL6" x="-3.5" y="14.2"/>
-    <waypoint name="SPL7" x="-6.4" y="14.5"/>
-    <waypoint name="SPL8" x="-7.9" y="11.2"/>
-    <waypoint name="BZ9" x="-5.0" y="6.4"/>
+    <waypoint name="STDBY" x="4.0" y="-6.4"/>
+    <waypoint name="ELLIPSE" x="-0.6" y="-7.0"/>
+    <waypoint name="P1" x="-2.4" y="-7.0"/>
+    <waypoint name="P2" x="1.8" y="-7.0"/>
+    <waypoint name="SPL0" x="-3.0" y="-1.6"/>
+    <waypoint name="SPL1" x="0.9" y="-3.4"/>
+    <waypoint name="SPL2" x="3.9" y="-1.7"/>
+    <waypoint name="SPL3" x="2.6" y="1.6"/>
+    <waypoint name="SPL4" x="5.7" y="3.1"/>
+    <waypoint name="SPL5" x="5.8" y="6.0"/>
+    <waypoint name="SPL6" x="2.1" y="7.0"/>
+    <waypoint name="SPL7" x="-2.4" y="6.8"/>
+    <waypoint name="SPL8" x="-4.8" y="2.0"/>
+    <waypoint name="BZ9" x="-3.0" y="-1.6"/>
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
