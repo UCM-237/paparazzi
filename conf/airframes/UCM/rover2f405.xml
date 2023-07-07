@@ -6,7 +6,7 @@
     <autopilot name="rover_steering.xml"/>
     <define name="USE_INS_NAV_INIT"/>
 
-    <target name="ap" board="matek_f405_wing_v1">
+    <target name="ap" board="matek_f405_wing_v1_chibios">
       <configure name="PERIODIC_FREQUENCY" value="100"/>
       <module name="radio_control" type="sbus">
         <configure name="SBUS_PORT" value="UART2"/>

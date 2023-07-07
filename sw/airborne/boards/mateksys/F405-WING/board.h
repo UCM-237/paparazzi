@@ -879,10 +879,13 @@
 #define AF_LINE_SPI1_MISO                5U
 #define AF_SPI1_MOSI                     5U
 #define AF_LINE_SPI1_MOSI                5U
+*/
+
 #define AF_UART1_TX                      7U
 #define AF_LINE_UART1_TX                 7U
 #define AF_UART1_RX                      7U
 #define AF_LINE_UART1_RX                 7U
+/*
 #define AF_S5                            3U
 #define AF_LINE_S5                       3U
 #define AF_S6                            3U
