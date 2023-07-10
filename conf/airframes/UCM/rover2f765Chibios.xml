@@ -53,7 +53,7 @@
     <!-- Our modules: Lidar -->
     <!--LIDAR-->
     <module name="lidar" type="tfmini">
-    	<configure name="TFMINI_PORT" value="UART3"/>
+    	<configure name="TFMINI_PORT" value="UART6"/>
     	<configure name="TFMINI_BAUD" value="B115200"/>
     </module>
 
