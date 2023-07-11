@@ -58,9 +58,14 @@ rover_obstacle_avoidance obstacle_avoidance;
 
 PRINT_CONFIG_VAR(MOV_AVG_M)
 
+// Speed moving average filter parameters
 static int ptr_avg = 0;
 static float speed_avg = 0;
 static float mvg_avg[MOV_AVG_M] = {0};
+
+// Distance moving average filter parameters
+static int ptr_avg_dist = 0;
+static float mvg_avg_dist[MOV_AVG_M] = {0};
 
 
 static struct PID_f rover_pid;
@@ -116,10 +121,13 @@ void rover_guidance_steering_init(void)
 
 	init_pid_f(&rover_pid, guidance_control.kp, 0.f, guidance_control.ki, MAX_PPRZ*0.4);
 
-	// Mov avg init
+	// Mov avg init Speed and distance
 	float speed = stateGetHorizontalSpeedNorm_f();
-	for(int k = 0; k < MOV_AVG_M; k++)
-	mvg_avg[k] = speed;
+	tfmini_event();
+	for(int k = 0; k < MOV_AVG_M; k++){
+		mvg_avg[k] = speed;
+		mvg_avg_dist[k] = tfmini.distance;
+	}
 	speed_avg = speed;
 	
 	// Initialize rollover protection
@@ -158,7 +166,7 @@ void rover_guidance_steering_heading_ctrl(float omega) //GVF give us this omega
 	
 	rover_guidance_steering_update_measurment();
 	if(obstacle_avoidance.use_obstacle_avoidance){
-		float omega_aux = rover_guidance_steering_omega_obstacle_avoidance();
+		float omega_aux = rover_guidance_steering_omega_obstacle_avoidance_v2();
 		omega = (omega_aux != -1) ? omega_aux : omega;
 	}
 	else
@@ -269,11 +277,14 @@ void rover_guidance_steering_speed_ctrl_lyap(float dv_sp)
 }
 
 
-// Update dist measurement
+// Update dist measurement using moving average filter
 void rover_guidance_steering_update_measurment(void)
 {
+	obstacle_avoidance.distance = obstacle_avoidance.distance - mvg_avg_dist[ptr_avg_dist]/MOV_AVG_M;
 	tfmini_event();
-	obstacle_avoidance.distance = tfmini.distance;
+	mvg_avg_dist[ptr_avg_dist] = tfmini.distance;
+	obstacle_avoidance.distance = obstacle_avoidance.distance + mvg_avg_dist[ptr_avg_dist]/MOV_AVG_M;
+	ptr_avg_dist = (ptr_avg_dist + 1) % MOV_AVG_M;
 }
 
 // Turn 90 degrees when obstacle is detected
@@ -300,6 +311,27 @@ float rover_guidance_steering_omega_obstacle_avoidance(void)
 		// 90 degrees turn
 		if(DegOfRad(fabs(obstacle_avoidance.old_psi - stateGetNedToBodyEulers_f()->psi)) >= 90.0)
 			obstacle_avoidance.turn_90_deg = 0;
+	}
+	return omega_ret;
+}
+
+// Turn when obstacle is detected
+float rover_guidance_steering_omega_obstacle_avoidance_v2(void)
+{
+
+	float omega_ret = -1;
+	
+	if(obstacle_avoidance.use_speed_function)
+		obstacle_avoidance.max_distance = speed_avg*2.0 + obstacle_avoidance.min_distance;
+	
+	
+	if((obstacle_avoidance.distance <= obstacle_avoidance.max_distance) 
+	   && (obstacle_avoidance.distance >= obstacle_avoidance.min_distance))
+	{
+		if(obstacle_avoidance.choose_direction == 1) // Turn right
+			omega_ret = -1000;
+		else // Turn left
+			omega_ret = 1000;
 	}
 	return omega_ret;
 }

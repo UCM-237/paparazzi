@@ -158,6 +158,7 @@ extern void rover_guidance_steering_speed_ctrl_pid(void);
 extern void rover_guidance_steering_speed_ctrl_lyap(float);
 extern void rover_guidance_steering_update_measurment(void);
 extern float rover_guidance_steering_omega_obstacle_avoidance(void);
+extern float rover_guidance_steering_omega_obstacle_avoidance_v2(void);
 extern void rover_guidance_steering_pid_reset(void);
 extern void rover_guidance_steering_kill(void);
 

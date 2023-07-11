@@ -42,6 +42,7 @@
       <message name="GVF"                    period="1.0"/>
       <message name="LIDAR"                  period="1.0"/>
       <message name="ROVER_CTRL"             period="0.50"/>  
+      <message name="ACTUATORS"	       period="0.50"/>
       <!--message name="OBSTACLE_GRID"	       period="3"/-->
       
       
