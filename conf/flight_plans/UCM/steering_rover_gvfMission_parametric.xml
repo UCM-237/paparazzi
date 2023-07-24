@@ -1,25 +1,28 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.4509" lon0="-3.72721" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.4506" lon0="-3.72605" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
-    <waypoint name="HOME" x="0" y="0"/>
-    <waypoint name="STDBY" x="4.0" y="-6.4"/>
-    <waypoint name="ELLIPSE" x="-0.6" y="-7.0"/>
-    <waypoint name="P1" x="-2.4" y="-7.0"/>
-    <waypoint name="P2" x="1.8" y="-7.0"/>
-    <waypoint name="SPL0" x="-3.0" y="-1.6"/>
-    <waypoint name="SPL1" x="0.9" y="-3.4"/>
-    <waypoint name="SPL2" x="3.9" y="-1.7"/>
-    <waypoint name="SPL3" x="2.6" y="1.6"/>
-    <waypoint name="SPL4" x="5.7" y="3.1"/>
-    <waypoint name="SPL5" x="5.8" y="6.0"/>
-    <waypoint name="SPL6" x="2.1" y="7.0"/>
-    <waypoint name="SPL7" x="-2.4" y="6.8"/>
-    <waypoint name="SPL8" x="-4.8" y="2.0"/>
-    <waypoint name="BZ9" x="-3.0" y="-1.6"/>
+    <waypoint name="HOME" x="0.3" y="-0.7"/>
+    <waypoint name="STDBY" x="-7.7" y="-4.6"/>
+    <waypoint name="ELLIPSE" x="-7.7" y="-10.5"/>
+    <waypoint name="P1" x="-6.9" y="-7.4"/>
+    <waypoint name="P2" x="-4.9" y="-8.4"/>
+    <waypoint name="SPL0" x="1.7" y="-6.0"/>
+    <waypoint name="SPL1" x="-1.4" y="-14.7"/>
+    <waypoint name="SPL2" x="0.8" y="-19.3"/>
+    <waypoint name="SPL3" x="6.3" y="-26.2"/>
+    <waypoint name="SPL4" x="16.9" y="-30.7"/>
+    <waypoint name="SPL5" x="25.6" y="-30.0"/>
+    <waypoint name="SPL6" x="31.0" y="-22.6"/>
+    <waypoint name="SPL7" x="33.4" y="-14.7"/>
+    <waypoint name="SPL8" x="32.3" y="-7.0"/>
+    <waypoint name="BZ9" x="27.3" y="-2.0"/>
+    <waypoint name="BZ10" x="19.7" y="0.6"/>
+    <waypoint name="BZ11" x="12.6" y="1.6"/>
+    <waypoint name="BZ12" x="1.8" y="-5.8"/>
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -87,7 +90,7 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_bezier">
-      <call fun="gvf_parametric_2D_bezier_wp(WP_SPL0, WP_SPL1, WP_SPL2,WP_SPL3,WP_SPL4, WP_SPL5, WP_SPL6, WP_SPL7, WP_SPL8, WP_BZ9)"/>
+      <call fun="gvf_parametric_2D_bezier_wp(WP_SPL0, WP_SPL1, WP_SPL2,WP_SPL3,WP_SPL4, WP_SPL5, WP_SPL6, WP_SPL7, WP_SPL8, WP_BZ9, WP_BZ10, WP_BZ11, WP_BZ12)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
   </blocks>

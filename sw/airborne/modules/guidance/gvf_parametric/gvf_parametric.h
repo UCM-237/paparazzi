@@ -137,7 +137,7 @@ extern bool gvf_parametric_2D_splines_wp(uint8_t , uint8_t , uint8_t , uint8_t ,
 extern bool gvf_parametric_2D_splines_XY(void);
 
 // 2D BEZIER
-extern bool gvf_parametric_2D_bezier_wp(uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t, uint8_t);
+extern bool gvf_parametric_2D_bezier_wp(uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
 extern bool gvf_parametric_2D_bezier_XY(void);
 
 // 3D Ellipse

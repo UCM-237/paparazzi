@@ -87,6 +87,7 @@ static void send_gvf_parametric(struct transport_tx *trans, struct link_device *
 
   float wb = gvf_parametric_control.w * gvf_parametric_control.beta;
 
+  // delta_T < 200 ?? Why, if delta_T > 200 ms do not send telemetry ??? That's why it send nothing.....?
   if (delta_T < 200) {
     pprz_msg_send_GVF_PARAMETRIC(trans, dev, AC_ID, &traj_type, &gvf_parametric_control.s, &wb, gvf_parametric_plen,
                                  gvf_parametric_trajectory.p_parametric, gvf_parametric_elen, gvf_parametric_trajectory.phi_errors);
@@ -151,6 +152,7 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
   gvf_parametric_control.delta_T = now - gvf_parametric_t0;
   gvf_parametric_t0 = now;
 
+  //
   if (gvf_parametric_control.delta_T > 300) { // We need at least two iterations for Delta_T
     gvf_parametric_control.w = 0; // Reset w since we assume the algorithm starts
     return;
@@ -489,60 +491,62 @@ bool gvf_parametric_2D_bezier_XY(void)
 }
 
 // TODO: Improve scalability (pass an array of wp)
-bool gvf_parametric_2D_bezier_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, uint8_t wp7, uint8_t wp8, uint8_t wp9)
+bool gvf_parametric_2D_bezier_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, uint8_t wp7, uint8_t wp8, uint8_t wp9,
+				  uint8_t wp10, uint8_t wp11, uint8_t wp12)
 {
 	float x[3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1];
 	float y[3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1];
 	
-	x[0] = WaypointX(wp0);	x[1] = WaypointX(wp1);
-	x[2] = WaypointX(wp2);	x[3] = WaypointX(wp3);	
-	x[4] = WaypointX(wp4); x[5] = WaypointX(wp5);
-	x[6] = WaypointX(wp6);	x[7] = WaypointX(wp7);	
-	x[8] = WaypointX(wp8); x[9] = WaypointX(wp9);
+	x[0]  = WaypointX(wp0);   x[1] = WaypointX(wp1);
+	x[2]  = WaypointX(wp2);   x[3] = WaypointX(wp3);	
+	x[4]  = WaypointX(wp4);   x[5] = WaypointX(wp5);
+	x[6]  = WaypointX(wp6);   x[7] = WaypointX(wp7);	
+	x[8]  = WaypointX(wp8);   x[9] = WaypointX(wp9);
+	x[10] = WaypointX(wp10);  x[11] = WaypointX(wp11);
+	x[12] = WaypointX(wp12);
 	
-	y[0] = WaypointY(wp0);	y[1] = WaypointY(wp1);
-	y[2] = WaypointY(wp2);	y[3] = WaypointY(wp3);	
-	y[4] = WaypointY(wp4);	y[5] = WaypointY(wp5);	
-	y[6] = WaypointY(wp6);	y[7] = WaypointY(wp7);
-	y[8] = WaypointY(wp8); y[9] = WaypointY(wp9);
-	
+	y[0]  = WaypointY(wp0);   y[1] = WaypointY(wp1);
+	y[2]  = WaypointY(wp2);   y[3] = WaypointY(wp3);	
+	y[4]  = WaypointY(wp4);   y[5] = WaypointY(wp5);	
+	y[6]  = WaypointY(wp6);   y[7] = WaypointY(wp7);
+	y[8]  = WaypointY(wp8);   y[9] = WaypointY(wp9);
+	y[10] = WaypointY(wp10);  y[11] = WaypointY(wp11);
+	y[12] = WaypointY(wp12);
 	
 	create_bezier_spline(gvf_bezier_2D, x, y);
-	// For the telemetry
-	/*
-	gvf_parametric_trajectory.p_parametric[0] = x[0];
-	gvf_parametric_trajectory.p_parametric[1] = x[1];
-	gvf_parametric_trajectory.p_parametric[2] = x[2];
-	gvf_parametric_trajectory.p_parametric[3] = x[3];
-	gvf_parametric_trajectory.p_parametric[4] = x[4];
-	gvf_parametric_trajectory.p_parametric[5] = x[5];
-	gvf_parametric_trajectory.p_parametric[6] = x[6];
-	gvf_parametric_trajectory.p_parametric[7] = x[7];
-	gvf_parametric_trajectory.p_parametric[8] = x[8];
 	
-	gvf_parametric_trajectory.p_parametric[9] = y[0];
-	gvf_parametric_trajectory.p_parametric[10] = y[1];
-	gvf_parametric_trajectory.p_parametric[11] = y[2];
-	gvf_parametric_trajectory.p_parametric[12] = y[3];
-	gvf_parametric_trajectory.p_parametric[13] = y[4];
-	gvf_parametric_trajectory.p_parametric[14] = y[5];
-	gvf_parametric_trajectory.p_parametric[15] = y[6];
-	gvf_parametric_trajectory.p_parametric[16] = y[7];
-	gvf_parametric_trajectory.p_parametric[17] = y[8];
+	// For the telemetry. Pass the waypoints
+	gvf_parametric_trajectory.p_parametric[0]  = x[0];
+	gvf_parametric_trajectory.p_parametric[1]  = x[1];
+	gvf_parametric_trajectory.p_parametric[2]  = x[2];
+	gvf_parametric_trajectory.p_parametric[3]  = x[3];
+	gvf_parametric_trajectory.p_parametric[4]  = x[4];
+	gvf_parametric_trajectory.p_parametric[5]  = x[5];
+	gvf_parametric_trajectory.p_parametric[6]  = x[6];
+	gvf_parametric_trajectory.p_parametric[7]  = x[7];
+	gvf_parametric_trajectory.p_parametric[8]  = x[8];
+	gvf_parametric_trajectory.p_parametric[9]  = x[9];
+	gvf_parametric_trajectory.p_parametric[10] = x[10];
+	gvf_parametric_trajectory.p_parametric[11] = x[11];
+	gvf_parametric_trajectory.p_parametric[12] = x[12];
 	
-	gvf_parametric_trajectory.p_parametric[18] = t[0];
-	gvf_parametric_trajectory.p_parametric[19] = t[1];
-	gvf_parametric_trajectory.p_parametric[20] = t[2];
-	gvf_parametric_trajectory.p_parametric[21] = t[3];
-	gvf_parametric_trajectory.p_parametric[22] = t[4];
-	gvf_parametric_trajectory.p_parametric[23] = t[5];
-	gvf_parametric_trajectory.p_parametric[24] = t[6];
-	gvf_parametric_trajectory.p_parametric[25] = t[7];
-	gvf_parametric_trajectory.p_parametric[26] = t[8];
+	gvf_parametric_trajectory.p_parametric[13] = y[0];
+	gvf_parametric_trajectory.p_parametric[14] = y[1];
+	gvf_parametric_trajectory.p_parametric[15] = y[2];
+	gvf_parametric_trajectory.p_parametric[16] = y[3];
+	gvf_parametric_trajectory.p_parametric[17] = y[4];
+	gvf_parametric_trajectory.p_parametric[18] = y[5];
+	gvf_parametric_trajectory.p_parametric[19] = y[6];
+	gvf_parametric_trajectory.p_parametric[20] = y[7];
+	gvf_parametric_trajectory.p_parametric[21] = y[8];
+	gvf_parametric_trajectory.p_parametric[22] = y[9];
+	gvf_parametric_trajectory.p_parametric[23] = y[10];
+	gvf_parametric_trajectory.p_parametric[24] = y[11];
+	gvf_parametric_trajectory.p_parametric[25] = y[12];	
 	
-	gvf_parametric_plen = 27;
+	gvf_parametric_plen = 26;
 	gvf_parametric_plen_wps = 0;
-	*/
+	
 	// restart the spline
 	if(gvf_parametric_control.w >= (float)GVF_PARAMETRIC_2D_BEZIER_N_SEG)
 		gvf_parametric_control.w = 0;

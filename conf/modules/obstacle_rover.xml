@@ -1,0 +1,23 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="obstacle_rover" dir="firmwares/rover/obstacles">
+  <doc>
+    <description> 
+	Obstacle rover grid
+    </description>
+  </doc>
+  
+  <header>
+     <file name="rover_obstacles.h"/>
+  </header>
+   
+  <makefile firmware="fixedwing">
+     <file name="rover_obstacles.c"/>
+  </makefile>
+   
+  <makefile firmware="rover">
+     <file name="rover_obstacles.c" dir="$(SRC_FIRMWARE)/obstacles"/>
+  </makefile>
+  
+</module>
+

@@ -38,13 +38,15 @@ void create_bezier_spline(bezier_t *bezier, float *px, float *py)
 
 void gvf_parametric_2d_bezier_splines_info(bezier_t *bezier, float *f1, float *f2, float *f1d, float *f2d, float *f1dd, float *f2dd)
 {
-	// How can we select in which bezier curve are we? Check w. spline 0 -> 0 <= t <= 1, spline 1 -> 1 <= t <= 2;
+	// How can we select in which bezier curve are we? Check w. spline zero: 0 <= t <= 1, spline ones: 1 <= t <= 2;
 	float t = gvf_parametric_control.w;
 	int n_seg = floorl(t);
-	if(n_seg < 0)
-		n_seg = 0;	// w could be < 0
-	// Evalute the corresponding bezier curve
 	float tt = t - n_seg;
+	if(n_seg < 0){
+		n_seg = 0;	// w could be < 0 in that case go to first point of first segment
+		tt = 0;
+	}
+	// Evalute the corresponding bezier curve
 	float p0x = bezier[n_seg].p0[0]; float p0y = bezier[n_seg].p0[1];
 	float p1x = bezier[n_seg].p1[0]; float p1y = bezier[n_seg].p1[1];
 	float p2x = bezier[n_seg].p2[0]; float p2y = bezier[n_seg].p2[1];
