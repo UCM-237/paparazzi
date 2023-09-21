@@ -19,10 +19,12 @@
     <waypoint name="SPL6" x="31.0" y="-22.6"/>
     <waypoint name="SPL7" x="33.4" y="-14.7"/>
     <waypoint name="SPL8" x="32.3" y="-7.0"/>
+    
     <waypoint name="BZ9" x="27.3" y="-2.0"/>
     <waypoint name="BZ10" x="19.7" y="0.6"/>
     <waypoint name="BZ11" x="12.6" y="1.6"/>
     <waypoint name="BZ12" x="1.8" y="-5.8"/>
+    
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -89,9 +91,11 @@
       <call fun="gvf_parametric_2D_splines_wp(WP_SPL0, WP_SPL1, WP_SPL2,WP_SPL3,WP_SPL4, WP_SPL5, WP_SPL6, WP_SPL7, WP_SPL8, 0, 10, 20, 30, 40, 50, 60, 70, 80)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
+    
     <block name="gvf_bezier">
       <call fun="gvf_parametric_2D_bezier_wp(WP_SPL0, WP_SPL1, WP_SPL2,WP_SPL3,WP_SPL4, WP_SPL5, WP_SPL6, WP_SPL7, WP_SPL8, WP_BZ9, WP_BZ10, WP_BZ11, WP_BZ12)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
+    
   </blocks>
 </flight_plan>

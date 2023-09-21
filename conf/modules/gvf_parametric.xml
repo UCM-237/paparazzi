@@ -58,8 +58,8 @@
           <dl_setting MAX="0.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_splines_par.ky" shortname="2d_spl_ky" param="GVF_PARAMETRIC_2D_SPLINES_KY"/>
         </dl_settings>
         <dl_settings NAME="2D_bezier">
-          <dl_setting MAX="0.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_bezier_par.kx" shortname="2d_bezier_kx" param="GVF_PARAMETRIC_2D_BEZIER_KX"/>
-          <dl_setting MAX="0.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_bezier_par.ky" shortname="2d_bezier_ky" param="GVF_PARAMETRIC_2D_BEZIER_KY"/>
+          <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_bezier_par.kx" shortname="2d_bezier_kx" param="GVF_PARAMETRIC_2D_BEZIER_KX"/>
+          <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_bezier_par.ky" shortname="2d_bezier_ky" param="GVF_PARAMETRIC_2D_BEZIER_KY"/>
         </dl_settings>   
         
       </dl_settings>
