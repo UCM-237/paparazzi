@@ -29,8 +29,7 @@
 * @param omega is the horizontal control signal
 */
 
- typedef struct{
- 	
+ typedef struct{ 	
  	float omega;
  } gvf_common_omega;
  
@@ -41,8 +40,7 @@ extern gvf_common_omega gvf_c_omega;
 * @param kappa is the curve's curvature
 * @param ori_err is the orientation error
 */
-typedef struct{
-	
+typedef struct{	
 	float kappa;
 	float kappa_dot;
 	float ori_err;

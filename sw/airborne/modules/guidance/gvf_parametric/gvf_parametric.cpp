@@ -51,6 +51,7 @@ extern "C" {
 
 // Control
 uint32_t gvf_parametric_t0 = 0; // We need it for calculting the time lapse delta_T
+uint32_t gvf_parametric_splines_ctr = 0; // We need it for Bézier curves splines Telemetry
 gvf_parametric_con gvf_parametric_control;
 
 // Trajectory
@@ -89,6 +90,7 @@ static void send_gvf_parametric(struct transport_tx *trans, struct link_device *
 
   // delta_T < 200 ?? Why, if delta_T > 200 ms do not send telemetry ??? That's why it send nothing.....?
   if (delta_T < 200) {
+  	gvf_parametric_splines_ctr = (gvf_parametric_splines_ctr + 1) % 3;
     pprz_msg_send_GVF_PARAMETRIC(trans, dev, AC_ID, &traj_type, &gvf_parametric_control.s, &wb, gvf_parametric_plen,
                                  gvf_parametric_trajectory.p_parametric, gvf_parametric_elen, gvf_parametric_trajectory.phi_errors);
   }
@@ -515,40 +517,34 @@ bool gvf_parametric_2D_bezier_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t 
 	
 	create_bezier_spline(gvf_bezier_2D, x, y);
 	
-	// For the telemetry. Pass the waypoints
-	gvf_parametric_trajectory.p_parametric[0]  = x[0];
-	gvf_parametric_trajectory.p_parametric[1]  = x[1];
-	gvf_parametric_trajectory.p_parametric[2]  = x[2];
-	gvf_parametric_trajectory.p_parametric[3]  = x[3];
-	gvf_parametric_trajectory.p_parametric[4]  = x[4];
-	gvf_parametric_trajectory.p_parametric[5]  = x[5];
-	gvf_parametric_trajectory.p_parametric[6]  = x[6];
-	gvf_parametric_trajectory.p_parametric[7]  = x[7];
-	gvf_parametric_trajectory.p_parametric[8]  = x[8];
-	gvf_parametric_trajectory.p_parametric[9]  = x[9];
-	gvf_parametric_trajectory.p_parametric[10] = x[10];
-	gvf_parametric_trajectory.p_parametric[11] = x[11];
-	gvf_parametric_trajectory.p_parametric[12] = x[12];
+	/* Send data piecewise. Some radio modules do not allow for a big data frame.*/
 	
-	gvf_parametric_trajectory.p_parametric[13] = y[0];
-	gvf_parametric_trajectory.p_parametric[14] = y[1];
-	gvf_parametric_trajectory.p_parametric[15] = y[2];
-	gvf_parametric_trajectory.p_parametric[16] = y[3];
-	gvf_parametric_trajectory.p_parametric[17] = y[4];
-	gvf_parametric_trajectory.p_parametric[18] = y[5];
-	gvf_parametric_trajectory.p_parametric[19] = y[6];
-	gvf_parametric_trajectory.p_parametric[20] = y[7];
-	gvf_parametric_trajectory.p_parametric[21] = y[8];
-	gvf_parametric_trajectory.p_parametric[22] = y[9];
-	gvf_parametric_trajectory.p_parametric[23] = y[10];
-	gvf_parametric_trajectory.p_parametric[24] = y[11];
-	gvf_parametric_trajectory.p_parametric[25] = y[12];	
-	
-	gvf_parametric_plen = 26;
-	gvf_parametric_plen_wps = 0;
+	// Send x points -> Indicate x with sign (+) in the first parameter
+	if(gvf_parametric_splines_ctr == 0){
+		gvf_parametric_trajectory.p_parametric[0] = -GVF_PARAMETRIC_2D_BEZIER_N_SEG; // send x (negative value)
+		for(int k = 0; k < 3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1; k++)
+			gvf_parametric_trajectory.p_parametric[k+1] = x[k];
+	}
+	// Send y points -> Indicate y with sign (-) in the first parameter
+	else if (gvf_parametric_splines_ctr == 1){
+		gvf_parametric_trajectory.p_parametric[0]  = GVF_PARAMETRIC_2D_BEZIER_N_SEG; // send y (positive value)
+		for(int k = 0; k < 3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1; k++)
+			gvf_parametric_trajectory.p_parametric[k+1] = y[k];
+	}
+	// send kx, ky, beta and anything else needed..
+	else{
+		gvf_parametric_trajectory.p_parametric[0] = 0.0; 
+		gvf_parametric_trajectory.p_parametric[1] = gvf_parametric_2d_bezier_par.kx;
+		gvf_parametric_trajectory.p_parametric[2] = gvf_parametric_2d_bezier_par.ky;
+		gvf_parametric_trajectory.p_parametric[3] = gvf_parametric_control.beta;
+	}
+	gvf_parametric_plen = 16;
+	gvf_parametric_plen_wps = 1;
 	
 	// restart the spline
 	if(gvf_parametric_control.w >= (float)GVF_PARAMETRIC_2D_BEZIER_N_SEG)
+		gvf_parametric_control.w = 0;
+	else if(gvf_parametric_control.w < 0)
 		gvf_parametric_control.w = 0;
 	gvf_parametric_2D_bezier_XY();
 	return true;

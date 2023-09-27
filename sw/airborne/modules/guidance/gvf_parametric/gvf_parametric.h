@@ -46,7 +46,7 @@
 
 /*! Default scale for w  */
 #ifndef GVF_PARAMETRIC_CONTROL_BETA
-#define GVF_PARAMETRIC_CONTROL_BETA 1
+#define GVF_PARAMETRIC_CONTROL_BETA 0.01
 #endif
 
 /*! Default gain kpsi for tuning the alignment of the vehicle with the vector field */
@@ -97,8 +97,8 @@ enum trajectories_parametric {
   TREFOIL_2D = 0,
   ELLIPSE_3D = 1,
   LISSAJOUS_3D = 2,
-  SPLINES_2D = 3,  
-  BEZIER_2D = 4,	
+  SPLINES_2D = 4,  
+  BEZIER_2D = 3,	
   NONE_PARAMETRIC = 255,
 };
 
