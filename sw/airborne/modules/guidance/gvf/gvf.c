@@ -400,17 +400,17 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 	}
 	struct EnuCoor_f *p = stateGetPositionEnu_f();
  	float px = p->x;
-  	float py = p->y;
-  	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
-  	if((dist <= gvf_c_stopwp.distance_stop)){
-  		if(!gvf_c_stopwp.stop_at_wp){
-  			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
-  		}		
-  		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-  			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
-  			gvf_c_stopwp.stay_still = 1;
-  		}
-  	}
+	float py = p->y;
+	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
+	if((dist <= gvf_c_stopwp.distance_stop)){
+		if(!gvf_c_stopwp.stop_at_wp){
+			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+			}		
+		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+			gvf_c_stopwp.stay_still = 1;
+			}
+		}
   	float x1 = gvf_lines_array[gvf_control.which_line].p1x;
    	float y1 = gvf_lines_array[gvf_control.which_line].p1y;
    	float x2 = gvf_lines_array[gvf_control.which_line].p2x;

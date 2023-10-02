@@ -1,30 +1,28 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.4506" lon0="-3.72605" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.4509280" lon0="-3.7272100" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
     <waypoint name="HOME" x="0.3" y="-0.7"/>
-    <waypoint name="STDBY" x="-7.7" y="-4.6"/>
-    <waypoint name="ELLIPSE" x="-7.7" y="-10.5"/>
-    <waypoint name="P1" x="-6.9" y="-7.4"/>
-    <waypoint name="P2" x="-4.9" y="-8.4"/>
-    <waypoint name="SPL0" x="1.7" y="-6.0"/>
-    <waypoint name="SPL1" x="-1.4" y="-14.7"/>
-    <waypoint name="SPL2" x="0.8" y="-19.3"/>
-    <waypoint name="SPL3" x="6.3" y="-26.2"/>
-    <waypoint name="SPL4" x="16.9" y="-30.7"/>
-    <waypoint name="SPL5" x="25.6" y="-30.0"/>
-    <waypoint name="SPL6" x="31.0" y="-22.6"/>
-    <waypoint name="SPL7" x="33.4" y="-14.7"/>
-    <waypoint name="SPL8" x="32.3" y="-7.0"/>
-    
-    <waypoint name="BZ9" x="27.3" y="-2.0"/>
-    <waypoint name="BZ10" x="19.7" y="0.6"/>
-    <waypoint name="BZ11" x="12.6" y="1.6"/>
-    <waypoint name="BZ12" x="1.8" y="-5.8"/>
-    
+    <waypoint name="STDBY" x="-1.2" y="14.4"/>
+    <waypoint name="ELLIPSE" x="-2.7" y="10.6"/>
+    <waypoint name="P1" x="-4.4" y="12.8"/>
+    <waypoint name="P2" x="1.6" y="13.1"/>
+    <waypoint name="BZ0" x="1.7" y="-16.4"/>
+    <waypoint name="BZ1" x="3.9" y="-9.8"/>
+    <waypoint name="BZ2" x="5.2" y="-6.6"/>
+    <waypoint name="BZ3" x="5.6" y="-0.7"/>
+    <waypoint name="BZ4" x="5.1" y="2.0"/>
+    <waypoint name="BZ5" x="3.2" y="3.7"/>
+    <waypoint name="BZ6" x="0.5" y="5.8"/>
+    <waypoint name="BZ7" x="-3.3" y="5.3"/>
+    <waypoint name="BZ8" x="-5.5" y="0.4"/>
+    <waypoint name="BZ9" x="-2.3" y="-6.0"/>
+    <waypoint name="BZ10" x="-2.1" y="-10.0"/>
+    <waypoint name="BZ11" x="-0.9" y="-13.4"/>
+    <waypoint name="BZ12" x="3.9" y="-14.4"/>
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -87,15 +85,9 @@
       <call fun="gvf_sin_wp1_wp2(WP_P1, WP_P2, gvf_sin_par.w, gvf_sin_par.off, gvf_sin_par.A)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
-    <block name="gvf_splines">
-      <call fun="gvf_parametric_2D_splines_wp(WP_SPL0, WP_SPL1, WP_SPL2,WP_SPL3,WP_SPL4, WP_SPL5, WP_SPL6, WP_SPL7, WP_SPL8, 0, 10, 20, 30, 40, 50, 60, 70, 80)"/>
-      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-    </block>
-    
     <block name="gvf_bezier">
-      <call fun="gvf_parametric_2D_bezier_wp(WP_SPL0, WP_SPL1, WP_SPL2,WP_SPL3,WP_SPL4, WP_SPL5, WP_SPL6, WP_SPL7, WP_SPL8, WP_BZ9, WP_BZ10, WP_BZ11, WP_BZ12)"/>
+      <call fun="gvf_parametric_2D_bezier_wp(WP_BZ0, WP_BZ1, WP_BZ2,WP_BZ3,WP_BZ4, WP_BZ5, WP_BZ6, WP_BZ7, WP_BZ8, WP_BZ9, WP_BZ10, WP_BZ11, WP_BZ12)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
-    
   </blocks>
 </flight_plan>

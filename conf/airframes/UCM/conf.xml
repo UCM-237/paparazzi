@@ -30,7 +30,7 @@
    flight_plan="flight_plans/UCM/steering_rover_gvfMission_parametric.xml"
    settings=""
    settings_modules="modules/ahrs_float_dcm.xml modules/gps.xml modules/gps_ublox.xml modules/gps_ubx_ucenter.xml modules/guidance_rover_steering.xml~SR Guidance~ modules/gvf_module.xml~GVF~ modules/gvf_parametric.xml~GVF_PARAMETRIC~ modules/imu_common.xml modules/lidar_tfmini.xml modules/nav_rover_base.xml"
-   gui_color="#cc0000000000"
+   gui_color="#1c007100d800"
   />
   <aircraft
    name="Rover_Avelino"
