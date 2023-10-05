@@ -202,10 +202,10 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
   //float w_dot = (ground_speed * X(2)) / sqrtf(X(0) * X(0) + X(1) * X(1));
 
   // Use moving avg for w_dot
-  speed_avg = speed_avg - mvg_avg[ptr_avg]/MOV_AVG_M;
+  speed_avg = speed_avg - mvg_avg[ptr_avg]/MOV_AVG_GVF_M;
   mvg_avg[ptr_avg] = stateGetHorizontalSpeedNorm_f();
-  speed_avg = speed_avg + mvg_avg[ptr_avg]/MOV_AVG_M;
-  ptr_avg = (ptr_avg + 1) % MOV_AVG_M;
+  speed_avg = speed_avg + mvg_avg[ptr_avg]/MOV_AVG_GVF_M;
+  ptr_avg = (ptr_avg + 1) % MOV_AVG_GVF_M;
  
   float w_dot = (speed_avg * X(2)) / sqrtf(X(0) * X(0) + X(1) * X(1));
 
