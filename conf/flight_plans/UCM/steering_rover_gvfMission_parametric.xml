@@ -1,15 +1,16 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.4509280" lon0="-3.7272100" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.4506486" lon0="-3.7271496" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
-    <waypoint name="HOME" x="0.3" y="-0.7"/>
-    <waypoint name="STDBY" x="-1.2" y="14.4"/>
-    <waypoint name="ELLIPSE" x="-2.7" y="10.6"/>
-    <waypoint name="P1" x="-4.4" y="12.8"/>
-    <waypoint name="P2" x="1.6" y="13.1"/>
+
+    <waypoint name="HOME" x="0.0" y="0.0"/>
+    <waypoint name="STDBY" x="-1.2" y="-14.4"/>
+    <waypoint name="ELLIPSE" x="-2.7" y="-10.6"/>
+    <waypoint name="P1" x="-4.4" y="-12.8"/>
+    <waypoint name="P2" x="1.6" y="-13.1"/>
     
     <!-- Relative
     <waypoint name="BZ0" x="1.7" y="-16.4"/>
@@ -28,6 +29,7 @@
     -->
     
     <!-- Absolute -->
+    
     <waypoint name="BZ0" lon="-3.7271761" lat="40.4507189"/>
     <waypoint name="BZ1" lon="-3.7272071" lat="40.4508400"/>
     <waypoint name="BZ2" lon="-3.7271479" lat="40.4508690"/>
@@ -46,10 +48,10 @@
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
     <waypoint name="_S4" x="-3" y="4"/>
-    <waypoint name="_N1" x="40" y="40"/>
-    <waypoint name="_N2" x="40" y="-40"/>
-    <waypoint name="_N3" x="-40" y="-40"/>
-    <waypoint name="_N4" x="-40" y="40"/>
+    <waypoint name="_N1" x="60" y="60"/>
+    <waypoint name="_N2" x="60" y="-60"/>
+    <waypoint name="_N3" x="-60" y="-60"/>
+    <waypoint name="_N4" x="-60" y="60"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">

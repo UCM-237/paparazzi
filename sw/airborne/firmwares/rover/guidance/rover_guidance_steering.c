@@ -114,7 +114,7 @@ void rover_guidance_steering_init(void)
 	guidance_control.speed_error = 0.0;
 	guidance_control.kf = SR_MEASURED_KF;
 	guidance_control.kp = 500;
-	guidance_control.ki = 100;
+	guidance_control.ki = 400;
 	guidance_control.cmd_nonlinear.k = 9600;
 	guidance_control.cmd.z_kappa = 0.0;
 	guidance_control.cmd.z_ori = 0.0;
