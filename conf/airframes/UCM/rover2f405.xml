@@ -62,6 +62,7 @@
     </module>
 	    
     <module name="gvf" type="module"/>
+    <module name="gvf_parametric_bare"/>
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
