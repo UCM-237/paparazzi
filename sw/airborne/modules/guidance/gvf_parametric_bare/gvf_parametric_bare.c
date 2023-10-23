@@ -209,7 +209,9 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   gvf_c_omega.omega   = heading_rate; 
   gvf_c_info.kappa    = (f1d*f2dd - f1dd*f2d)/powf(f1d*f1d + f2d*f2d, 1.5);
   gvf_c_info.ori_err  = 1 - (Xpn[0]*cosf(course) + Xpn[1]*sinf(course));
-	gvf_parametric_bare_control.w += w_dot * gvf_parametric_bare_control.delta_T * 1e-5;
+  
+  // Adjust integration time constant
+	gvf_parametric_bare_control.w += w_dot * gvf_parametric_bare_control.delta_T * 1e-3;
 }
 
 
