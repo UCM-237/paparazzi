@@ -81,7 +81,7 @@
       <define name="SR_MEASURED_KF"       value="1400.0"/>
       <define name="MIN_CMD_SHUT"         value="3800"/>
       <define name="MAX_CMD_SHUT"         value="1350"/>
-      <define name="MOV_AVG_M"            value="20"/>
+      <define name="MOV_AVG_M"            value="100"/>
       <!--define name="USE_GRID"             value="1"/-->
     </module>
 
