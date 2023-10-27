@@ -23,11 +23,11 @@
 #include "modules/guidance/gvf_parametric_bare/trajectories/gvf_parametric_bare_2d_bezier_splines.h"
 
 #ifndef GVF_PARAMETRIC_BARE_2D_BEZIER_SPLINES_KX
-#define GVF_PARAMETRIC_BARE_2D_BEZIER_SPLINES_KX 2.0
+#define GVF_PARAMETRIC_BARE_2D_BEZIER_SPLINES_KX 0.5
 #endif 
 
 #ifndef GVF_PARAMETRIC_BARE_2D_BEZIER_SPLINES_KY
-#define GVF_PARAMETRIC_BARE_2D_BEZIER_SPLINES_KY 2.0
+#define GVF_PARAMETRIC_BARE_2D_BEZIER_SPLINES_KY 0.5
 #endif 
 
 gvf_bare_par_2d_bezier_par gvf_parametric_bare_2d_bezier_par = {GVF_PARAMETRIC_BARE_2D_BEZIER_SPLINES_KX, 
