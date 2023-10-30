@@ -110,5 +110,9 @@
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
+    <block name="gvf_quintic_bezier_bare">
+      <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
   </blocks>
 </flight_plan>

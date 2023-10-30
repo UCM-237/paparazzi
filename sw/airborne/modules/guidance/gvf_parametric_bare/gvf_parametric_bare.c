@@ -218,14 +218,14 @@ bool gvf_parametric_bare_2D_bezier_XY(void)
 {
 	gvf_parametric_bare_trajectory.type = BEZIER_2D_BARE;
 	float fx, fy, fxd, fyd, fxdd, fydd;
-	gvf_parametric_bare_2d_bezier_splines_info(gvf_bezier_2D_bare, &fx, &fy, &fxd, &fyd, &fxdd, &fydd);
+	gvf_parametric_bare_2d_bezier_splines_info(gvf_bezier_2D_bare, 3, &fx, &fy, &fxd, &fyd, &fxdd, &fydd);
 	gvf_parametric_bare_control_2D(gvf_parametric_bare_2d_bezier_par.kx, gvf_parametric_bare_2d_bezier_par.ky, fx, fy, fxd, fyd, fxdd, fydd);
 	return true;
 }
 
-// TODO: Improve scalability (pass an array of wp) ??
 bool gvf_parametric_bare_2D_bezier_wp(uint8_t wp0)
 {
+
 	float x[3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
 	float y[3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
 	for(int k = 0; k < 3 * GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1; k++){
@@ -233,7 +233,7 @@ bool gvf_parametric_bare_2D_bezier_wp(uint8_t wp0)
 	  y[k] = WaypointY(wp0+k);
 	}
 	
-	bare_create_bezier_spline(gvf_bezier_2D_bare, x, y);
+	bare_create_bezier_spline(gvf_bezier_2D_bare, 3, x, y);
 	
 	/* Send data piecewise. Some radio modules do not allow for a big data frame.*/
 	
@@ -265,6 +265,64 @@ bool gvf_parametric_bare_2D_bezier_wp(uint8_t wp0)
 	else if(gvf_parametric_bare_control.w < 0)
 		gvf_parametric_bare_control.w = 0;
 	gvf_parametric_bare_2D_bezier_XY();
+	return true;
+}
+
+
+// 2D QUINTIC BEZIER CURVE
+bool gvf_parametric_bare_2D_quintic_bezier_XY(void)
+{
+	gvf_parametric_bare_trajectory.type = QUINTIC_BEZIER_2D_BARE;
+	float fx, fy, fxd, fyd, fxdd, fydd;
+	gvf_parametric_bare_2d_bezier_splines_info(gvf_bezier_2D_bare, 5, &fx, &fy, &fxd, &fyd, &fxdd, &fydd);
+	gvf_parametric_bare_control_2D(gvf_parametric_bare_2d_bezier_par.kx, gvf_parametric_bare_2d_bezier_par.ky, fx, fy, fxd, fyd, fxdd, fydd);
+	return true;
+}
+
+bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t wp0)
+{
+
+	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
+	  x[k] = WaypointX(wp0+k);
+	  y[k] = WaypointY(wp0+k);
+	}
+	
+	// Now x and y do not have the complete Quintic spline!!
+	bare_create_bezier_spline(gvf_bezier_2D_bare, 5, x, y);
+	
+	/* Send data piecewise. Some radio modules do not allow for a big data frame.*/
+	// MAX 4 SEGMENTS...
+	
+	// Send x points -> Indicate x with sign (+) in the first parameter
+	if(gvf_parametric_bare_splines_ctr == 0){
+		gvf_parametric_bare_trajectory.p_parametric[0] = -GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; // send x (negative value)
+		for(int k = 0; k < 3 *(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++)
+			gvf_parametric_bare_trajectory.p_parametric[k+1] = x[k];
+	}
+	// Send y points -> Indicate y with sign (-) in the first parameter
+	else if (gvf_parametric_bare_splines_ctr == 1){
+		gvf_parametric_bare_trajectory.p_parametric[0]  = GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; // send y (positive value)
+		for(int k = 0; k < 3* (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++)
+			gvf_parametric_bare_trajectory.p_parametric[k+1] = y[k];
+	}
+	// send kx, ky, beta and anything else needed..
+	else{
+		gvf_parametric_bare_trajectory.p_parametric[0] = 0.0; 
+		gvf_parametric_bare_trajectory.p_parametric[1] = gvf_parametric_bare_2d_bezier_par.kx;
+		gvf_parametric_bare_trajectory.p_parametric[2] = gvf_parametric_bare_2d_bezier_par.ky;
+		gvf_parametric_bare_trajectory.p_parametric[3] = gvf_parametric_bare_control.beta;
+	}
+	gvf_parametric_bare_plen = 16;
+	gvf_parametric_bare_plen_wps = 1;
+	
+	// restart the spline
+	if(gvf_parametric_bare_control.w >= (float)GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG)
+		gvf_parametric_bare_control.w = 0;
+	else if(gvf_parametric_bare_control.w < 0)
+		gvf_parametric_bare_control.w = 0;
+	gvf_parametric_bare_2D_quintic_bezier_XY();
 	return true;
 }
 
