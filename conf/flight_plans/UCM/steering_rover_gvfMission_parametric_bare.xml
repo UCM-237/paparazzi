@@ -30,18 +30,18 @@
     
     <!-- Absolute -->
     
-    <waypoint name="BZ0" lon="-3.7271761" lat="40.4507189"/>
-    <waypoint name="BZ1" lon="-3.7272071" lat="40.4508400"/>
-    <waypoint name="BZ2" lon="-3.7271479" lat="40.4508690"/>
-    <waypoint name="BZ3" lon="-3.7271431" lat="40.4508960"/>
-    <waypoint name="BZ4" lon="-3.7271311" lat="40.4509240"/>
-    <waypoint name="BZ5" lon="-3.7271540" lat="40.4509530"/>
-    <waypoint name="BZ6" lon="-3.7272071" lat="40.4509469"/>
-    <waypoint name="BZ7" lon="-3.7272559" lat="40.4509440"/>
-    <waypoint name="BZ8" lon="-3.7272680" lat="40.4508960"/>
-    <waypoint name="BZ9" lon="-3.7272364" lat="40.4508738"/>
-    <waypoint name="BZ10" lon="-3.7271761" lat="40.4508559"/>
-    <waypoint name="BZ11" lon="-3.7271590" lat="40.4507678"/>
+    <waypoint name="BZ0" lon="-3.7271760" lat="40.4507330"/>
+    <waypoint name="BZ1" lon="-3.7271789" lat="40.4508069"/>
+    <waypoint name="BZ2" lon="-3.7271789" lat="40.4508339"/>
+    <waypoint name="BZ3" lon="-3.7271430" lat="40.4508959"/>
+    <waypoint name="BZ4" lon="-3.7271330" lat="40.4509399"/>
+    <waypoint name="BZ5" lon="-3.7271581" lat="40.4509659"/>
+    <waypoint name="BZ6" lon="-3.7272660" lat="40.4509759"/>
+    <waypoint name="BZ7" lon="-3.7272750" lat="40.4509199"/>
+    <waypoint name="BZ8" lon="-3.7272429" lat="40.4508769"/>
+    <waypoint name="BZ9" lon="-3.7272080" lat="40.4508490"/>
+    <waypoint name="BZ10" lon="-3.7271630" lat="40.4507759"/>
+    <waypoint name="BZ11" lon="-3.7271539" lat="40.4507369"/>
     <waypoint name="BZ12" lon="-3.7271550" lat="40.4507289"/>
     
     <waypoint name="_S1" x="3" y="4"/>
