@@ -122,6 +122,7 @@ typedef struct {
   float kf;
   float kp;
   float ki;
+  float kd;
 } rover_ctrl;
 
 // Obstacle avoidance structure

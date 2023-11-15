@@ -65,6 +65,9 @@
     <module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module>
+    <module name="gvf_parametric_bare">
+      <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
+    </module>
     
     <module name="guidance" type="rover_steering">
       <define name="MAX_DELTA"            value="15.0"/>
@@ -72,7 +75,7 @@
       <define name="SR_MEASURED_KF"       value="1400.0"/>
       <define name="MIN_CMD_SHUT"         value="3800"/>
       <define name="MAX_CMD_SHUT"         value="1350"/>
-      <define name="MOV_AVG_M"            value="100"/>
+      <define name="MOV_AVG_M"            value="200"/>
     </module>
 
   </firmware>

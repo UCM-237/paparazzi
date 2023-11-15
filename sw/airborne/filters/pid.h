@@ -69,13 +69,13 @@ static inline float update_pid_f(struct PID_f *pid, float value, float dt)
 {
   pid->e[1] = pid->e[0];
   pid->e[0] = value;
-  float integral = pid->g[2] * (pid->sum + value * dt) ; // dt added
+  float integral = pid->g[2] * (pid->sum + value) * dt ; // dt added
   if (integral > pid->max_sum) {
     integral = pid->max_sum;
   } else if (integral < -pid->max_sum) {
     integral = -pid->max_sum;
   } else {
-    pid->sum += value * dt;
+    pid->sum += value;
   }
   pid->u = pid->g[0] * pid->e[0] + pid->g[1] * (pid->e[0] - pid->e[1]) / dt + integral;
   return pid->u;
@@ -90,7 +90,7 @@ static inline float update_pid_f(struct PID_f *pid, float value, float dt)
 static inline float get_i_action(struct PID_f *pid, float error, float dt)
 {
 	float integral; 
-	integral = pid->g[2] * (pid->sum + error * dt);
+	integral = pid->g[2] * (pid->sum + error) * dt;
 	return ( (integral > pid->max_sum) ? pid->max_sum : ((integral < -pid->max_sum) ? -pid->max_sum : integral));
 }
 
@@ -99,6 +99,10 @@ static inline float get_p_action(struct PID_f *pid, float error)
 	return pid->g[0] * error;
 }
 
+static inline float get_d_action(struct PID_f *pid, float error, float dt)
+{
+	return (pid->g[1] * (pid->e[0] - pid->e[1]) / dt);
+}
 /** Get current value of the PID command.
  *
  * @param pid pointer to PID structure

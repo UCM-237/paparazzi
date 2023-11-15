@@ -26,7 +26,7 @@
     <module name="actuators" type="pwm"/>
 
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART4"/>
+    	<configure name="GPS_PORT"  value="UART3"/>
     </module>
     <module name="gps_ubx_ucenter"/>
     
@@ -83,7 +83,7 @@
       <define name="SR_MEASURED_KF"       value="1400.0"/>
       <define name="MIN_CMD_SHUT"         value="3800"/>
       <define name="MAX_CMD_SHUT"         value="1350"/>
-      <define name="MOV_AVG_M"            value="100"/>
+      <define name="MOV_AVG_M"            value="200"/>
       <!--define name="USE_GRID"             value="1"/-->
     </module>
 

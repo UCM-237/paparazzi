@@ -28,8 +28,9 @@
           
           <dl_setting MAX="9600.0" MIN="1.0" STEP="1" VAR="guidance_control.cmd_nonlinear.k" shortname="k_nonlinear"/>
           <dl_setting MAX="2000.0" MIN="0.0" STEP="1" VAR="guidance_control.kf" shortname="kf"/>
-          <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.kp" shortname="kp"/>
+          <dl_setting MAX="4000.0" MIN="0.0" STEP="1" VAR="guidance_control.kp" shortname="kp"/>
           <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.ki" shortname="ki"/>
+          <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.kd" shortname="kd"/>
           
           <dl_setting MAX="100.0" MIN="0.0" STEP="1" VAR="guidance_control.cmd.z_kappa" shortname="z kappa"/>
           <dl_setting MAX="100.0" MIN="0.0" STEP="1" VAR="guidance_control.cmd.z_ori"   shortname="z orierr"/>

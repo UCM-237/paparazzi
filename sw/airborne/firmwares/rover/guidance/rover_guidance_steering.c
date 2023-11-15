@@ -73,9 +73,10 @@ static float time_step;
 static float last_speed_cmd;
 static uint8_t last_ap_mode;
 
-// Integral and prop actions (telemetry)
+// Integral, prop and derivative actions (telemetry)
 static float i_action;
 static float p_action;
+static float d_action;
 
 // Here the time
 static uint32_t rover_time = 0;
@@ -89,9 +90,14 @@ static void send_rover_ctrl(struct transport_tx *trans, struct link_device *dev)
                     	    &guidance_control.speed_error,
                     	    &guidance_control.throttle,
                     	    &guidance_control.cmd.delta,
+                    	    &guidance_control.kp,
+                    	    &guidance_control.ki,
+                    	    &guidance_control.kd,
                     	    &i_action,				// Integral action
                     	    &p_action,                        // Prop action 
-                    	    &speed_avg);                      // Avg speed measured 
+                    	    &d_action,
+                    	    &speed_avg,				// Avg speed measured
+                    	    &gvf_c_info.kappa);      // Curvature
 }
 #endif
 
@@ -113,13 +119,14 @@ void rover_guidance_steering_init(void)
 
 	guidance_control.speed_error = 0.0;
 	guidance_control.kf = SR_MEASURED_KF;
-	guidance_control.kp = 500;
-	guidance_control.ki = 400;
+	guidance_control.kp = 1400;
+	guidance_control.ki = 600;
+	guidance_control.kd = 1000;
 	guidance_control.cmd_nonlinear.k = 9600;
 	guidance_control.cmd.z_kappa = 0.0;
 	guidance_control.cmd.z_ori = 0.0;
 
-	init_pid_f(&rover_pid, guidance_control.kp, 0.f, guidance_control.ki, MAX_PPRZ*0.4);
+	init_pid_f(&rover_pid, guidance_control.kp, guidance_control.kd, guidance_control.ki, MAX_PPRZ*0.2);
 
 	// Mov avg init Speed and distance
 	float speed = stateGetHorizontalSpeedNorm_f();
@@ -233,8 +240,8 @@ void rover_guidance_steering_obtain_setpoint(float *dv_sp)
 void rover_guidance_steering_speed_ctrl_pid(void)
 {
 	// - Looking for setting update
-	if (guidance_control.kp != rover_pid.g[0] || guidance_control.ki != rover_pid.g[2]) {
-		set_gains_pid_f(&rover_pid, guidance_control.kp, 0.f, guidance_control.ki);
+	if (guidance_control.kp != rover_pid.g[0] || guidance_control.ki != rover_pid.g[2] || guidance_control.kd != rover_pid.g[1]) {
+		set_gains_pid_f(&rover_pid, guidance_control.kp, guidance_control.kd, guidance_control.ki);
 	}
 	if (guidance_control.cmd.speed != last_speed_cmd) {
 		last_speed_cmd = guidance_control.cmd.speed;
@@ -247,9 +254,10 @@ void rover_guidance_steering_speed_ctrl_pid(void)
 
 	guidance_control.throttle = BoundThrottle(guidance_control.cmd.speed*guidance_control.kf + get_pid_f(&rover_pid));
 	
-	// Telemetry
+	// Telemetry TODO: unify in one function
 	i_action = get_i_action(&rover_pid, guidance_control.speed_error, time_step);
 	p_action = get_p_action(&rover_pid, guidance_control.speed_error);
+	d_action = get_d_action(&rover_pid, guidance_control.speed_error, time_step);
 }
 
 // Non linear controller 
