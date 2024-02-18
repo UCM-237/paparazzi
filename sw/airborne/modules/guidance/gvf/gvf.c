@@ -490,6 +490,9 @@ bool gvf_romboid_XY(float x, float y, float r)
   gvf_romboid_info(&e, &grad_romboid, &Hess_romboid);
   gvf_control.ke = gvf_romboid_par.ke;
   gvf_control_2D(gvf_romboid_par.ke, gvf_romboid_par.kn, e, &grad_romboid, &Hess_romboid);
+  
+  gvf_control.error = e;
+  return true;
 }
 
 bool gvf_romboid_wp(uint8_t wp, float r)

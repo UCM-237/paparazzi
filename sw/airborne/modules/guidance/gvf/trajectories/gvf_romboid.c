@@ -33,17 +33,17 @@
 
 /*! Default gain ke for the romboid trajectory */
 #ifndef GVF_romboid_KE
-#define GVF_romboid_KE 0.3
+#define GVF_romboid_KE 0.7
 #endif
 
 /*! Default gain kn for the romboid trajectory */
 #ifndef GVF_romboid_KN
-#define GVF_romboid_KN 1
+#define GVF_romboid_KN 2
 #endif
 
 /*! Default first axis for the romboid trajectory */
 #ifndef GVF_romboid_R
-#define GVF_romboid_R 5
+#define GVF_romboid_R 6
 #endif
 
 gvf_romb_par gvf_romboid_par = {GVF_romboid_KE, GVF_romboid_KN,
