@@ -85,6 +85,9 @@
       <call fun="gvf_sin_wp1_wp2(WP_P1, WP_P2, gvf_sin_par.w, gvf_sin_par.off, gvf_sin_par.A)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
+    <block name="gvf_rhomboid" strip_icon="oval.png">
+      <call fun="gvf_romboid_wp(WP_ELLIPSE, gvf_romboid_par.r)"/>
+    </block>
     <block name="gvf_bezier_bare">
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>

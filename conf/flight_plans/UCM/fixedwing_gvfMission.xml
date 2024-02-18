@@ -8,6 +8,7 @@
     <waypoint alt="700.0" name="HOME"    x="0.0" y="0.0"/>
     <waypoint alt="700.0" name="STDBY"   x="0" y="-4"/>
     <waypoint alt="700.0" name="ELLIPSE" x="-30" y="-30"/>
+    <waypoint alt="700.0" name="RHOMBOID" x="-40" y="-40"/>
     <waypoint alt="700.0" name="CLIMB"   x="-30" y="-40"/>
     <waypoint alt="700.0" name="P1"      x="-20" y="-40"/>
     <waypoint alt="700.0" name="P2"      x="20" y="-40"/>
@@ -42,6 +43,7 @@
   <variables>
     <variable var="a_stb" init="60.0" min="1.0" max="150.0" step="1.0"/>
     <variable var="b_stb" init="60.0" min="1.0" max="150.0" step="1.0"/>
+    <variable var="r_stb" init="400.0" min="200.0" max="700.0" step="10.0"/>
   </variables>
   
   <modules>
@@ -76,7 +78,7 @@
     </block>
 
     <block key="s" name="Standby" strip_button="Standby" strip_icon="home.png" group="home">
-      <call fun="gvf_ellipse_wp(WP_ELLIPSE, a_stb, b_stb, gvf_ellipse_par.alpha)"/>
+      <call fun="gvf_romboid_wp(WP_RHOMBOID, gvf_romboid_par.r)"/>
     </block>
     
     <block name="line_to_HOME" strip_icon="home_drop.png"> 
@@ -86,7 +88,11 @@
     <block name="ellipse_wp" strip_icon="oval.png">
       <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
     </block>
-
+    
+    <block name="gvf_rhomboid" strip_icon="oval.png">
+      <call fun="gvf_romboid_wp(WP_RHOMBOID, gvf_romboid_par.r)"/>
+    </block>
+    
     <block name="gvf_ellipse_XY" strip_icon="oval.png">
       <call fun="gvf_ellipse_XY(10.1, 10.1, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
     </block>

@@ -27,6 +27,7 @@
 #include "modules/guidance/gvf/gvf_low_level_control.h"
 #include "modules/guidance/gvf/trajectories/gvf_ellipse.h"
 #include "modules/guidance/gvf/trajectories/gvf_line.h"
+#include "modules/guidance/gvf/trajectories/gvf_romboid.h"
 #include "modules/guidance/gvf/trajectories/gvf_sin.h"
 #include "autopilot.h"
 #include "../gvf_common.h"
@@ -469,6 +470,33 @@ bool gvf_ellipse_wp(uint8_t wp, float a, float b, float alpha)
   gvf_plen_wps = 1;
 
   gvf_ellipse_XY(WaypointX(wp),  WaypointY(wp), a, b, alpha);
+  return true;
+}
+
+// ROMBOID
+
+bool gvf_romboid_XY(float x, float y, float r)
+{
+  float e;
+  struct gvf_grad grad_romboid;
+  struct gvf_Hess Hess_romboid;
+  gvf_trajectory.type = ROMBOID;
+  gvf_trajectory.p[0] = x;
+  gvf_trajectory.p[1] = y;
+  gvf_trajectory.p[2] = r;
+  gvf_plen = 3 + gvf_plen_wps;
+  gvf_plen_wps = 0;
+  
+  gvf_romboid_info(&e, &grad_romboid, &Hess_romboid);
+  gvf_control.ke = gvf_romboid_par.ke;
+  gvf_control_2D(gvf_romboid_par.ke, gvf_romboid_par.kn, e, &grad_romboid, &Hess_romboid);
+}
+
+bool gvf_romboid_wp(uint8_t wp, float r)
+{
+  gvf_trajectory.p[3] = wp;
+  gvf_plen_wps = 1;
+  gvf_romboid_XY(WaypointX(wp), WaypointY(wp), r);
   return true;
 }
 
