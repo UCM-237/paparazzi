@@ -28,6 +28,7 @@
 #include "modules/guidance/gvf/trajectories/gvf_ellipse.h"
 #include "modules/guidance/gvf/trajectories/gvf_line.h"
 #include "modules/guidance/gvf/trajectories/gvf_romboid.h"
+#include "modules/guidance/gvf/trajectories/gvf_square.h"
 #include "modules/guidance/gvf/trajectories/gvf_sin.h"
 #include "autopilot.h"
 #include "../gvf_common.h"
@@ -379,6 +380,7 @@ bool gvf_line_wp_heading(uint8_t wp, float heading)
 
   return gvf_line_XY_heading(a, b, heading);
 }
+
 // Array of Lines
 bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2)
 {
@@ -500,6 +502,35 @@ bool gvf_romboid_wp(uint8_t wp, float r)
   gvf_trajectory.p[3] = wp;
   gvf_plen_wps = 1;
   gvf_romboid_XY(WaypointX(wp), WaypointY(wp), r);
+  return true;
+}
+
+// Square
+bool gvf_square_XY(float x, float y, float r)
+{
+  float e;
+  struct gvf_grad grad_square;
+  struct gvf_Hess Hess_square;
+  gvf_trajectory.type = SQUARE;
+  gvf_trajectory.p[0] = x;
+  gvf_trajectory.p[1] = y;
+  gvf_trajectory.p[2] = r;
+  gvf_plen = 3 + gvf_plen_wps;
+  gvf_plen_wps = 0;
+  
+  gvf_square_info(&e, &grad_square, &Hess_square);
+  gvf_control.ke = gvf_square_par.ke;
+  gvf_control_2D(gvf_square_par.ke, gvf_square_par.kn, e, &grad_square, &Hess_square);
+  
+  gvf_control.error = e;
+  return true;
+}
+
+bool gvf_square_wp(uint8_t wp, float r)
+{
+  gvf_trajectory.p[3] = wp;
+  gvf_plen_wps = 1;
+  gvf_square_XY(WaypointX(wp), WaypointY(wp), r);
   return true;
 }
 

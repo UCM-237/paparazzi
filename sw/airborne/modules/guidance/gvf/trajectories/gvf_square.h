@@ -20,33 +20,33 @@
  *
  */
 
-/** @file gvf_romboid.h
+/** @file gvf_square.h
  *
  *  Guidance algorithm based on vector fields
- *  2D romboid trajectory
+ *  2D square trajectory
  */
 
-#ifndef GVF_ROMBOID_H
-#define GVF_ROMBOID_H
+#ifndef GVF_SQUARE_H
+#define GVF_SQUARE_H
 
 #include "modules/guidance/gvf/gvf.h"
 
-/** @typedef gvf_romb_par
+/** @typedef gvf_squr_par
 * @brief Parameters for the GVF rhomboid trajectory
 * @param ke Gain defining how agressive is the vector field
 * @param kn Gain for making converge the vehicle to the vector field
-* @param a First axis of the romboid in meters
-* @param b Second axis of the romboid in meters
-* @param alpha Orientation of the romboid in rads
+* @param a First axis of the square in meters
+* @param b Second axis of the square in meters
+* @param alpha Orientation of the square in rads
 */
 typedef struct {
   float ke;
   float kn;
   float r;
-} gvf_romb_par;
+} gvf_squr_par;
 
-extern gvf_romb_par gvf_romboid_par;
+extern gvf_squr_par gvf_square_par;
 
-extern void gvf_romboid_info(float *phi, struct gvf_grad *, struct gvf_Hess *);
+extern void gvf_square_info(float *phi, struct gvf_grad *, struct gvf_Hess *);
 
-#endif // GVF_romboid_H
+#endif // GVF_square_H

@@ -20,36 +20,36 @@
  *
  */
 
-/** \file gvf_romboid.c
+/** \file gvf_square.c
  *
  *  Guidance algorithm based on vector fields
- *  2D romboid trajectory
+ *  2D square trajectory
  */
 
 
 #include "modules/nav/common_nav.h"
-#include "gvf_romboid.h"
+#include "gvf_square.h"
 #include "generated/airframe.h"
 
-/*! Default gain ke for the romboid trajectory */
-#ifndef GVF_romboid_KE
-#define GVF_romboid_KE 0.7
+/*! Default gain ke for the square trajectory */
+#ifndef GVF_square_KE
+#define GVF_square_KE 0.7
 #endif
 
-/*! Default gain kn for the romboid trajectory */
-#ifndef GVF_romboid_KN
-#define GVF_romboid_KN 2
+/*! Default gain kn for the square trajectory */
+#ifndef GVF_square_KN
+#define GVF_square_KN 2
 #endif
 
-/*! Default first axis for the romboid trajectory */
-#ifndef GVF_romboid_R
-#define GVF_romboid_R 6
+/*! Default first axis for the square trajectory */
+#ifndef GVF_square_R
+#define GVF_square_R 6
 #endif
 
-gvf_romb_par gvf_romboid_par = {GVF_romboid_KE, GVF_romboid_KN,
-                               GVF_romboid_R};
+gvf_squr_par gvf_square_par = {GVF_square_KE, GVF_square_KN,
+                               GVF_square_R};
 
-void gvf_romboid_info(float *phi, struct gvf_grad *grad,
+void gvf_square_info(float *phi, struct gvf_grad *grad,
                       struct gvf_Hess *hess)
 {
 
@@ -60,14 +60,25 @@ void gvf_romboid_info(float *phi, struct gvf_grad *grad,
   float wy = gvf_trajectory.p[1];
 
   // Phi(x,y)
-  *phi = fabs(px - wx) + fabs(py - wy) - gvf_romboid_par.r;
+  float maxi = (fabs(px-wx) > fabs(py-wy)) ? fabs(px-wx) : fabs(py-wy);
+  *phi = maxi - gvf_square_par.r;
 
   // grad Phi
   float g1, g2;
   g1 = (px - wx >= 0) ? 1 : -1;
   g2 = (py - wy >= 0) ? 1 : -1;
-  grad->nx = g1;
-  grad->ny = g2;
+  if(abs(px-wx) > abs(py-wy)){
+    grad->nx = g1;
+    grad->ny = 0;
+  }
+  else if(abs(px-wx) < abs(py-wy)){
+    grad->nx = 0;
+    grad->ny = g2;
+  }
+  else{
+    grad->nx = g1;
+    grad->ny = g2;
+  }
 
   // Hessian Phi
   hess->H11 = 0;

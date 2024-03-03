@@ -64,6 +64,11 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
           <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_romboid_par.kn" shortname="rom_kn" param="GVF_romboid_KN"/>
           <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_romboid_par.r"  shortname="rom_r"  param="GVF_romboid_R"/>
         </dl_settings>
+        <dl_settings NAME="square">
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_square_par.ke" shortname="square_ke" param="GVF_square_KE"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_square_par.kn" shortname="square_kn" param="GVF_square_KN"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_square_par.r"  shortname="square_r"  param="GVF_square_R"/>
+        </dl_settings>
       </dl_settings>
     </dl_settings>
   </settings>
@@ -79,6 +84,7 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
      <file name="trajectories/gvf_sin.h"/>
      <file name="trajectories/gvf_ellipse.h"/>
      <file name="trajectories/gvf_romboid.h"/>
+     <file name="trajectories/gvf_square.h"/>
      <file name="nav/nav_survey_polygon_gvf.h"/>
    </header>
 
@@ -91,6 +97,7 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
      <file name="trajectories/gvf_sin.c"/>
      <file name="trajectories/gvf_ellipse.c"/>
      <file name="trajectories/gvf_romboid.c"/>
+     <file name="trajectories/gvf_square.c"/>
      <file name="nav/nav_survey_polygon_gvf.c"/>
    </makefile>
 
@@ -100,6 +107,7 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
      <file name="trajectories/gvf_line.c"/>
      <file name="trajectories/gvf_sin.c"/>
      <file name="trajectories/gvf_romboid.c"/>
+     <file name="trajectories/gvf_square.c"/>
      <file name="trajectories/gvf_ellipse.c"/>
      <!--file name="nav/nav_survey_polygon_gvf.c"/-->
    </makefile>
