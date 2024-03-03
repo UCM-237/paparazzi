@@ -93,6 +93,10 @@
       <call fun="gvf_romboid_wp(WP_RHOMBOID, gvf_romboid_par.r)"/>
     </block>
     
+    <block name="gvf_lpnorm" strip_icon="oval.png">
+      <call fun="gvf_pnorm_wp(WP_RHOMBOID, gvf_pnorm_par.r, gvf_pnorm_par.p)"/>
+    </block>
+    
     <block name="gvf_ellipse_XY" strip_icon="oval.png">
       <call fun="gvf_ellipse_XY(10.1, 10.1, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
     </block>

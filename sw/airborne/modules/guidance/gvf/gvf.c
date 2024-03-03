@@ -29,6 +29,7 @@
 #include "modules/guidance/gvf/trajectories/gvf_line.h"
 #include "modules/guidance/gvf/trajectories/gvf_romboid.h"
 #include "modules/guidance/gvf/trajectories/gvf_square.h"
+#include "modules/guidance/gvf/trajectories/gvf_pnorm.h"
 #include "modules/guidance/gvf/trajectories/gvf_sin.h"
 #include "autopilot.h"
 #include "../gvf_common.h"
@@ -534,6 +535,35 @@ bool gvf_square_wp(uint8_t wp, float r)
   return true;
 }
 
+// pnorm
+
+bool gvf_pnorm_XY(float x, float y, float r, float p){
+  float e;
+  struct gvf_grad grad_pnorm;
+  struct gvf_Hess Hess_pnorm;
+  gvf_trajectory.type = PNORM;
+  gvf_trajectory.p[0] = x;
+  gvf_trajectory.p[1] = y;
+  gvf_trajectory.p[2] = r;
+  gvf_trajectory.p[3] = p;
+  gvf_plen = 4 + gvf_plen_wps;
+  gvf_plen_wps = 0;
+  
+  gvf_pnorm_info(&e, &grad_pnorm, &Hess_pnorm);
+  gvf_control.ke = gvf_pnorm_par.ke;
+  gvf_control_2D(gvf_pnorm_par.ke, gvf_pnorm_par.kn, e, &grad_pnorm, &Hess_pnorm);
+  
+  gvf_control.error = e;
+  return true;
+}
+
+bool gvf_pnorm_wp(uint8_t wp, float r, float p){
+  gvf_trajectory.p[4] = wp;
+  gvf_plen_wps = 1;
+
+  gvf_pnorm_XY(WaypointX(wp), WaypointY(wp), r, p);
+  return true;
+}
 // SINUSOIDAL (if w = 0 and off = 0, then we just have the straight line case)
 
 bool gvf_sin_XY_alpha(float a, float b, float alpha, float w, float off, float A)

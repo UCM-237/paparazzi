@@ -67,11 +67,11 @@ void gvf_square_info(float *phi, struct gvf_grad *grad,
   float g1, g2;
   g1 = (px - wx >= 0) ? 1 : -1;
   g2 = (py - wy >= 0) ? 1 : -1;
-  if(abs(px-wx) > abs(py-wy)){
+  if(fabs(px-wx) > fabs(py-wy)){
     grad->nx = g1;
     grad->ny = 0;
   }
-  else if(abs(px-wx) < abs(py-wy)){
+  else if(fabs(px-wx) < fabs(py-wy)){
     grad->nx = 0;
     grad->ny = g2;
   }

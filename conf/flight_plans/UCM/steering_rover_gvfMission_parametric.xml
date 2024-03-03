@@ -119,6 +119,10 @@
       <call fun="gvf_square_wp(WP_SQUARE, gvf_square_par.r)"/>
     </block>
     
+    <block name="gvf_pnorm" strip_icon="oval.png">
+      <call fun="gvf_pnorm_wp(WP_SQUARE, gvf_pnorm_par.r, gvf_pnorm_par.p)"/>
+    </block>
+    
     <!--
     <block name="gvf_bezier">
       <call fun="gvf_parametric_2D_bezier_wp(WP_BZ0, WP_BZ1, WP_BZ2,WP_BZ3,WP_BZ4, WP_BZ5, WP_BZ6, WP_BZ7, WP_BZ8, WP_BZ9, WP_BZ10, WP_BZ11, WP_BZ12)"/>

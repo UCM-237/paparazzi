@@ -70,6 +70,7 @@ enum trajectories {
   LINE_ARRAY,
   ROMBOID,
   SQUARE,
+  PNORM,
   NONE = 255,
 };
 
@@ -144,6 +145,10 @@ extern bool gvf_romboid_XY(float x, float y, float r);
 // square
 extern bool gvf_square_wp(uint8_t wp, float r);
 extern bool gvf_square_XY(float x, float y, float r);
+
+// pnorm
+extern bool gvf_pnorm_wp(uint8_t wp, float r, float p);
+extern bool gvf_pnorm_XY(float x, float y, float r, float p);
 
 // Sinusoidal
 extern bool gvf_sin_XY_alpha(float x, float y, float alpha, float w, float off, float A);

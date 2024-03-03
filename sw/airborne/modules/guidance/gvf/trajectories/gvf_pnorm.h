@@ -20,14 +20,14 @@
  *
  */
 
-/** @file gvf_square.h
+/** @file gvf_pnorm.h
  *
  *  Guidance algorithm based on vector fields
- *  2D square trajectory
+ *  2D pnorm trajectory
  */
 
-#ifndef GVF_SQUARE_H
-#define GVF_SQUARE_H
+#ifndef GVF_PNORM_H
+#define GVF_PNORM_H
 
 #include "modules/guidance/gvf/gvf.h"
 
@@ -35,16 +35,18 @@
 * @brief Parameters for the GVF rhomboid trajectory
 * @param ke Gain defining how agressive is the vector field
 * @param kn Gain for making converge the vehicle to the vector field
-* @param r Maximum side length of the square
+* @param r Maximum side length of the pnorm
+* @param p The l-p norm
 */
 typedef struct {
   float ke;
   float kn;
   float r;
-} gvf_squr_par;
+  float p;
+} gvf_lpnorm_par;
 
-extern gvf_squr_par gvf_square_par;
+extern gvf_lpnorm_par gvf_pnorm_par;
 
-extern void gvf_square_info(float *phi, struct gvf_grad *, struct gvf_Hess *);
+extern void gvf_pnorm_info(float *phi, struct gvf_grad *, struct gvf_Hess *);
 
-#endif // GVF_square_H
+#endif // GVF_pnorm_H
