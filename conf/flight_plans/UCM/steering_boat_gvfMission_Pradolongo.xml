@@ -1,6 +1,6 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="39.78917" lon0="-4.08694" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.3756184" lon0="-3.7041719" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
