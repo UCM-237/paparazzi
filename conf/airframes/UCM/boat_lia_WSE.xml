@@ -56,7 +56,7 @@
     <module name="geo_mag"/>
     
    <module name="telemetry" type="xbee_api">
-    	<configure name="MODEM_PORT"  value="UART1"/>
+    	<configure name="MODEM_PORT"  value="UART2"/>
     	<define name="BOAT_DEBUG"     value="TRUE"/>
     </module>
 
