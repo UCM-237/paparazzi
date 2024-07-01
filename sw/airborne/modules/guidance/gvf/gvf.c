@@ -48,7 +48,7 @@ uint32_t gvf_t0 = 0;
 int gvf_plen = 1;
 int gvf_plen_wps = 0;
 
-int puntero_bz_static=0;
+//int puntero_bz_static=0;
 
 // Lines
 gvf_li_line gvf_lines_array[GVF_N_LINES];
@@ -539,7 +539,7 @@ bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off, float A)
   return true;
 }
 
-bool dist_bool(float x_, float y_, uint8_t wp0){
+/*bool dist_bool(float x_, float y_, uint8_t wp0){
 
 	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
 	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
@@ -572,7 +572,7 @@ bool dist_bool(float x_, float y_, uint8_t wp0){
   } 
   return false;
 }
-
+*/
 
 
 

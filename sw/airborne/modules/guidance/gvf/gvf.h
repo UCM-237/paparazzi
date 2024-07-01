@@ -143,7 +143,7 @@ extern bool gvf_sin_wp1_wp2(uint8_t wp1, uint8_t wp2, float w, float off,
 extern bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off,
                              float A);
 // ESTO ES DE PRUEBA
-extern bool dist_bool(float x_, float y_, uint8_t wp0);
+//extern bool dist_bool(float x_, float y_, uint8_t wp0);
 /////////////////////
 
 #endif // GVF_H

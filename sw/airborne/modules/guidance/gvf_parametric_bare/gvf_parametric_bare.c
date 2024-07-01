@@ -50,7 +50,7 @@ int gvf_parametric_bare_elen = 3;
 
 // Bézier
 bare_bezier_t gvf_bezier_2D_bare[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG];
-
+int puntero_bz_static=0;
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 static void send_gvf_parametric_bare(struct transport_tx *trans, struct link_device *dev)
@@ -326,3 +326,37 @@ bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t wp0)
 	return true;
 }
 
+
+bool dist_bool(float x_, float y_, uint8_t wp0){
+
+	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
+	  x[k] = WaypointX(wp0+k);
+	  y[k] = WaypointY(wp0+k);
+	}
+	
+	float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+	
+	x_bz[0]=x[0]; y_bz[0]=y[0];
+	x_bz[1]=x[4]; y_bz[0]=y[4];
+	x_bz[2]=x[7]; y_bz[2]=y[7];
+	x_bz[3]=x[11]; y_bz[3]=y[11];
+	
+  
+ 	float px = x_;
+  float py = y_;
+  float dist = sqrtf( powf(px-x_bz[puntero_bz_static],2) + powf(py-y_bz[puntero_bz_static],2));
+  if((dist <= gvf_c_stopwp.distance_stop)){	
+  	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+  		gvf_c_stopwp.stay_still = 1;
+  		gvf_c_stopwp.pxd = x_bz[puntero_bz_static]; 
+  		gvf_c_stopwp.pyd = y_bz[puntero_bz_static];
+  		puntero_bz_static = (puntero_bz_static+1) %GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG;
+  		return true;
+  	}
+  	puntero_bz_static = (puntero_bz_static+1) %GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG;
+  } 
+  return false;
+}
