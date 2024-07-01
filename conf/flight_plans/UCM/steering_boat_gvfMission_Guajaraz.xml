@@ -90,6 +90,7 @@
     </block>
     <block name="line_array" strip_icon="line.png">
       <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="dist_bool(GetPosX(), GetPosY(), WP_L0)" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_bezier_bare">
@@ -98,13 +99,12 @@
     </block>
     <block name="gvf_quintic_bezier_bare">
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
-      <exception cond="dist_bool(GetPosX(), GetPosY(), WP_BZ0)" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="static_control">
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-      <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)"deroute="gvf_quintic_bezier_bare"/>
+      <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)"deroute="line_array"/>
     </block>
   </blocks>
 </flight_plan>
