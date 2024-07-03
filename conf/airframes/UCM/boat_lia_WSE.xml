@@ -142,6 +142,7 @@
     <define name="GYRO_R_SIGN"       value="-1"/>
  
 <!-- CAlibracion 06/06/2024 ESTE ES EL BUENO (EL ULTIMO EN PRADOLONGO (PRADOLARGO))-->
+<!--
 <define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1499,1419,2178}, .scale={{4881,25505,3671},{3104,13528,2074}}}}"/>
 
 <define name="MAG_X_NEUTRAL" value="1499"/>
@@ -151,6 +152,16 @@
 <define name="MAG_Y_SENS" value="1.8853489049806385" integer="16"/>
 <define name="MAG_Z_SENS" value="1.770009655069537" integer="16"/>
 
+-->
+<!--Calibracion 02/06/2024 GUAJARAZ-->
+<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1452,1425,2257}, .scale={{22139,37531,41508},{15286,20819,25019}}}}"/>
+
+<define name="MAG_X_NEUTRAL" value="1452"/>
+<define name="MAG_Y_NEUTRAL" value="1425"/>
+<define name="MAG_Z_NEUTRAL" value="2257"/>
+<define name="MAG_X_SENS" value="1.448318722837593" integer="16"/>
+<define name="MAG_Y_SENS" value="1.802728276186034" integer="16"/>
+<define name="MAG_Z_SENS" value="1.6590591156972092" integer="16"/>
 
   </section>
 
