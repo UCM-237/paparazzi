@@ -13,7 +13,7 @@
   <aircraft
    name="Rover_Tana"
    ac_id="1"
-   airframe="airframes/UCM/rover2f405.xml"
+   airframe="airframes/UCM/rover2f405WSE.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
    telemetry="telemetry/default_rover_pidcontrol.xml"
    flight_plan="flight_plans/UCM/steering_rover_gvfMission_parametric_bare.xml"
@@ -35,7 +35,7 @@
   <aircraft
    name="Rover_Avelino"
    ac_id="4"
-   airframe="airframes/UCM/roverf405_v2.xml"
+   airframe="airframes/UCM/rover2f405WSE.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
    telemetry="telemetry/default_rover_pidcontrol.xml"
    flight_plan="flight_plans/UCM/steering_rover_gvfMission_parametric_bare.xml"
