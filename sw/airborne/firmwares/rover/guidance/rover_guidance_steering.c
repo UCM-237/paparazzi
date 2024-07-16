@@ -352,6 +352,49 @@ void rover_guidance_steering_pid_reset(void)
 		reset_pid_f(&rover_pid);
 	}
 }
+/** To Stop at Waypoints **/
+bool rover_guidance_bearing_static_ctrl(void)
+{ 
+ /*
+  // Current position of the rover
+  struct EnuCoor_f *p = stateGetPositionEnu_f();
+  float px = p->x;
+  float py = p->y;
+ 
+  // Desired position for the rover
+  float pd[2]; 
+  
+  // psi = angle between the direction of the vehicle and the origin of coordinates
+  // Tip: Use magnetometer (USE_MAGNETOMETER defined), gps course is bad at low speeds
+  float psi = stateGetNedToBodyEulers_f()->psi;
+  float u[2];
+  
+  // s = p - pd
+  float s[2];
+  
+ 	pd[0] = gvf_c_stopwp.pxd;
+ 	pd[1] = gvf_c_stopwp.pyd;
+ 	
+ 	u[0] = cosf(psi); u[1] = sinf(psi);
+ 	s[0] = (px - pd[0]); s[1] = (py - pd[1]);
+ 
+  // normalized using euclidean norm
+  float ns = sqrtf(s[0] * s[0] + s[1] * s[1]);
+  
+	s[0] /= ns; s[1] /= ns;
+  
+  float sTu = u[0]*s[0] + u[1]*s[1];  // cos(beta), beta = angle(u,s)
+  float sTEu = -s[0]*u[1] + s[1]*u[0]; // sin(beta)
+  
+  float tau = guidance_control.kf_bearing_static * sTu * sTEu;
+  float f = guidance_control.kf_speed_static * sTu * ns;
+  */
+  guidance_control.cmd.speed = 0.0;
+  guidance_control.cmd.delta  = 0.0;
+  //guidance_control.throttle = BoundThrottle(0.0);
+  
+  return true;
+}
 
 void rover_guidance_steering_kill(void)
 {

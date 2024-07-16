@@ -63,6 +63,8 @@ typedef struct {
 
 extern gvf_st gvf_state;
 
+
+
 enum trajectories {
   LINE = 0,
   ELLIPSE,
@@ -141,6 +143,9 @@ extern bool gvf_sin_wp1_wp2(uint8_t wp1, uint8_t wp2, float w, float off,
                             float A);
 extern bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off,
                              float A);
-
+                             
+extern bool dist_bool(float x_, float y_, uint8_t wp0);
+extern float dist(float x_, float y_, uint8_t wp0);
+extern bool increase_bz_pointer(void);
 
 #endif // GVF_H

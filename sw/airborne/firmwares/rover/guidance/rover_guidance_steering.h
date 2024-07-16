@@ -162,6 +162,7 @@ extern float rover_guidance_steering_omega_obstacle_avoidance(void);
 extern float rover_guidance_steering_omega_obstacle_avoidance_v2(void);
 extern void rover_guidance_steering_pid_reset(void);
 extern void rover_guidance_steering_kill(void);
+extern bool rover_guidance_bearing_static_ctrl(void);
 
 
 /** MACROS **/

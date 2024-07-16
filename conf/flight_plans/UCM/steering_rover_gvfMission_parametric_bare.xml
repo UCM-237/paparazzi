@@ -101,8 +101,17 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_quintic_bezier_bare">
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+º      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT 5.0" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_control">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun=" increase_bz_pointer()"/>
+      <call fun="rover_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)"deroute="gvf_quintic_bezier_bare"/>
     </block>
   </blocks>
 </flight_plan>
