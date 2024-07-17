@@ -1491,6 +1491,14 @@
       <field name="pt_bz"  type="uint8"/>
       <field name="pxd" type="float"/>
       <field name="pyd" type="float"/>
+      <field name="bz0x"  type="float"/>
+      <field name="bz0y"  type="float"/>
+      <field name="bz4x"  type="float"/>
+      <field name="bz4y"  type="float"/>
+      <field name="bz7x"  type="float"/>
+      <field name="bz7y"  type="float"/>
+      <field name="bz11x"  type="float"/>
+      <field name="bz11y"  type="float"/> 	      
     </message>
 
     <message name="ROTORCRAFT_NAV_STATUS" id="159">

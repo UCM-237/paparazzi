@@ -50,7 +50,8 @@ int gvf_plen_wps = 0;
 
 
 
-char static_active='n';
+bz_wp bz_stop_wp;
+
 float dist_WP=0.0;
 // Lines
 gvf_li_line gvf_lines_array[GVF_N_LINES];
@@ -98,7 +99,10 @@ static void send_gvf(struct transport_tx *trans, struct link_device *dev)
   }
 }
 static void send_static_control(struct transport_tx *trans, struct link_device *dev){
-    pprz_msg_send_STATIC_CONTROL(trans,dev,AC_ID,&gvf_c_stopwp.stay_still, &dist_WP,&gvf_c_stopwp.next_wp,&gvf_c_stopwp.pxd,&gvf_c_stopwp.pyd);
+    pprz_msg_send_STATIC_CONTROL(trans,dev,AC_ID,
+    &gvf_c_stopwp.stay_still, &dist_WP,&gvf_c_stopwp.next_wp,&gvf_c_stopwp.pxd,&gvf_c_stopwp.pyd,
+    &bz_stop_wp.bz0x, &bz_stop_wp.bz0y, &bz_stop_wp.bz4x,&bz_stop_wp.bz4y,
+    &bz_stop_wp.bz7x, &bz_stop_wp.bz7y,&bz_stop_wp.bz11x,&bz_stop_wp.bz11y);
 
 }
 
@@ -146,7 +150,7 @@ void gvf_init(void)
   // gvf_common.h
   gvf_c_stopwp.stay_still = 0;
   gvf_c_stopwp.stop_at_wp = 1;
-  gvf_c_stopwp.distance_stop = 4;
+  gvf_c_stopwp.distance_stop = 2;
   gvf_c_stopwp.wait_time = 15;
   
   gvf_c_stopwp.next_wp=0;
@@ -561,7 +565,7 @@ bool dist_bool(float x_, float y_, uint8_t wp0){
 	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
 	
 	x_bz[0]=x[0]; y_bz[0]=y[0];
-	x_bz[1]=x[4]; y_bz[0]=y[4];
+	x_bz[1]=x[4]; y_bz[1]=y[4];
 	x_bz[2]=x[7]; y_bz[2]=y[7];
 	x_bz[3]=x[11]; y_bz[3]=y[11];
 	
@@ -569,7 +573,7 @@ bool dist_bool(float x_, float y_, uint8_t wp0){
   float px = x_;
   float py = y_;
   float dist = sqrtf( powf(px-x_bz[gvf_c_stopwp.next_wp],2) + powf(py-y_bz[gvf_c_stopwp.next_wp],2));
-  if((dist <= 2.0)){//gvf_c_stopwp.distance_stop)){	
+  if(dist <= gvf_c_stopwp.distance_stop){	
   	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
   		gvf_c_stopwp.stay_still = 1;
   		gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp]; 
@@ -593,16 +597,23 @@ float dist(float x_, float y_, uint8_t wp0){
 	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
 	
 	x_bz[0]=x[0]; y_bz[0]=y[0];
-	x_bz[1]=x[4]; y_bz[0]=y[4];
+	x_bz[1]=x[4]; y_bz[1]=y[4];
 	x_bz[2]=x[7]; y_bz[2]=y[7];
 	x_bz[3]=x[11]; y_bz[3]=y[11];
 	
-  
+	bz_stop_wp.bz0x=x_bz[0];
+	bz_stop_wp.bz0y=y_bz[0];
+	bz_stop_wp.bz4x=x_bz[1];
+	bz_stop_wp.bz4y=y_bz[1];
+	bz_stop_wp.bz7x=x_bz[2];
+	bz_stop_wp.bz7y=y_bz[2];
+	bz_stop_wp.bz11x=x_bz[3];
+	bz_stop_wp.bz11y=y_bz[3];  
   float px = x_;
   float py = y_;
   float dist = sqrtf( powf(px-x_bz[gvf_c_stopwp.next_wp],2) + powf(py-y_bz[gvf_c_stopwp.next_wp],2));
   dist_WP=dist;
-  static_active='y';
+
   gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp]; 
   gvf_c_stopwp.pyd = y_bz[gvf_c_stopwp.next_wp];
   if((dist <= gvf_c_stopwp.distance_stop)){	

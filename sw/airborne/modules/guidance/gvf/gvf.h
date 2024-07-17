@@ -94,6 +94,19 @@ typedef struct {
   float y2;
 } gvf_seg;
 
+typedef struct {
+float bz0x;
+float bz0y;
+float bz4x;
+float bz4y;
+float bz7x;
+float bz7y;
+float bz11x;
+float bz11y;
+} bz_wp;
+
+extern bz_wp bz_stop_wp;
+
 extern gvf_tra gvf_trajectory;
 
 struct gvf_grad {

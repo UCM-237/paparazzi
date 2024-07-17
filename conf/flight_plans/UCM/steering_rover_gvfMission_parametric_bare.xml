@@ -103,7 +103,7 @@
     <block name="gvf_quintic_bezier_bare">
       <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
-      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT 5.0" deroute="static_control"/>
+      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="static_control">
