@@ -34,7 +34,6 @@
 
 
 // Control
-uint32_t gvf_parametric_bare_t0 = 0; // We need it for calculting the time lapse delta_T
 uint32_t gvf_parametric_bare_splines_ctr = 0; // We need it for Bézier curves splines Telemetry
 gvf_parametric_bare_con gvf_parametric_bare_control;
 
@@ -58,7 +57,7 @@ static void send_gvf_parametric_bare(struct transport_tx *trans, struct link_dev
   uint8_t traj_type = (uint8_t)gvf_parametric_bare_trajectory.type;
 
   uint32_t now = get_sys_time_msec();
-  uint32_t delta_T = now - gvf_parametric_bare_t0;
+  uint32_t delta_T = now - gvf_c_t0;
 
   float wb = gvf_parametric_bare_control.w * gvf_parametric_bare_control.beta;
 
@@ -73,7 +72,7 @@ static void send_gvf_parametric_bare(struct transport_tx *trans, struct link_dev
 static void send_circle_parametric(struct transport_tx *trans, struct link_device *dev)
 {
   uint32_t now = get_sys_time_msec();
-  uint32_t delta_T = now - gvf_parametric_bare_t0;
+  uint32_t delta_T = now - gvf_c_t0;
 
 	/*
   if (delta_T < 200)
@@ -115,34 +114,15 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
 {
 
   uint32_t now = get_sys_time_msec();
-  gvf_parametric_bare_control.delta_T = now - gvf_parametric_bare_t0;
-  gvf_parametric_bare_t0 = now;
+  gvf_parametric_bare_control.delta_T = now - gvf_c_t0;
+  gvf_c_t0 = now;
 
-  /* If the vehicle does not need to stop at the wp */
-  if(!gvf_c_stopwp.stop_at_wp)
+  // We need at least two iterations for Delta_T
+  if (gvf_parametric_bare_control.delta_T > 300)
   {
-    // We need at least two iterations for Delta_T
-    if ((gvf_parametric_bare_control.delta_T > 300))
-    {
-      /* Reset w since we assume the algorithm starts, because there cannot be any
-       * physical stop of 300 ms */
-      gvf_parametric_bare_control.w = 0;
-      return;
-    }
-  }
-  else
-  {
-    /* TODO: Replace magic number for conversion from ms to s and the number
-     * of seconds of error */
-    /* If the vehicle has to stop at any waypoint wp, it shall wait outside
-     * gvf_parametric_bare, gvf_c_stopwp.wait_time seconds, so when coming back
-     * into this function, delta_T could be really big. If that's the case then
-     * fix delta_T to a value, so the integration step is properly carried.
-     */
-    if((gvf_parametric_bare_control.delta_T >= (gvf_c_stopwp.wait_time - 1)* 1000))
-    {
-      gvf_parametric_bare_control.delta_T = 1.0 / PERIODIC_FREQUENCY;
-    }
+    /* Reset w since we assume the algorithm starts */
+    gvf_parametric_bare_control.w = 0;
+    return;
   }
 
   // Carrot position

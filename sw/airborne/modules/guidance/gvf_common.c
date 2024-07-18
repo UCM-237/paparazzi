@@ -23,3 +23,4 @@
 gvf_common_omega  gvf_c_omega;
 gvf_common_params gvf_c_info;
 gvf_common_stop_at_wp gvf_c_stopwp;
+uint32_t gvf_c_t0;
