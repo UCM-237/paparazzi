@@ -113,7 +113,6 @@ extern void boat_guidance_steering_obtain_setpoint(void);
 extern void boat_guidance_pid_reset(void);
 extern void boat_guidance_kill(void);
 
-
 /** MACROS **/
 // Bound commands
 #define BoundCmd(cmd) 2*TRIM_PPRZ((int)cmd/2);

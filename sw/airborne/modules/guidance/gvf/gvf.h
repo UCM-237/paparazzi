@@ -63,6 +63,8 @@ typedef struct {
 
 extern gvf_st gvf_state;
 
+
+
 enum trajectories {
   LINE = 0,
   ELLIPSE,
@@ -91,6 +93,19 @@ typedef struct {
   float x2;
   float y2;
 } gvf_seg;
+
+typedef struct {
+float bz0x;
+float bz0y;
+float bz4x;
+float bz4y;
+float bz7x;
+float bz7y;
+float bz11x;
+float bz11y;
+} bz_wp;
+
+extern bz_wp bz_stop_wp;
 
 extern gvf_tra gvf_trajectory;
 
@@ -127,7 +142,6 @@ extern bool gvf_segment_XY1_XY2(float x1, float y1, float x2, float y2);
 extern bool gvf_segment_wp1_wp2(uint8_t wp1, uint8_t wp2);
 extern bool gvf_line_wp_heading(uint8_t wp, float heading);
 
-
 // Array of straight lines
 extern bool gvf_lines_array_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6);
 extern bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2);
@@ -142,8 +156,9 @@ extern bool gvf_sin_wp1_wp2(uint8_t wp1, uint8_t wp2, float w, float off,
                             float A);
 extern bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off,
                              float A);
-// ESTO ES DE PRUEBA
-//extern bool dist_bool(float x_, float y_, uint8_t wp0);
-/////////////////////
+                             
+extern bool dist_bool(float x_, float y_, uint8_t wp0);
+extern float dist(float x_, float y_, uint8_t wp0);
+extern bool increase_bz_pointer(void);
 
 #endif // GVF_H

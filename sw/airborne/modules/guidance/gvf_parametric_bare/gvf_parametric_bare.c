@@ -50,7 +50,7 @@ int gvf_parametric_bare_elen = 3;
 
 // Bézier
 bare_bezier_t gvf_bezier_2D_bare[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG];
-int puntero_bz_static=0;
+
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 static void send_gvf_parametric_bare(struct transport_tx *trans, struct link_device *dev)
@@ -118,9 +118,31 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   gvf_parametric_bare_control.delta_T = now - gvf_parametric_bare_t0;
   gvf_parametric_bare_t0 = now;
 
-  if (gvf_parametric_bare_control.delta_T > 300) { // We need at least two iterations for Delta_T
-    gvf_parametric_bare_control.w = 0; // Reset w since we assume the algorithm starts
-    return;
+  /* If the vehicle does not need to stop at the wp */
+  if(!gvf_c_stopwp.stop_at_wp)
+  {
+    // We need at least two iterations for Delta_T
+    if ((gvf_parametric_bare_control.delta_T > 300))
+    {
+      /* Reset w since we assume the algorithm starts, because there cannot be any
+       * physical stop of 300 ms */
+      gvf_parametric_bare_control.w = 0;
+      return;
+    }
+  }
+  else
+  {
+    /* TODO: Replace magic number for conversion from ms to s and the number
+     * of seconds of error */
+    /* If the vehicle has to stop at any waypoint wp, it shall wait outside
+     * gvf_parametric_bare, gvf_c_stopwp.wait_time seconds, so when coming back
+     * into this function, delta_T could be really big. If that's the case then
+     * fix delta_T to a value, so the integration step is properly carried.
+     */
+    if((gvf_parametric_bare_control.delta_T >= (gvf_c_stopwp.wait_time - 1)* 1000))
+    {
+      gvf_parametric_bare_control.delta_T = 1.0 / PERIODIC_FREQUENCY;
+    }
   }
 
   // Carrot position
@@ -326,37 +348,3 @@ bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t wp0)
 	return true;
 }
 
-
-bool dist_bool(float x_, float y_, uint8_t wp0){
-
-	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
-	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
-	for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
-	  x[k] = WaypointX(wp0+k);
-	  y[k] = WaypointY(wp0+k);
-	}
-	
-	float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-	
-	x_bz[0]=x[0]; y_bz[0]=y[0];
-	x_bz[1]=x[4]; y_bz[0]=y[4];
-	x_bz[2]=x[7]; y_bz[2]=y[7];
-	x_bz[3]=x[11]; y_bz[3]=y[11];
-	
-  
- 	float px = x_;
-  float py = y_;
-  float dist = sqrtf( powf(px-x_bz[puntero_bz_static],2) + powf(py-y_bz[puntero_bz_static],2));
-  if((dist <= gvf_c_stopwp.distance_stop)){	
-  	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-  		gvf_c_stopwp.stay_still = 1;
-  		gvf_c_stopwp.pxd = x_bz[puntero_bz_static]; 
-  		gvf_c_stopwp.pyd = y_bz[puntero_bz_static];
-  		puntero_bz_static = (puntero_bz_static+1) %GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG;
-  		return true;
-  	}
-  	puntero_bz_static = (puntero_bz_static+1) %GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG;
-  } 
-  return false;
-}

@@ -48,8 +48,11 @@ uint32_t gvf_t0 = 0;
 int gvf_plen = 1;
 int gvf_plen_wps = 0;
 
-//int puntero_bz_static=0;
 
+
+bz_wp bz_stop_wp;
+
+float dist_WP=0.0;
 // Lines
 gvf_li_line gvf_lines_array[GVF_N_LINES];
 
@@ -80,7 +83,7 @@ static void send_gvf(struct transport_tx *trans, struct link_device *dev)
                             &gvf_segment.x1, &gvf_segment.y1,
                             &gvf_segment.x2, &gvf_segment.y2);
     }
-		if (gvf_trajectory.type == LINE_ARRAY && gvf_segment.seg == 1) {
+    if (gvf_trajectory.type == LINE_ARRAY && gvf_segment.seg == 1) {
       pprz_msg_send_SEGMENT(trans, dev, AC_ID,
                             &gvf_segment.x1, &gvf_segment.y1,
                             &gvf_segment.x2, &gvf_segment.y2);
@@ -94,6 +97,13 @@ static void send_gvf(struct transport_tx *trans, struct link_device *dev)
 #endif // GVF_OCAML_GCS
 
   }
+}
+static void send_static_control(struct transport_tx *trans, struct link_device *dev){
+    pprz_msg_send_STATIC_CONTROL(trans,dev,AC_ID,
+    &gvf_c_stopwp.stay_still, &dist_WP,&gvf_c_stopwp.next_wp,&gvf_c_stopwp.pxd,&gvf_c_stopwp.pyd,
+    &bz_stop_wp.bz0x, &bz_stop_wp.bz0y, &bz_stop_wp.bz4x,&bz_stop_wp.bz4y,
+    &bz_stop_wp.bz7x, &bz_stop_wp.bz7y,&bz_stop_wp.bz11x,&bz_stop_wp.bz11y);
+
 }
 
 #endif // PERIODIC_TELEMETRY
@@ -139,12 +149,14 @@ void gvf_init(void)
 
   // gvf_common.h
   gvf_c_stopwp.stay_still = 0;
-  gvf_c_stopwp.stop_at_wp = 0;
-  gvf_c_stopwp.distance_stop = 0.1;
-  gvf_c_stopwp.wait_time = 1;
+  gvf_c_stopwp.stop_at_wp = 1;
+  gvf_c_stopwp.distance_stop = 2;
+  gvf_c_stopwp.wait_time = 15;
   
+  gvf_c_stopwp.next_wp=0;
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GVF, send_gvf);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATIC_CONTROL, send_static_control);
 #endif
 }
 
@@ -208,8 +220,11 @@ void gvf_control_2D(float ke, float kn, float e,
   float omega = omega_d + kn * (mr_x * md_y - mr_y * md_x);
   
   gvf_control.omega = omega;
+  
   // From gvf_common.h
-  gvf_c_omega.omega = omega; 
+  gvf_c_omega.omega  = omega; 
+  gvf_c_info.kappa   = (nx*(H12*ny - nx*H22) + ny*(H21*nx - H11*ny))/powf(nx*nx + ny*ny,1.5);
+  gvf_c_info.ori_err = 1 - (md_x*cosf(course) + md_y*sinf(course));
   gvf_low_level_control_2D(omega);
 }
 
@@ -235,7 +250,7 @@ static void gvf_line(float a, float b, float heading)
 
   gvf_line_info(&e, &grad_line, &Hess_line);
   gvf_control.ke = gvf_line_par.ke;
-  gvf_control_2D(1e-2 * gvf_line_par.ke, gvf_line_par.kn, e, &grad_line, &Hess_line);
+  gvf_control_2D(gvf_line_par.ke, gvf_line_par.kn, e, &grad_line, &Hess_line); // Removed 1e-2
 
   gvf_control.error = e;
   
@@ -377,7 +392,7 @@ bool gvf_line_wp_heading(uint8_t wp, float heading)
 
   return gvf_line_XY_heading(a, b, heading);
 }
-
+// Array of Lines
 bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2)
 {
 	// Create the points
@@ -399,19 +414,17 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 	}
 	struct EnuCoor_f *p = stateGetPositionEnu_f();
  	float px = p->x;
-  float py = p->y;
-  float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
-  	if((dist <= gvf_c_stopwp.distance_stop)){
-  		if(!gvf_c_stopwp.stop_at_wp){
-  			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
-  		}		
-  		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-  			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
-  			gvf_c_stopwp.stay_still = 1;
-  			gvf_c_stopwp.pxd = gvf_lines_array[gvf_control.which_line].p1x; 
-  			gvf_c_stopwp.pyd = gvf_lines_array[gvf_control.which_line].p1y;
-  		}
-  	}
+	float py = p->y;
+	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
+	if((dist <= gvf_c_stopwp.distance_stop)){
+		if(!gvf_c_stopwp.stop_at_wp){
+			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+			}		
+		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+			gvf_c_stopwp.stay_still = 1;
+			}
+		}
   	float x1 = gvf_lines_array[gvf_control.which_line].p1x;
    	float y1 = gvf_lines_array[gvf_control.which_line].p1y;
    	float x2 = gvf_lines_array[gvf_control.which_line].p2x;
@@ -539,7 +552,7 @@ bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off, float A)
   return true;
 }
 
-/*bool dist_bool(float x_, float y_, uint8_t wp0){
+bool dist_bool(float x_, float y_, uint8_t wp0){
 
 	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
 	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
@@ -552,34 +565,69 @@ bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off, float A)
 	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
 	
 	x_bz[0]=x[0]; y_bz[0]=y[0];
-	x_bz[1]=x[4]; y_bz[0]=y[4];
+	x_bz[1]=x[4]; y_bz[1]=y[4];
 	x_bz[2]=x[7]; y_bz[2]=y[7];
 	x_bz[3]=x[11]; y_bz[3]=y[11];
 	
   
- 	float px = x_;
+  float px = x_;
   float py = y_;
-  float dist = sqrtf( powf(px-x_bz[puntero_bz_static],2) + powf(py-y_bz[puntero_bz_static],2));
-  if((dist <= gvf_c_stopwp.distance_stop)){	
+  float dist = sqrtf( powf(px-x_bz[gvf_c_stopwp.next_wp],2) + powf(py-y_bz[gvf_c_stopwp.next_wp],2));
+  if(dist <= gvf_c_stopwp.distance_stop){	
   	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
   		gvf_c_stopwp.stay_still = 1;
-  		gvf_c_stopwp.pxd = x_bz[puntero_bz_static]; 
-  		gvf_c_stopwp.pyd = y_bz[puntero_bz_static];
-  		puntero_bz_static++;
+  		gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp]; 
+  		gvf_c_stopwp.pyd = y_bz[gvf_c_stopwp.next_wp];
   		return true;
   	}
-  	puntero_bz_static++;
+  	
   } 
   return false;
 }
-*/
 
+float dist(float x_, float y_, uint8_t wp0){
+	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
+	  x[k] = WaypointX(wp0+k);
+	  y[k] = WaypointY(wp0+k);
+	}
+	
+	float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+	
+	x_bz[0]=x[0]; y_bz[0]=y[0];
+	x_bz[1]=x[4]; y_bz[1]=y[4];
+	x_bz[2]=x[7]; y_bz[2]=y[7];
+	x_bz[3]=x[11]; y_bz[3]=y[11];
+	
+	bz_stop_wp.bz0x=x_bz[0];
+	bz_stop_wp.bz0y=y_bz[0];
+	bz_stop_wp.bz4x=x_bz[1];
+	bz_stop_wp.bz4y=y_bz[1];
+	bz_stop_wp.bz7x=x_bz[2];
+	bz_stop_wp.bz7y=y_bz[2];
+	bz_stop_wp.bz11x=x_bz[3];
+	bz_stop_wp.bz11y=y_bz[3];  
+  float px = x_;
+  float py = y_;
+  float dist = sqrtf( powf(px-x_bz[gvf_c_stopwp.next_wp],2) + powf(py-y_bz[gvf_c_stopwp.next_wp],2));
+  dist_WP=dist;
 
-
-
-
-
-
-
-
-
+  gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp]; 
+  gvf_c_stopwp.pyd = y_bz[gvf_c_stopwp.next_wp];
+  if((dist <= gvf_c_stopwp.distance_stop)){	
+  	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+  		gvf_c_stopwp.stay_still = 1;
+  		return dist;
+  	}
+  } 
+  return dist;
+  }
+  
+  bool increase_bz_pointer(void){
+  gvf_c_stopwp.next_wp++;
+  if (gvf_c_stopwp.next_wp>3) 
+  	gvf_c_stopwp.next_wp=0;
+  return false;
+  }

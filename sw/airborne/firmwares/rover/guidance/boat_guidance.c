@@ -45,18 +45,6 @@
 #endif
 PRINT_CONFIG_VAR(MOV_AVG_M)
 
-// Debugging telemetry. Must be included for sys_time
-#ifdef BOAT_DEBUG
-#if PERIODIC_TELEMETRY
-#include "modules/datalink/telemetry.h"
-static uint8_t dummy = 0;
-static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
-  pprz_msg_send_INFO_MSG(trans, dev, AC_ID, &dummy ,&guidance_control.bearing, &guidance_control.throttle, 
-  					     &guidance_control.rc_throttle, &guidance_control.rc_bearing, &commands[COMMAND_MLEFT], &commands[COMMAND_MRIGHT]);
-  }					
-#endif
-#endif
-
 // Guidance control main variables
 ctrl_t guidance_control;
 
@@ -70,6 +58,30 @@ uint8_t reset_time = 0;
 static int ptr_avg = 0;
 static float speed_avg = 0;
 static float mvg_avg[MOV_AVG_M] = {0};
+
+// Debugging telemetry. Must be included for sys_time
+#ifdef BOAT_DEBUG
+#if PERIODIC_TELEMETRY
+#include "modules/datalink/telemetry.h"
+static uint8_t dummy = 0;
+static void send_rover_ctrl(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_ROVER_CTRL(trans, dev, AC_ID,
+                    	    &guidance_control.cmd.speed,
+                    	    &guidance_control.speed_error,
+                    	    &guidance_control.throttle,
+                    	    &guidance_control.cmd.omega,
+                    	    &guidance_control.kp,
+                    	    &guidance_control.ki,
+                    	    &guidance_control.kp,
+                    	    &guidance_control.kf_bearing,				// Integral action
+                    	    &guidance_control.kf_speed,                        // Prop action 
+                    	    &guidance_control.kf_bearing_static,
+                    	    &speed_avg,				// Avg speed measured
+                    	    &gvf_c_info.kappa);      // Curvature
+}
+#endif
+#endif
 
 
 /** INIT function **/
@@ -111,7 +123,7 @@ void boat_guidance_init(void)
   
   #ifdef BOAT_DEBUG
   #if PERIODIC_TELEMETRY
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INFO_MSG, send_telemetry);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_ROVER_CTRL, send_rover_ctrl);
   #endif
   #endif
 }
@@ -269,7 +281,6 @@ void boat_guidance_pid_reset(void)
       reset_pid_f(&boat_pid);
     }
 }
-
 
 /** KILL function **/
 void boat_guidance_kill(void)

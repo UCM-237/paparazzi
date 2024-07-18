@@ -41,7 +41,8 @@
       <message name="GVF_PARAMETRIC"         period="1.0"/>
       <message name="GVF"                    period="1.0"/>
       <!--message name="LIDAR"               period="1.0"/-->
-      <message name="ROVER_CTRL"             period="0.50"/>  
+      <message name="ROVER_CTRL"             period="0.50"/> 
+      <message name="STATIC_CONTROL"         period="1.0"/> 
       
       
     </mode>
