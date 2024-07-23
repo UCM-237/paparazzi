@@ -54,11 +54,8 @@ typedef struct {
   float omega;
   float speed;
   int8_t s;
-<<<<<<< HEAD
   int8_t which_line;
-=======
-  bool align;
->>>>>>> master
+	bool align;
 } gvf_con;
 
 extern gvf_con gvf_control;

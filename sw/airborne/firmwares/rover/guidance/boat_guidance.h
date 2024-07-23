@@ -34,11 +34,11 @@
 #include "generated/airframe.h"
 
 // Check critical global definitiones
-#ifndef SERVO_MOTOR_LEFT
+#ifndef SERVO_MOTOR_LEFT_DRIVER_NO
 #error "Boat guidance requires the servo MOTOR_LEFT"
 #endif
 
-#ifndef SERVO_MOTOR_RIGHT
+#ifndef SERVO_MOTOR_RIGHT_DRIVER_NO
 #error "Boat guidance requires the servo MOTOR_RIGHT"
 #endif
 
