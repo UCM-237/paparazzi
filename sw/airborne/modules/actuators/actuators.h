@@ -40,15 +40,34 @@
 extern void actuators_init(void);
 extern void actuators_periodic(void);
 
+// Actuator feedback structure for ABI Message
+struct act_feedback_t {
+  uint8_t idx;                      ///< General index of the actuators (generated in airframe.h)
+  struct act_feedback_set_t {
+    bool rpm: 1;                    ///< RPM is set
+    bool position: 1;               ///< Position is set
+  } set;                            ///< Bitset registering what is set as feedback
+
+  int32_t rpm;                      ///< RPM
+  float position;                   ///< In radians
+};
+
 #if ACTUATORS_NB
 
 extern uint32_t actuators_delay_time;
 extern bool   actuators_delay_done;
 
+// Actuator feedback structure for ABI Message
+struct actuator_t {
+  pprz_t pprz_val;                  ///< Actuator value in PPRZ units
+  int16_t driver_val;               ///< Actuator value in driver units (scaling from servo in airframe.h)
+};
+
+
 /** Actuators array.
  * Temporary storage (for debugging purpose, downlinked via telemetry)
  * */
-extern int16_t actuators[ACTUATORS_NB];
+extern struct actuator_t actuators[ACTUATORS_NB];
 
 /** PPRZ command to each actuator
  * Can be used to directly control actuators from the control algorithm

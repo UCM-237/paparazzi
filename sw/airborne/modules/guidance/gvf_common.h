@@ -17,6 +17,7 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
+<<<<<<< HEAD
  
  #ifndef GVF_COMMON_H
  #define GVF_COMMON_H
@@ -25,10 +26,21 @@
 #include "std.h"
 
  /** @typedef gvf_common_omega
+=======
+
+#ifndef GVF_COMMON_H
+#define GVF_COMMON_H
+
+// uint32_t
+#include "std.h"
+
+/** @typedef gvf_common_omega
+>>>>>>> master
 * @brief Horizontal control signal for both gvf
 * @param omega is the horizontal control signal
 */
 
+<<<<<<< HEAD
  typedef struct{ 	
  	float omega;
  } gvf_common_omega;
@@ -36,10 +48,20 @@
 extern gvf_common_omega gvf_c_omega;
 
  /** @typedef gvf_common_params
+=======
+typedef struct {
+  float omega;
+} gvf_common_omega;
+
+extern gvf_common_omega gvf_c_omega;
+
+/** @typedef gvf_common_params
+>>>>>>> master
 * @brief Different parameters obtained from gvfs. dot means d/dt
 * @param kappa is the curve's curvature
 * @param ori_err is the orientation error
 */
+<<<<<<< HEAD
 typedef struct{	
 	float kappa;
 	float kappa_dot;
@@ -61,4 +83,16 @@ extern gvf_common_params gvf_c_info;
 extern gvf_common_stop_at_wp gvf_c_stopwp;
  
  #endif // GVF_COMMON_H
+=======
+typedef struct {
+  float kappa;
+  float kappa_dot;
+  float ori_err;
+  float ori_err_dot;
+} gvf_common_params;
+
+extern gvf_common_params gvf_c_info;
+
+#endif // GVF_COMMON_H
+>>>>>>> master
 

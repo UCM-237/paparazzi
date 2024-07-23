@@ -41,6 +41,8 @@
 #endif
 
 
+#include "./trajectories/gvf_parametric_2d_bezier_splines.h"
+#include "../gvf_common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +52,7 @@ extern "C" {
 
 // Control
 uint32_t gvf_parametric_t0 = 0; // We need it for calculting the time lapse delta_T
+uint32_t gvf_parametric_splines_ctr = 0; // We need it for Bézier curves splines Telemetry
 gvf_parametric_con gvf_parametric_control;
 
 // Trajectory
@@ -62,6 +65,7 @@ int gvf_parametric_plen_wps = 0;
 // Error signals array lenght
 int gvf_parametric_elen = 3;
 
+
 // Splines structs
 spline_t gvf_splines_2D_x[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
 spline_t gvf_splines_2D_y[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
@@ -71,6 +75,8 @@ spline_t gvf_splines_2D_y[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
 static int ptr_avg = 0;
 static float speed_avg = 0;
 static float mvg_avg[MOV_AVG_GVF_M] = {0};
+// Bézier
+bezier_t gvf_bezier_2D[GVF_PARAMETRIC_2D_BEZIER_N_SEG];
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -84,6 +90,7 @@ static void send_gvf_parametric(struct transport_tx *trans, struct link_device *
   float wb = gvf_parametric_control.w * gvf_parametric_control.beta;
 
   if (delta_T < 200) {
+    gvf_parametric_splines_ctr = (gvf_parametric_splines_ctr + 1) % 3;
     pprz_msg_send_GVF_PARAMETRIC(trans, dev, AC_ID, &traj_type, &gvf_parametric_control.s, &wb, gvf_parametric_plen,
                                  gvf_parametric_trajectory.p_parametric, gvf_parametric_elen, gvf_parametric_trajectory.phi_errors);
   }
@@ -155,6 +162,7 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
   // Carrot position
   //desired_x = f1;
   //desired_y = f2;
+
 
   float L = gvf_parametric_control.L;
   float beta = gvf_parametric_control.beta * gvf_parametric_control.s;
@@ -240,6 +248,7 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
   // From gvf_common.h
   gvf_c_omega.omega = heading_rate; 
   
+
   // Virtual coordinate update, even if the vehicle is not in autonomous mode, the parameter w will get "closer" to
   // the vehicle. So it is not only okei but advisable to update it.
   gvf_parametric_control.w += w_dot * gvf_parametric_control.delta_T * 1e-3;
@@ -354,8 +363,8 @@ void gvf_parametric_control_3D(float kx, float ky, float kz, float f1, float f2,
 
   gvf_parametric_low_level_control_3D(heading_rate, climbing_rate);
 }
-#endif
 
+#endif 
 /** 2D TRAJECTORIES **/
 // 2D TREFOIL KNOT
 
@@ -383,11 +392,71 @@ bool gvf_parametric_2D_trefoil_XY(float xo, float yo, float w1, float w2, float 
 }
 
 bool gvf_parametric_2D_trefoil_wp(uint8_t wp, float w1, float w2, float ratio, float r, float alpha)
-{ 
+{
   gvf_parametric_trajectory.p_parametric[7] = wp;
   gvf_parametric_plen_wps = 1;
+  gvf_parametric_2D_trefoil_XY(WaypointX(wp), WaypointY(wp), w1, w2, ratio, r, alpha);
+  return true;
+}
 
-  gvf_parametric_2D_trefoil_XY(waypoints[wp].x, waypoints[wp].y, w1, w2, ratio, r, alpha);
+// 2D CUBIC BEZIER CURVE
+bool gvf_parametric_2D_bezier_XY(void)
+{
+  gvf_parametric_trajectory.type = BEZIER_2D;
+  float fx, fy, fxd, fyd, fxdd, fydd;
+  gvf_parametric_2d_bezier_splines_info(gvf_bezier_2D, &fx, &fy, &fxd, &fyd, &fxdd, &fydd);
+  gvf_parametric_control_2D(gvf_parametric_2d_bezier_par.kx, gvf_parametric_2d_bezier_par.ky, fx, fy, fxd, fyd, fxdd,
+                            fydd);
+  return true;
+}
+
+/* @param first_wp is the first waypoint of the Bézier Spline
+ * there should be 3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1 points
+ */
+bool gvf_parametric_2D_bezier_wp(uint8_t first_wp)
+{
+  float x[3 * GVF_PARAMETRIC_2D_BEZIER_N_SEG + 1];
+  float y[3 * GVF_PARAMETRIC_2D_BEZIER_N_SEG + 1];
+  int k;
+  for (k = 0; k < 3 * GVF_PARAMETRIC_2D_BEZIER_N_SEG + 1; k++) {
+    x[k] = WaypointX(first_wp + k);
+    y[k] = WaypointY(first_wp + k);
+  }
+  create_bezier_spline(gvf_bezier_2D, x, y);
+
+  /* Send data piecewise. Some radio modules do not allow for a big data frame.*/
+
+  // Send x points -> Indicate x with sign (+) in the first parameter
+  if (gvf_parametric_splines_ctr == 0) {
+    gvf_parametric_trajectory.p_parametric[0] = -GVF_PARAMETRIC_2D_BEZIER_N_SEG; // send x (negative value)
+    for (k = 0; k < 3 * GVF_PARAMETRIC_2D_BEZIER_N_SEG + 1; k++) {
+      gvf_parametric_trajectory.p_parametric[k + 1] = x[k];
+    }
+  }
+  // Send y points -> Indicate y with sign (-) in the first parameter
+  else if (gvf_parametric_splines_ctr == 1) {
+    gvf_parametric_trajectory.p_parametric[0] = GVF_PARAMETRIC_2D_BEZIER_N_SEG; // send y (positive value)
+    for (k = 0; k < 3 * GVF_PARAMETRIC_2D_BEZIER_N_SEG + 1; k++) {
+      gvf_parametric_trajectory.p_parametric[k + 1] = y[k];
+    }
+  }
+  // send kx, ky, beta and anything else needed..
+  else {
+    gvf_parametric_trajectory.p_parametric[0] = 0.0;
+    gvf_parametric_trajectory.p_parametric[1] = gvf_parametric_2d_bezier_par.kx;
+    gvf_parametric_trajectory.p_parametric[2] = gvf_parametric_2d_bezier_par.ky;
+    gvf_parametric_trajectory.p_parametric[3] = gvf_parametric_control.beta;
+  }
+  gvf_parametric_plen = 16;
+  gvf_parametric_plen_wps = 1;
+
+  // restart the spline
+  if (gvf_parametric_control.w >= (float)GVF_PARAMETRIC_2D_BEZIER_N_SEG) {
+    gvf_parametric_control.w = 0;
+  } else if (gvf_parametric_control.w < 0) {
+    gvf_parametric_control.w = 0;
+  }
+  gvf_parametric_2D_bezier_XY();
   return true;
 }
 #endif
@@ -508,7 +577,7 @@ bool gvf_parametric_3D_ellipse_XYZ(float xo, float yo, float r, float zl, float 
 }
 
 bool gvf_parametric_3D_ellipse_wp(uint8_t wp, float r, float zl, float zh, float alpha)
-{ 
+{
   gvf_parametric_trajectory.p_parametric[6] = wp;
   gvf_parametric_plen_wps = 1;
 
@@ -564,11 +633,13 @@ bool gvf_parametric_3D_lissajous_XYZ(float xo, float yo, float zo, float cx, flo
 
 bool gvf_parametric_3D_lissajous_wp_center(uint8_t wp, float zo, float cx, float cy, float cz, float wx, float wy,
     float wz, float dx, float dy, float dz, float alpha)
-{ 
+{
   gvf_parametric_trajectory.p_parametric[13] = wp;
   gvf_parametric_plen_wps = 1;
 
   gvf_parametric_3D_lissajous_XYZ(waypoints[wp].x, waypoints[wp].y, zo, cx, cy, cz, wx, wy, wz, dx, dy, dz, alpha);
   return true;
 }
+
 #endif
+
