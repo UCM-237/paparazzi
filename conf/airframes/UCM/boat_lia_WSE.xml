@@ -141,49 +141,15 @@
     <define name="GYRO_Q_SIGN"       value="-	1"/>
     <define name="GYRO_R_SIGN"       value="-1"/>
 
-    
-    
-		<!-- Calibracion 30 november 2023 -->
-		<!--
-		<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={2845,1061,1782}, .scale={{45167,35608,64165},{2481,10789,4398}}}}"/>
-		<define name="MAG_X_NEUTRAL" value="2845"/>
-		<define name="MAG_Y_NEUTRAL" value="1061"/>
-		<define name="MAG_Z_NEUTRAL" value="1782"/>
-		<define name="MAG_X_SENS" value="18.20515926892537" integer="16"/>
-		<define name="MAG_Y_SENS" value="3.300398550842525" integer="16"/>
-		<define name="MAG_Z_SENS" value="14.589586194551865" integer="16"/>
-		-->
-		
-<!-- Calibracion 7 de febrero de 2024-->
-<!--<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={3021,1709,2351}, .scale={{65152,56122,65024},{6221,19975,4201}}}}"/>
+<!--Calibracion 02/06/2024 GUAJARAZ-->
+<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1452,1425,2257}, .scale={{22139,37531,41508},{15286,20819,25019}}}}"/>
 
-<define name="MAG_X_NEUTRAL" value="3021"/>
-<define name="MAG_Y_NEUTRAL" value="1709"/>
-<define name="MAG_Z_NEUTRAL" value="2351"/>
-<define name="MAG_X_SENS" value="10.472914336263354" integer="16"/>
-<define name="MAG_Y_SENS" value="2.8096120146697294" integer="16"/>
-<define name="MAG_Z_SENS" value="15.478219493994972" integer="16"/>-->
-
-<!-- Calibracion 17 de mayo de 2024 Físicas-->
-<!--<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1394,1350,2286}, .scale={{16729,44318,64927},{10298,22755,35234}}}}"/>
-
-<define name="MAG_X_NEUTRAL" value="1394"/>
-<define name="MAG_Y_NEUTRAL" value="1350"/>
-<define name="MAG_Z_NEUTRAL" value="2286"/>
-<define name="MAG_X_SENS" value="1.6244901900036965" integer="16"/>
-<define name="MAG_Y_SENS" value="1.94761590855709" integer="16"/>
-<define name="MAG_Z_SENS" value="1.8427371281813942" integer="16"/>-->
-
-<!-- CAlibracion 06/06/2024 ESTE ES EL BUENO (EL ULTIMO EN PRADOLONGO (PRADOLARGO))-->
-<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1499,1419,2178}, .scale={{4881,25505,3671},{3104,13528,2074}}}}"/>
-
-<define name="MAG_X_NEUTRAL" value="1499"/>
-<define name="MAG_Y_NEUTRAL" value="1419"/>
-<define name="MAG_Z_NEUTRAL" value="2178"/>
-<define name="MAG_X_SENS" value="1.572487112761647" integer="16"/>
-<define name="MAG_Y_SENS" value="1.8853489049806385" integer="16"/>
-<define name="MAG_Z_SENS" value="1.770009655069537" integer="16"/>
-
+<define name="MAG_X_NEUTRAL" value="1452"/>
+<define name="MAG_Y_NEUTRAL" value="1425"/>
+<define name="MAG_Z_NEUTRAL" value="2257"/>
+<define name="MAG_X_SENS" value="1.448318722837593" integer="16"/>
+<define name="MAG_Y_SENS" value="1.802728276186034" integer="16"/>
+<define name="MAG_Z_SENS" value="1.6590591156972092" integer="16"/>
 
   </section>
 

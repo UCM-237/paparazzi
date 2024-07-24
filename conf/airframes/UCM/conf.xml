@@ -15,6 +15,7 @@
    ac_id="1"
    airframe="airframes/UCM/boat_lia_WSE.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
+
    telemetry="telemetry/default_rover_pidcontrol.xml"
    flight_plan="flight_plans/UCM/steering_boat_gvfMission_Pradolongo.xml"
    settings=""
