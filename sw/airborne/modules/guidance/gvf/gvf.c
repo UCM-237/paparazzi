@@ -23,11 +23,11 @@
 #include <math.h>
 #include "std.h"
 
-#include "modules/guidance/gvf/gvf.h"
-#include "modules/guidance/gvf/gvf_low_level_control.h"
-#include "modules/guidance/gvf/trajectories/gvf_ellipse.h"
-#include "modules/guidance/gvf/trajectories/gvf_line.h"
-#include "modules/guidance/gvf/trajectories/gvf_sin.h"
+#include "gvf.h"
+#include "gvf_low_level_control.h"
+#include "trajectories/gvf_ellipse.h"
+#include "trajectories/gvf_line.h"
+#include "trajectories/gvf_sin.h"
 #include "autopilot.h"
 #include "../gvf_common.h"
 
@@ -145,6 +145,8 @@ void gvf_init(void)
   gvf_control.kn = 1;
   gvf_control.s = 1;
   gvf_control.which_line = 0; // Start always with first line
+  gvf_control.speed = 1.0; // Rotorcraft only (for now)
+  gvf_control.align = false; // Rotorcraft only
   gvf_trajectory.type = NONE;
 
   // gvf_common.h
@@ -165,7 +167,7 @@ void gvf_control_2D(float ke, float kn, float e,
                     struct gvf_grad *grad, struct gvf_Hess *hess)
 {
   gvf_t0 = get_sys_time_msec();
-  
+
   gvf_low_level_getState();
   float course = gvf_state.course;
   float px_dot = gvf_state.px_dot;
@@ -191,10 +193,6 @@ void gvf_control_2D(float ke, float kn, float e,
   float pdx_dot = tx - ke * e * nx;
   float pdy_dot = ty - ke * e * ny;
 
-  float norm_pd_dot = sqrtf(pdx_dot * pdx_dot + pdy_dot * pdy_dot);
-  float md_x = pdx_dot / norm_pd_dot;
-  float md_y = pdy_dot / norm_pd_dot;
-
   float Apd_dot_dot_x = -ke * (nx * px_dot + ny * py_dot) * nx;
   float Apd_dot_dot_y = -ke * (nx * px_dot + ny * py_dot) * ny;
 
@@ -206,11 +204,66 @@ void gvf_control_2D(float ke, float kn, float e,
   float pd_dot_dot_x = Apd_dot_dot_x + Bpd_dot_dot_x;
   float pd_dot_dot_y = Apd_dot_dot_y + Bpd_dot_dot_y;
 
+  float norm_pd_dot = sqrtf(pdx_dot * pdx_dot + pdy_dot * pdy_dot);
+  float md_x = pdx_dot / norm_pd_dot;
+  float md_y = pdy_dot / norm_pd_dot;
+
   float md_dot_const = -(md_x * pd_dot_dot_y - md_y * pd_dot_dot_x)
                        / norm_pd_dot;
 
   float md_dot_x =  md_y * md_dot_const;
   float md_dot_y = -md_x * md_dot_const;
+
+  #if defined(ROTORCRAFT_FIRMWARE)
+
+  // Use accel based control. Not recommended as of current implementation
+  #if defined(GVF_ROTORCRAFT_USE_ACCEL)
+
+  // Set nav for command
+  // Use parameter kn as the speed command
+  nav.speed.x = md_x * kn;
+  nav.speed.y = md_y * kn;
+
+  // Acceleration induced by the field with speed set to kn (!WIP!)
+  #warning "Using GVF for rotorcraft is still experimental, proceed with caution"
+  float n_norm = sqrtf(nx*nx+ny*ny);
+  float hess_px_dot = px_dot * H11 + py_dot * H12;
+  float hess_py_dot = px_dot * H21 + py_dot * H22;
+
+  float hess_pdx_dot = pdx_dot * H11 + pdy_dot * H12;
+  float hess_pdy_dot = pdx_dot * H21 + pdy_dot * H22;
+
+  float curvature_correction = tx * hess_px_dot + ty * hess_py_dot / (n_norm * n_norm);
+  float accel_correction_x = kn * hess_py_dot / n_norm;
+  float accel_correction_y = - kn * hess_px_dot / n_norm;
+  float accel_cmd_x = accel_correction_x + px_dot * curvature_correction;
+  float accel_cmd_y = accel_correction_y + py_dot * curvature_correction;
+
+  float speed_cmd_x = kn*tx / n_norm - ke * e * nx / (n_norm);
+  float speed_cmd_y = kn*ty / n_norm - ke * e * ny / (n_norm);
+
+  // TODO: don't change nav struct directly
+  nav.accel.x = accel_cmd_x + (speed_cmd_x - px_dot);
+  nav.accel.y = accel_cmd_y + (speed_cmd_y - py_dot);
+  nav.heading = atan2f(md_x,md_y);
+
+  #else // SPEED_BASED_GVF
+
+  nav.setpoint_mode = NAV_SETPOINT_MODE_SPEED;
+
+  // Speed-based control, acceleration based control not implemented yet
+  nav.speed.x = gvf_control.speed * md_x;
+  nav.speed.y = gvf_control.speed * md_y;
+
+  // Optionally align heading with trajectory
+  if (gvf_control.align) 
+  {
+    nav.heading = atan2f(md_x, md_y);
+  }
+  
+  #endif
+
+  #else // FIXEDWING / ROVER FIRMWARE
 
   float omega_d = -(md_dot_x * md_y - md_dot_y * md_x);
 
@@ -218,15 +271,33 @@ void gvf_control_2D(float ke, float kn, float e,
   float mr_y = cosf(course);
 
   float omega = omega_d + kn * (mr_x * md_y - mr_y * md_x);
-  
+
   gvf_control.omega = omega;
   
   // From gvf_common.h
   gvf_c_omega.omega  = omega; 
+
   gvf_c_info.kappa   = (nx*(H12*ny - nx*H22) + ny*(H21*nx - H11*ny))/powf(nx*nx + ny*ny,1.5);
   gvf_c_info.ori_err = 1 - (md_x*cosf(course) + md_y*sinf(course));
   gvf_low_level_control_2D(omega);
+
+  #endif
 }
+
+// BEGIN ROTORCRAFT
+
+void gvf_set_speed(float speed)
+{
+  if (speed < 0.0) speed = 0.0;
+  gvf_control.speed = speed;
+}
+
+void gvf_set_align(bool align)
+{
+  gvf_control.align = align;
+}
+
+// END ROTORCRAFT
 
 void gvf_set_direction(int8_t s)
 {
@@ -253,9 +324,9 @@ static void gvf_line(float a, float b, float heading)
   gvf_control_2D(gvf_line_par.ke, gvf_line_par.kn, e, &grad_line, &Hess_line); // Removed 1e-2
 
   gvf_control.error = e;
-  
+
   gvf_setNavMode(GVF_MODE_WAYPOINT);
-  
+
   gvf_segment.seg = 0;
 }
 
@@ -267,7 +338,7 @@ bool gvf_line_XY_heading(float a, float b, float heading)
 }
 
 bool gvf_line_XY1_XY2(float x1, float y1, float x2, float y2)
-{ 
+{
   if (gvf_plen_wps != 2) {
     gvf_trajectory.p[3] = x2;
     gvf_trajectory.p[4] = y2;
@@ -279,7 +350,7 @@ bool gvf_line_XY1_XY2(float x1, float y1, float x2, float y2)
   float zy = y2 - y1;
 
   gvf_line_XY_heading(x1, y1, atan2f(zx, zy));
-  
+
   gvf_setNavMode(GVF_MODE_ROUTE);
   gvf_segment.seg = 1;
   gvf_segment.x1 = x1;
@@ -295,7 +366,7 @@ bool gvf_line_wp1_wp2(uint8_t wp1, uint8_t wp2)
   gvf_trajectory.p[3] = wp1;
   gvf_trajectory.p[4] = wp2;
   gvf_plen_wps = 2;
-  
+
   float x1 = WaypointX(wp1);
   float y1 = WaypointY(wp1);
   float x2 = WaypointX(wp2);
@@ -318,7 +389,7 @@ bool gvf_segment_loop_XY1_XY2(float x1, float y1, float x2, float y2, float d1, 
   gvf_line(x1, y1, alpha);
 
   gvf_setNavMode(GVF_MODE_ROUTE);
-  
+
   gvf_segment.seg = 1;
   gvf_segment.x1 = x1;
   gvf_segment.y1 = y1;
@@ -329,7 +400,7 @@ bool gvf_segment_loop_XY1_XY2(float x1, float y1, float x2, float y2, float d1, 
 }
 
 bool gvf_segment_loop_wp1_wp2(uint8_t wp1, uint8_t wp2, float d1, float d2)
-{ 
+{
   gvf_trajectory.p[3] = wp1;
   gvf_trajectory.p[4] = wp2;
   gvf_trajectory.p[5] = d1;
@@ -345,7 +416,7 @@ bool gvf_segment_loop_wp1_wp2(uint8_t wp1, uint8_t wp2, float d1, float d2)
 }
 
 bool gvf_segment_XY1_XY2(float x1, float y1, float x2, float y2)
-{ 
+{
   struct EnuCoor_f *p = stateGetPositionEnu_f();
   float px = p->x - x1;
   float py = p->y - y1;
@@ -478,7 +549,7 @@ bool gvf_ellipse_XY(float x, float y, float a, float b, float alpha)
 
 
 bool gvf_ellipse_wp(uint8_t wp, float a, float b, float alpha)
-{  
+{
   gvf_trajectory.p[5] = wp;
   gvf_plen_wps = 1;
 
