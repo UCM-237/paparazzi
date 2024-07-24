@@ -43,6 +43,7 @@ extern gvf_common_omega gvf_c_omega;
 * @brief Different parameters obtained from gvfs. dot means d/dt
 * @param kappa is the curve's curvature
 * @param ori_err is the orientation error
+* #param ori_err_dot is the derivative of the orientation error
 */
 
 typedef struct{	
@@ -64,6 +65,8 @@ typedef struct{
  
 extern gvf_common_params gvf_c_info;
 extern gvf_common_stop_at_wp gvf_c_stopwp;
+/* @ brief Variable to keep the current cpu time in gvf calls */
+extern uint32_t gvf_c_t0;
  
  #endif // GVF_COMMON_H
 

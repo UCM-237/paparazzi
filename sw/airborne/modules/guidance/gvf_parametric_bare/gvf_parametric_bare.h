@@ -69,6 +69,8 @@
 * @param s Defines the direction to be tracked. It takes the values -1 or 1.
 * @param k_roll Gain for tuning the coordinated turn.
 * @param k_climb Gain for tuning the climbing setting point.
+* @param k_psi Gain for tuning the heading setting point
+* @param beta Variable to scale down w
 */
 typedef struct {
   float w;
