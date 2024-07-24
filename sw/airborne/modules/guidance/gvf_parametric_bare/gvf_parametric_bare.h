@@ -133,6 +133,6 @@ extern bool gvf_parametric_bare_3D_lissajous_XYZ(float, float, float, float, flo
 extern bool gvf_parametric_bare_3D_lissajous_wp_center(uint8_t, float, float, float, float, float, float, float, float,
     float, float, float);
 
-
+extern bool dist_bool(float , float , uint8_t );
 
 #endif // GVF_PARAMETRIC_H

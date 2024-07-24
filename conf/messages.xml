@@ -114,12 +114,13 @@
     </message>
 
     <message name="ENERGY" id="12">
-      <field name="throttle" type="uint8" unit="%">Throttle setting</field>
-      <field name="voltage"  type="float" unit="V">Input battery voltage</field>
-      <field name="current"  type="float" unit="A">Current consumption</field>
-      <field name="power"    type="float" unit="W">Electrical power</field>
-      <field name="charge"   type="float" unit="Ah">Accumulated consumed charge</field>
-      <field name="energy"   type="float" unit="Wh">Accumulated consumed energy</field>
+      <field name="throttle"  type="uint8" unit="%">Throttle setting</field>
+      <field name="voltage"   type="float" unit="V">Input battery voltage</field>
+      <field name="current"   type="float" unit="A">Current consumption</field>
+      <field name="power"     type="float" unit="W">Electrical power</field>
+      <field name="avg_power" type="float" unit="W">Average electrical power</field>
+      <field name="charge"    type="float" unit="Ah">Accumulated consumed charge</field>
+      <field name="energy"    type="float" unit="Wh">Accumulated consumed energy</field>
     </message>
 
     <message name="DEBUG_MCU_LINK" id="13">
@@ -942,10 +943,10 @@
       <field name="values" type="uint16[]" unit="none"/>
     </message>
 
-    <message name="ACTUATORS" id="105">
+
+    <message name="ACTUATORS_RAW" id="105">
       <field name="values" type="int16[]" unit="none"/>
     </message>
-
     <message name="BLUEGIGA" id="106">
       <field name="data_rate" type="uint32" unit="bytes/s"/>
       <field name="A2A_msg_rate" type="uint32"/>
@@ -1485,7 +1486,21 @@
       <field name="comp_id" type="uint8" values="NONE|GENERIC|IR|ICQ|ICE|FC|DCM|FINV|MLKF|GX3|CHIMU|VN"/>
     </message>
 
-    <!-- 158 is free -->
+    <message name="STATIC_CONTROL" id="158">
+      <field name="active"  type="uint8" values="INACTIVE|ACTIVE"/>
+      <field name="dist_WP" type="float" />
+      <field name="pt_bz"  type="uint8"/>
+      <field name="pxd" type="float"/>
+      <field name="pyd" type="float"/>
+      <field name="bz0x"  type="float"/>
+      <field name="bz0y"  type="float"/>
+      <field name="bz4x"  type="float"/>
+      <field name="bz4y"  type="float"/>
+      <field name="bz7x"  type="float"/>
+      <field name="bz7y"  type="float"/>
+      <field name="bz11x"  type="float"/>
+      <field name="bz11y"  type="float"/> 	      
+    </message>
 
     <message name="ROTORCRAFT_NAV_STATUS" id="159">
       <field name="block_time" type="uint16" unit="s"/>
@@ -1629,7 +1644,10 @@
       <field name="mag_y" type="float" unit="mGauss">Magnetometer y-bias in mGauss</field>
       <field name="mag_z" type="float" unit="mGauss">Magnetometer z-bias in mGauss</field>
     </message>
-    <!-- 172 is free -->
+
+    <message name="ACTUATORS" id="172">
+      <field name="values" type="int16[]" unit="none"/>
+    </message>
 
     <message name="AHRS_EULER" id="173">
       <field name="phi"   type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578" />
@@ -1697,17 +1715,37 @@
     	<description>
     		Setpoints of the rover, speed error,  throttle_command, PI action and speed measured
     	</description>
-    	<field name="speed_sp"         type="float" unit="m/s"/>
-    	<field name="speed_error"      type="float" unit="m/s" />
-    	<field name="throttle_command" type="float"/>
-    	<field name="delta_sp"         type="float" unit="deg"/>
-    	<field name="i_action"         type="float"/>
-    	<field name="p_action"         type="float"/>
-    	<field name="speed_measured"   type="float"/>
+    	<field name="speed_sp"         type="float" unit="m/s"/>  <!-- Speed setpoint -->
+    	<field name="speed_error"      type="float" unit="m/s" /> <!-- Speed error -->
+    	<field name="throttle_command" type="float"/>						  <!-- throttle command -->
+    	<field name="delta_sp"         type="float" unit="deg"/>  <!-- Angle of wheels setpoint -->
+    	<field name="kp"						   type="float"/>							<!-- Proporcional constant for the pid -->	
+    	<field name="ki"						   type="float"/>						  <!-- Integral constant for the pid -->
+    	<field name="kd"						   type="float"/>							<!-- Derivative constant for the pid -->
+    	<field name="i_action"         type="float"/>						  <!-- Integral action -->
+    	<field name="p_action"         type="float"/>						  <!-- Proportional action -->
+    	<field name="d_action"				 type="float"/>						  <!-- Derivative action -->
+    	<field name="speed_measured"   type="float"/>						  <!-- Measured speed -->
+    	<field name="curvature"				 type="float"/>							<!-- Computed curvature with the GVF -->
     </message>
     
+    <!-- Obstacle telemetry -->
+    <!--
+    <message name="OBSTACLE_GRID" id="182">
+    	<description>
+    		Obstacle grid telemetry
+    	</description>
+    	<field name="cell width" type="float"/>
+    	<field name="cell height" type="float"/>
+    	<field name="xmin" type="float"/>
+    	<field name="xmax" type="float"/>
+    	<field name="ymin" type="float"/>
+    	<field name="ymax" type="float"/>
+    	<field name="row_number" type="uint16"/>
+    	<field name="columns" type="uint8[]"/>
+    </message>
+    -->
     
-    <!-- 182 is free -->
     <!-- 183 is free -->
     <!-- 184 is free -->
     <!-- 185 is free -->
@@ -1868,26 +1906,22 @@
     </message>
 
     <message name="SERIAL_COM" id="212">
-     	 <field name="time"		              alt_unit="s"		type="uint16"/>
-    	 <field name="lat"		           alt_unit="1e7deg"	type="int32"/>
-    	 <field name="lon"		           alt_unit="1e7deg"	type="int32"/>
-    	 <field name="alt"		             alt_unit="mm"		type="int32"/>
-    	 <field name="distance"	           alt_unit="mm"		type="uint32"/> 
-    	 <field name="confidence"	           alt_unit="%"		type="uint8"/>
-    	  <field name="msg_snd_error"				                type="uint8"/> 
-    	 <field name="msg_snd_length"				                type="uint8"/>
-    	 <field name="checksum"				                      type="uint16"/>
-    	 <field name="recv_id"					                    type="uint8"/>
-    	 <field name="recv_status"				                  type="uint8"/>
-    	 <field name="recv_payld_len"				                type="uint8"/>
-    	 <field name="recv_time"           	alt_unit="s"		type="uint16"/>
-    	 <field name="recv_depth"	          alt_unit="mm"		type="uint16"/>
-    	 <field name="recv_left_v_bat"                      type="uint16" unit="mV"> Left Battery Voltage (mV)</field>
-    	 <field name="recv_left_i_bat"                      type="uint16" unit="mV"> Left Battery Current (mA)</field>
-    	 <field name="recv_right_v_bat"                     type="uint16" unit="mV"> Right Battery Voltage (mV)</field>
-     	 <field name="recv_right_i_bat"                     type="uint16" unit="mV"> Right Battery Current (mA)</field>
-    	  <field name="msg_recv_error"			                type="uint8"/> 
-    	  <field name="msg_snd_chks"				                type="uint16"/> 
+     	 <field name="time"		alt_unit="s"		type="uint16"/>
+    	 <field name="lat"		alt_unit="1e7deg"	type="int32"/>
+    	 <field name="lon"		alt_unit="1e7deg"	type="int32"/>
+    	 <field name="alt"		alt_unit="mm"		type="int32"/>
+    	 <field name="distance"	alt_unit="mm"		type="uint32"/> 
+    	 <field name="confidence"	alt_unit="%"		type="uint8"/>
+    	  <field name="msg_snd_error"				type="uint8"/> 
+    	 <field name="msg_snd_length"				type="uint8"/>
+    	 <field name="checksum"				type="uint16"/>
+    	 <field name="recv_id"					type="uint8"/>
+    	 <field name="recv_status"				type="uint8"/>
+    	 <field name="recv_payld_len"				type="uint8"/>
+    	 <field name="recv_time"	alt_unit="s"		type="uint16"/>
+    	 <field name="recv_depth"	alt_unit="mm"		type="uint16"/>
+    	  <field name="msg_recv_error"			type="uint8"/> 
+    	  <field name="msg_snd_chks"				type="uint16"/> 
     	  
     </message>
 
@@ -1920,14 +1954,8 @@
     </message>
 
     <message name="INFO_MSG" id="215">
-      <field name="msg" type="uint8"/>
-      <field name="bearing" type="float"/>
-      <field name="throttle" type="float"/>
-      <field name="rc_throttle" type="int32"/>
-      <field name="rc_bearing" type="int32"/>      
-      <field name="MLEFT" type="int32"/>
-      <field name="MRIGHT" type="int32"/>
-   </message>
+      <field name="msg" type="char[]"/>
+    </message>
 
     <message name="STAB_ATTITUDE_INDI" id="216">
       <field name="angular_accel_p" type="float"/>

@@ -146,10 +146,10 @@ static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
                            &serial_msg.payload_len,
                            &serial_msg.time,
                            &serial_msg.depth,
-                           &serial_msg.vbat_left,
-                           &serial_msg.cbat_left,
-                           &serial_msg.vbat_right,
-                           &serial_msg.cbat_right,
+                           //&serial_msg.vbat_left,
+                           //&serial_msg.cbat_left,
+                           //&serial_msg.vbat_right,
+                           //&serial_msg.cbat_right,
                            &serial_msg.error_last,
                            &serial_msg.ck
                           );

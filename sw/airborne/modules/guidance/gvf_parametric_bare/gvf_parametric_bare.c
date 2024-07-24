@@ -118,9 +118,31 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   gvf_parametric_bare_control.delta_T = now - gvf_parametric_bare_t0;
   gvf_parametric_bare_t0 = now;
 
-  if (gvf_parametric_bare_control.delta_T > 300) { // We need at least two iterations for Delta_T
-    gvf_parametric_bare_control.w = 0; // Reset w since we assume the algorithm starts
-    return;
+  /* If the vehicle does not need to stop at the wp */
+  if(!gvf_c_stopwp.stop_at_wp)
+  {
+    // We need at least two iterations for Delta_T
+    if ((gvf_parametric_bare_control.delta_T > 300))
+    {
+      /* Reset w since we assume the algorithm starts, because there cannot be any
+       * physical stop of 300 ms */
+      gvf_parametric_bare_control.w = 0;
+      return;
+    }
+  }
+  else
+  {
+    /* TODO: Replace magic number for conversion from ms to s and the number
+     * of seconds of error */
+    /* If the vehicle has to stop at any waypoint wp, it shall wait outside
+     * gvf_parametric_bare, gvf_c_stopwp.wait_time seconds, so when coming back
+     * into this function, delta_T could be really big. If that's the case then
+     * fix delta_T to a value, so the integration step is properly carried.
+     */
+    if((gvf_parametric_bare_control.delta_T >= (gvf_c_stopwp.wait_time - 1)* 1000))
+    {
+      gvf_parametric_bare_control.delta_T = 1.0 / PERIODIC_FREQUENCY;
+    }
   }
 
   // Carrot position

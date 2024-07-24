@@ -92,6 +92,10 @@
 #define SDP3X_SENDER_ID 41
 #endif
 
+#ifndef UAVCAN_SENDER_ID
+#define UAVCAN_SENDER_ID 42
+#endif
+
 /*
  * IDs of airspeed sensors (message 14)
  */
@@ -193,6 +197,10 @@
 #define AGL_LIDAR_MATEKSYS_3901_L0X_ID 15
 #endif
 
+#ifndef AGL_UAVCAN_ID
+#define AGL_UAVCAN_ID 16
+#endif
+
 /*
  * IDs of magnetometer sensors (including IMUs with mag)
  */
@@ -286,6 +294,10 @@
 
 #ifndef GPS_DW1000_ID
 #define GPS_DW1000_ID 15
+#endif
+
+#ifndef GPS_UBX2_ID
+#define GPS_UBX2_ID 16
 #endif
 
 /*
@@ -383,6 +395,22 @@
 #define IMU_NPS_ID 23
 #endif
 
+#ifndef IMU_ICM42688_ID
+#define IMU_ICM42688_ID 24
+#endif
+
+#ifndef IMU_PIXHAWK1_ID
+#define IMU_PIXHAWK1_ID 25
+#endif
+
+#ifndef IMU_PIXHAWK2_ID
+#define IMU_PIXHAWK2_ID 26
+#endif
+
+#ifndef IMU_PIXHAWK3_ID
+#define IMU_PIXHAWK3_ID 27
+#endif
+
 // prefiltering with OneEuro filter
 #ifndef IMU_F1E_ID
 #define IMU_F1E_ID 30
@@ -457,10 +485,26 @@
 #endif
 
 /*
- * IDs of RPM sensors (message 15)
+ * IDs of ACT_FEEDBACK sensors (message 15)
  */
-#ifndef RPM_SENSOR_ID
-#define RPM_SENSOR_ID 1
+#ifndef ACT_FEEDBACK_BOARD_ID
+#define ACT_FEEDBACK_BOARD_ID 1
+#endif
+
+#ifndef ACT_FEEDBACK_DSHOT_ID
+#define ACT_FEEDBACK_DSHOT_ID 2
+#endif
+
+#ifndef ACT_FEEDBACK_UAVCAN_ID
+#define ACT_FEEDBACK_UAVCAN_ID 3
+#endif
+
+#ifndef ACT_FEEDBACK_RPM_SENSOR_ID
+#define ACT_FEEDBACK_RPM_SENSOR_ID 4
+#endif
+
+#ifndef ACT_FEEDBACK_FAULHABER_ID
+#define ACT_FEEDBACK_FAULHABER_ID 5
 #endif
 
 /*
@@ -611,5 +655,14 @@
 #ifndef VEL_SP_FCR_ID
 #define VEL_SP_FCR_ID 1 // Approach Moving Target
 #endif
+
+
+/*
+ * IDs of LIDAR_DATA senders
+ */
+#ifndef LIDAR_DATA_VL53L5CX_ID
+#define LIDAR_DATA_VL53L5CX_ID 1
+#endif
+
 
 #endif /* ABI_SENDER_IDS_H */
