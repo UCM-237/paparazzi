@@ -114,12 +114,13 @@
     </message>
 
     <message name="ENERGY" id="12">
-      <field name="throttle" type="uint8" unit="%">Throttle setting</field>
-      <field name="voltage"  type="float" unit="V">Input battery voltage</field>
-      <field name="current"  type="float" unit="A">Current consumption</field>
-      <field name="power"    type="float" unit="W">Electrical power</field>
-      <field name="charge"   type="float" unit="Ah">Accumulated consumed charge</field>
-      <field name="energy"   type="float" unit="Wh">Accumulated consumed energy</field>
+      <field name="throttle"  type="uint8" unit="%">Throttle setting</field>
+      <field name="voltage"   type="float" unit="V">Input battery voltage</field>
+      <field name="current"   type="float" unit="A">Current consumption</field>
+      <field name="power"     type="float" unit="W">Electrical power</field>
+      <field name="avg_power" type="float" unit="W">Average electrical power</field>
+      <field name="charge"    type="float" unit="Ah">Accumulated consumed charge</field>
+      <field name="energy"    type="float" unit="Wh">Accumulated consumed energy</field>
     </message>
 
     <message name="DEBUG_MCU_LINK" id="13">
@@ -942,10 +943,10 @@
       <field name="values" type="uint16[]" unit="none"/>
     </message>
 
-    <message name="ACTUATORS" id="105">
+    <message name="ACTUATORS_RAW" id="105">
       <field name="values" type="int16[]" unit="none"/>
     </message>
-
+ 
     <message name="BLUEGIGA" id="106">
       <field name="data_rate" type="uint32" unit="bytes/s"/>
       <field name="A2A_msg_rate" type="uint32"/>
@@ -1485,7 +1486,21 @@
       <field name="comp_id" type="uint8" values="NONE|GENERIC|IR|ICQ|ICE|FC|DCM|FINV|MLKF|GX3|CHIMU|VN"/>
     </message>
 
-    <!-- 158 is free -->
+    <message name="STATIC_CONTROL" id="158">
+      <field name="active"  type="uint8" values="INACTIVE|ACTIVE"/>
+      <field name="dist_WP" type="float" />
+      <field name="pt_bz"  type="uint8"/>
+      <field name="pxd" type="float"/>
+      <field name="pyd" type="float"/>
+      <field name="bz0x"  type="float"/>
+      <field name="bz0y"  type="float"/>
+      <field name="bz4x"  type="float"/>
+      <field name="bz4y"  type="float"/>
+      <field name="bz7x"  type="float"/>
+      <field name="bz7y"  type="float"/>
+      <field name="bz11x"  type="float"/>
+      <field name="bz11y"  type="float"/> 	      
+    </message>
 
     <message name="ROTORCRAFT_NAV_STATUS" id="159">
       <field name="block_time" type="uint16" unit="s"/>
@@ -1629,7 +1644,10 @@
       <field name="mag_y" type="float" unit="mGauss">Magnetometer y-bias in mGauss</field>
       <field name="mag_z" type="float" unit="mGauss">Magnetometer z-bias in mGauss</field>
     </message>
-    <!-- 172 is free -->
+      <message name="ACTUATORS" id="172">
+      <field name="values" type="int16[]" unit="none"/>
+    </message>
+
 
     <message name="AHRS_EULER" id="173">
       <field name="phi"   type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578" />

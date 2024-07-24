@@ -49,6 +49,11 @@
 #define USE_INS_NAV_INIT TRUE
 #endif
 
+/** Maximum allowed error in distance between dual GPS antennae */
+#ifndef INS_EKF2_MAX_REL_LENGTH_ERROR
+#define INS_EKF2_MAX_REL_LENGTH_ERROR 0.2 // Factor which gets multiplied by the reference distance
+#endif
+
 /** Special configuration for Optitrack */
 #if INS_EKF2_OPTITRACK
 #ifndef INS_EKF2_FUSION_MODE
@@ -273,6 +278,10 @@ PRINT_CONFIG_VAR(INS_EKF2_GPS_P_NOISE)
 #endif
 PRINT_CONFIG_VAR(INS_EKF2_BARO_NOISE)
 
+#ifdef INS_EXT_VISION_ROTATION
+struct FloatQuat ins_ext_vision_rot;
+#endif
+
 /* All registered ABI events */
 static abi_event baro_ev;
 static abi_event temperature_ev;
@@ -291,8 +300,7 @@ static void gyro_int_cb(uint8_t sender_id, uint32_t stamp, struct FloatRates *de
 static void accel_int_cb(uint8_t sender_id, uint32_t stamp, struct FloatVect3 *delta_accel, uint16_t dt);
 static void mag_cb(uint8_t sender_id, uint32_t stamp, struct Int32Vect3 *mag);
 static void gps_cb(uint8_t sender_id, uint32_t stamp, struct GpsState *gps_s);
-static void optical_flow_cb(uint8_t sender_id, uint32_t stamp, int32_t flow_x, int32_t flow_y, int32_t flow_der_x,
-                            int32_t flow_der_y, float quality, float size_divergence);
+static void optical_flow_cb(uint8_t sender_id, uint32_t stamp, int32_t flow_x, int32_t flow_y, int32_t flow_der_x, int32_t flow_der_y, float quality, float size_divergence);
 
 /* Static local functions */
 static void ins_ekf2_publish_attitude(uint32_t stamp);
@@ -301,7 +309,7 @@ static void ins_ekf2_publish_attitude(uint32_t stamp);
 static Ekf ekf;                                   ///< EKF class itself
 static parameters *ekf_params;                    ///< The EKF parameters
 struct ekf2_t ekf2;                               ///< Local EKF2 status structure
-
+static struct extVisionSample sample_ev;          ///< External vision sample
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 
@@ -418,7 +426,7 @@ static void send_filter_status(struct transport_tx *trans, struct link_device *d
   uint8_t mde = 0;
 
   // Check the alignment and if GPS is fused
-  if (control_mode.flags.tilt_align && control_mode.flags.yaw_align && control_mode.flags.gps) {
+  if (control_mode.flags.tilt_align && control_mode.flags.yaw_align && (control_mode.flags.gps || control_mode.flags.ev_pos)) {
     mde = 3;
   } else if (control_mode.flags.tilt_align && control_mode.flags.yaw_align) {
     mde = 4;
@@ -455,6 +463,62 @@ static void send_ahrs_bias(struct transport_tx *trans, struct link_device *dev)
   pprz_msg_send_AHRS_BIAS(trans, dev, AC_ID, &accel_bias(0), &accel_bias(1), &accel_bias(2),
                           &gyro_bias(0), &gyro_bias(1), &gyro_bias(2), &mag_bias(0), &mag_bias(1), &mag_bias(2));
 }
+
+static void send_ahrs_quat(struct transport_tx *trans, struct link_device *dev)
+{
+  struct Int32Quat ltp_to_body_quat;
+  const Quatf att_q{ekf.calculate_quaternion()};
+  ltp_to_body_quat.qi = QUAT1_BFP_OF_REAL(att_q(0));
+  ltp_to_body_quat.qx = QUAT1_BFP_OF_REAL(att_q(1));
+  ltp_to_body_quat.qy = QUAT1_BFP_OF_REAL(att_q(2));
+  ltp_to_body_quat.qz = QUAT1_BFP_OF_REAL(att_q(3));
+  struct Int32Quat *quat = stateGetNedToBodyQuat_i();
+  float foo = 0.f;
+  uint8_t ahrs_id = 1; // generic
+  pprz_msg_send_AHRS_QUAT_INT(trans, dev, AC_ID,
+                              &foo,
+                              &ltp_to_body_quat.qi,
+                              &ltp_to_body_quat.qx,
+                              &ltp_to_body_quat.qy,
+                              &ltp_to_body_quat.qz,
+                              &(quat->qi),
+                              &(quat->qx),
+                              &(quat->qy),
+                              &(quat->qz),
+                              &ahrs_id);
+}
+
+
+static void send_external_pose_down(struct transport_tx *trans, struct link_device *dev)
+{
+  if(sample_ev.time_us == 0){
+    return;
+  }
+  float sample_temp_ev[11];
+  sample_temp_ev[0]  = (float) sample_ev.time_us;
+  sample_temp_ev[1]  = sample_ev.pos(0) ;
+  sample_temp_ev[2]  = sample_ev.pos(1) ;
+  sample_temp_ev[3]  = sample_ev.pos(2) ; 
+  sample_temp_ev[4]  = sample_ev.vel(0) ;
+  sample_temp_ev[5]  = sample_ev.vel(1) ;              
+  sample_temp_ev[6]  = sample_ev.vel(2) ; 
+  sample_temp_ev[7]  = sample_ev.quat(0);
+  sample_temp_ev[8]  = sample_ev.quat(1);
+  sample_temp_ev[9]  = sample_ev.quat(2); 
+  sample_temp_ev[10] = sample_ev.quat(3);
+  pprz_msg_send_EXTERNAL_POSE_DOWN(trans, dev, AC_ID,
+                        &sample_temp_ev[0],
+                        &sample_temp_ev[1], 
+                        &sample_temp_ev[2], 
+                        &sample_temp_ev[3],
+                        &sample_temp_ev[4], 
+                        &sample_temp_ev[5], 
+                        &sample_temp_ev[6], 
+                        &sample_temp_ev[7], 
+                        &sample_temp_ev[8], 
+                        &sample_temp_ev[9], 
+                        &sample_temp_ev[10] );
+} 
 #endif
 
 /* Initialize the EKF */
@@ -520,15 +584,18 @@ void ins_ekf2_init(void)
   /* Initialize the flow sensor limits */
   ekf.set_optical_flow_limits(INS_EKF2_MAX_FLOW_RATE, INS_EKF2_SONAR_MIN_RANGE, INS_EKF2_SONAR_MAX_RANGE);
 
+  // Don't send external vision data by default
+  sample_ev.time_us = 0;
+
   /* Initialize the origin from flight plan */
 #if USE_INS_NAV_INIT
-  if(ekf.setEkfGlobalOrigin(NAV_LAT0*1e-7, NAV_LON0*1e-7, (NAV_ALT0 + NAV_MSL0)*1e-3))
+  if(ekf.setEkfGlobalOrigin(NAV_LAT0*1e-7, NAV_LON0*1e-7, (NAV_ALT0)*1e-3)) // EKF2 works HMSL
   {
     struct LlaCoor_i llh_nav0; /* Height above the ellipsoid */
     llh_nav0.lat = NAV_LAT0;
     llh_nav0.lon = NAV_LON0;
     /* NAV_ALT0 = ground alt above msl, NAV_MSL0 = geoid-height (msl) over ellipsoid */
-    llh_nav0.alt = NAV_ALT0 + NAV_MSL0;
+    llh_nav0.alt = NAV_ALT0 + NAV_MSL0; // in millimeters above WGS84 reference ellipsoid
 
     ltp_def_from_lla_i(&ekf2.ltp_def, &llh_nav0);
     ekf2.ltp_def.hmsl = NAV_ALT0;
@@ -550,6 +617,8 @@ void ins_ekf2_init(void)
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATE_FILTER_STATUS, send_filter_status);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_WIND_INFO_RET, send_wind_info_ret);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_AHRS_BIAS, send_ahrs_bias);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_AHRS_QUAT_INT, send_ahrs_quat);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_EXTERNAL_POSE_DOWN, send_external_pose_down);
 #endif
 
   /*
@@ -563,6 +632,20 @@ void ins_ekf2_init(void)
   AbiBindMsgIMU_MAG(INS_EKF2_MAG_ID, &mag_ev, mag_cb);
   AbiBindMsgGPS(INS_EKF2_GPS_ID, &gps_ev, gps_cb);
   AbiBindMsgOPTICAL_FLOW(INS_EKF2_OF_ID, &optical_flow_ev, optical_flow_cb);
+}
+
+void ins_reset_local_origin(void)
+{
+#if USE_GPS
+  if (GpsFixValid()) {
+    struct LlaCoor_i lla_pos = lla_int_from_gps(&gps);
+    if (ekf.setEkfGlobalOrigin(lla_pos.lat*1e-7, lla_pos.lon*1e-7, gps.hmsl*1e-3)) {
+      ltp_def_from_lla_i(&ekf2.ltp_def, &lla_pos);
+      ekf2.ltp_def.hmsl = gps.hmsl;
+      stateSetLocalOrigin_i(&ekf2.ltp_def);
+    }
+  }
+#endif
 }
 
 /* Update the INS state */
@@ -621,7 +704,7 @@ void ins_ekf2_update(void)
       if (ekf_origin_valid && (origin_time > ekf2.ltp_stamp)) {
         lla_ref.lat = ekf_origin_lat * 1e7; // WGS-84 lat
         lla_ref.lon = ekf_origin_lon * 1e7; // WGS-84 lon
-        lla_ref.alt = ref_alt * 1e3 + wgs84_ellipsoid_to_geoid_i(lla_ref.lat, lla_ref.lon); // WGS-84 height
+        lla_ref.alt = ref_alt * 1e3 + wgs84_ellipsoid_to_geoid_i(lla_ref.lat, lla_ref.lon); // in millimeters above WGS84 reference ellipsoid (ref_alt is in HMSL)
         ltp_def_from_lla_i(&ekf2.ltp_def, &lla_ref);
         ekf2.ltp_def.hmsl = ref_alt * 1e3;
         stateSetLocalOrigin_i(&ekf2.ltp_def);
@@ -660,24 +743,35 @@ void ins_ekf2_remove_gps(int32_t mode)
 void ins_ekf2_parse_EXTERNAL_POSE(uint8_t *buf) {
   if (DL_EXTERNAL_POSE_ac_id(buf) != AC_ID) { return; } // not for this aircraft
 
-  extVisionSample sample;
-  sample.time_us = get_sys_time_usec(); //FIXME
-  sample.pos(0) = DL_EXTERNAL_POSE_enu_y(buf);
-  sample.pos(1) = DL_EXTERNAL_POSE_enu_x(buf);
-  sample.pos(2) = -DL_EXTERNAL_POSE_enu_z(buf);
-  sample.vel(0) = DL_EXTERNAL_POSE_enu_yd(buf);
-  sample.vel(1) = DL_EXTERNAL_POSE_enu_xd(buf);
-  sample.vel(2) = -DL_EXTERNAL_POSE_enu_zd(buf);
-  sample.quat(0) = DL_EXTERNAL_POSE_body_qi(buf);
-  sample.quat(1) = DL_EXTERNAL_POSE_body_qy(buf);
-  sample.quat(2) = DL_EXTERNAL_POSE_body_qx(buf);
-  sample.quat(3) = -DL_EXTERNAL_POSE_body_qz(buf);
-  sample.posVar.setAll(INS_EKF2_EVP_NOISE);
-  sample.velCov = matrix::eye<float, 3>() * INS_EKF2_EVV_NOISE;
-  sample.angVar = INS_EKF2_EVA_NOISE;
-  sample.vel_frame = velocity_frame_t::LOCAL_FRAME_FRD;
+  sample_ev.time_us = get_sys_time_usec(); //FIXME
+  sample_ev.pos(0) = DL_EXTERNAL_POSE_enu_y(buf);
+  sample_ev.pos(1) = DL_EXTERNAL_POSE_enu_x(buf);
+  sample_ev.pos(2) = -DL_EXTERNAL_POSE_enu_z(buf);
+  sample_ev.vel(0) = DL_EXTERNAL_POSE_enu_yd(buf);
+  sample_ev.vel(1) = DL_EXTERNAL_POSE_enu_xd(buf);      
+  sample_ev.vel(2) = -DL_EXTERNAL_POSE_enu_zd(buf);
+  sample_ev.quat(0) = DL_EXTERNAL_POSE_body_qi(buf);
+  sample_ev.quat(1) = DL_EXTERNAL_POSE_body_qy(buf);
+  sample_ev.quat(2) = DL_EXTERNAL_POSE_body_qx(buf);
+  sample_ev.quat(3) = -DL_EXTERNAL_POSE_body_qz(buf);
+  
+#ifdef INS_EXT_VISION_ROTATION
+  // Rotate the quaternion
+  struct FloatQuat body_q = {sample_ev.quat(0), sample_ev.quat(1), sample_ev.quat(2), sample_ev.quat(3)};
+  struct FloatQuat rot_q;
+  float_quat_comp(&rot_q, &body_q, &ins_ext_vision_rot);
+  sample_ev.quat(0) = rot_q.qi;
+  sample_ev.quat(1) = rot_q.qx;
+  sample_ev.quat(2) = rot_q.qy;
+  sample_ev.quat(3) = rot_q.qz;
+#endif
 
-  ekf.setExtVisionData(sample);
+  sample_ev.posVar.setAll(INS_EKF2_EVP_NOISE);
+  sample_ev.velCov = matrix::eye<float, 3>() * INS_EKF2_EVV_NOISE;
+  sample_ev.angVar = INS_EKF2_EVA_NOISE;
+  sample_ev.vel_frame = velocity_frame_t::LOCAL_FRAME_FRD;
+
+  ekf.setExtVisionData(sample_ev);
 }
 
 void ins_ekf2_parse_EXTERNAL_POSE_SMALL(uint8_t __attribute__((unused)) *buf) {
@@ -715,18 +809,13 @@ static void ins_ekf2_publish_attitude(uint32_t stamp)
     ekf.get_quat_reset(delta_q_reset, &quat_reset_counter);
 
 #ifndef NO_RESET_UPDATE_SETPOINT_HEADING
-
+    // FIXME is this hard reset of control setpoint really needed ? is it the right place ?
     if (ekf2.quat_reset_counter < quat_reset_counter) {
       float psi = matrix::Eulerf(matrix::Quatf(delta_q_reset)).psi();
-#if defined STABILIZATION_ATTITUDE_TYPE_INT
-      stab_att_sp_euler.psi += ANGLE_BFP_OF_REAL(psi);
-#else
-      stab_att_sp_euler.psi += psi;
-#endif
       guidance_h.sp.heading += psi;
-      guidance_h.rc_sp.psi += psi;
+      guidance_h.rc_sp.heading += psi;
       nav.heading += psi;
-      guidance_h_read_rc(autopilot_in_flight());
+      //guidance_h_read_rc(autopilot_in_flight());
       stabilization_attitude_enter();
       ekf2.quat_reset_counter = quat_reset_counter;
     }
@@ -769,7 +858,7 @@ static void baro_cb(uint8_t __attribute__((unused)) sender_id, uint32_t stamp, f
   ekf.set_air_density(rho);
 
   // Calculate the height above mean sea level based on pressure
-  sample.hgt = pprz_isa_height_of_pressure_full(pressure, ekf2.qnh * 100.0f); 
+  sample.hgt = pprz_isa_height_of_pressure_full(pressure, ekf2.qnh * 100.0f);
   ekf.setBaroData(sample);
 }
 
@@ -854,10 +943,20 @@ static void gps_cb(uint8_t sender_id __attribute__((unused)),
   struct LlaCoor_i lla_pos = lla_int_from_gps(gps_s);
   gps_msg.lat = lla_pos.lat;
   gps_msg.lon = lla_pos.lon;
-  gps_msg.alt = gps_s->hmsl;
+  gps_msg.alt = gps_s->hmsl; // EKF2 works with HMSL
 #if INS_EKF2_GPS_COURSE_YAW
   gps_msg.yaw = wrap_pi((float)gps_s->course / 1e7);
   gps_msg.yaw_offset = 0;
+#elif defined(INS_EKF2_GPS_YAW_OFFSET) && defined(INS_EKF2_ANTENNA_DISTANCE) 
+  if(ISFINITE(gps_relposned.relPosHeading) && gps_relposned.relPosValid && gps_relposned.diffSoln && gps_relposned.carrSoln >= 1 
+  && fabsf(gps_relposned.relPosLength - INS_EKF2_ANTENNA_DISTANCE) <= INS_EKF2_MAX_REL_LENGTH_ERROR * INS_EKF2_ANTENNA_DISTANCE) {
+    gps_msg.yaw = wrap_pi(RadOfDeg(gps_relposned.relPosHeading - INS_EKF2_GPS_YAW_OFFSET));
+  } else {
+    gps_msg.yaw = NAN;
+  }
+
+  // Offset also needs to be substracted from the heading (this is for roll/pitch angle limits)
+  gps_msg.yaw_offset = RadOfDeg(INS_EKF2_GPS_YAW_OFFSET);
 #else
   gps_msg.yaw = NAN;
   gps_msg.yaw_offset = NAN;

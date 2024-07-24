@@ -34,11 +34,11 @@
 #include "generated/airframe.h"
 
 // Check critical global definitiones
-#ifndef SERVO_MOTOR_THROTTLE
+#ifndef SERVO_MOTOR_THROTTLE_IDX
 #error "Steering rover firmware requires the servo MOTOR_THROTTLE"
 #endif
 
-#ifndef SERVO_MOTOR_STEERING
+#ifndef SERVO_MOTOR_STEERING_IDX
 #error "Steering rover firmware requires the servo MOTOR_STEERING"
 #endif
 
@@ -162,6 +162,7 @@ extern float rover_guidance_steering_omega_obstacle_avoidance(void);
 extern float rover_guidance_steering_omega_obstacle_avoidance_v2(void);
 extern void rover_guidance_steering_pid_reset(void);
 extern void rover_guidance_steering_kill(void);
+extern bool rover_guidance_bearing_static_ctrl(void);
 
 
 /** MACROS **/

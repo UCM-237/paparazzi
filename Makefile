@@ -304,19 +304,25 @@ test: test_math test_examples test_modules
 
 # subset of airframes for coverity test to pass the limited build time on travis
 test_coverity: all
-	CONF_XML=conf/conf_tests_coverity.xml prove tests/aircrafts/
+	CONF_XML=conf/conf_tests_coverity.xml prove tests/aircrafts/ 2>&1 | tee ./var/compile.log
+	python ./sw/tools/parse_compile_logs.py
 
 # test AggieAir conf
 test_aggieair: all
 	CONF_XML=conf/airframes/AGGIEAIR/aggieair_conf.xml prove tests/aircrafts/
 	
-# test Open UAS conf
-test_openuas: all
+# test MAVLab users conf
+test_mavlab: all
 	CONF_XML=conf/userconf/OPENUAS/openuas_conf.xml prove tests/aircrafts/
+	CONF_XML=conf/airframes/CDW/cdw_conf.xml prove tests/aircrafts/
+	CONF_XML=conf/airframes/BR/conf.xml prove tests/aircrafts/
 	
 # test TU Delft conf
 test_tudelft: all
 	CONF_XML=conf/userconf/tudelft/conf.xml prove tests/aircrafts/
+	CONF_XML=conf/userconf/tudelft/delfly_conf.xml prove tests/aircrafts/
+	CONF_XML=conf/userconf/tudelft/course_conf.xml prove tests/aircrafts/
+	CONF_XML=conf/userconf/tudelft/guido_conf.xml prove tests/aircrafts/
 
 # test GVF conf
 test_gvf: all
@@ -340,14 +346,14 @@ test_all_confs: all opencv_bebop
 test_math:
 	make -C tests/math
 
-# super simple simulator test, needs X
-# always uses conf/conf.xml, so that needs to contain the appropriate aircrafts
-# (only Microjet right now)
-test_sim: all
-	prove tests/sim
+test_full:
+	make -C ./ test_all_confs 2>&1 | tee ./var/compile.log
+	python ./sw/tools/parse_compile_logs.py | tee ./issues.md
+
+
 
 .PHONY: all print_build_version _print_building _save_build_version init dox ground_segment ground_segment.opt \
 subdirs $(SUBDIRS) conf ext libpprz libpprzlink.update libpprzlink.install cockpit cockpit.opt tmtc tmtc.opt generators\
 static sim_static opencv_bebop\
 clean cleanspaces ab_clean dist_clean distclean dist_clean_irreversible \
-test test_examples test_math test_sim test_all_confs
+test test_examples test_math test_all_confs

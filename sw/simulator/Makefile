@@ -28,15 +28,8 @@ include ../Makefile.ocaml
 
 OCAMLC += -g
 INCLUDES =
-PKG = -package glibivy,pprz
-LINKPKG = $(PKG) -linkpkg -dllpath-pkg pprz,pprzlink
-
-SIMML = simlib.ml data.ml flightModel.ml gps.ml
-SIMHML = $(SIMML) hitl.ml sim.ml
-SIMHCMO=$(SIMHML:%.ml=%.cmo)
-SIMSML = $(SIMML) sitl.ml sim.ml
-SIMSCMO=$(SIMSML:%.ml=%.cmo)
-SIMSCMX=$(SIMSML:%.ml=%.cmx)
+PKG = -package glibivy,pprz,$(USE_LABELGTK)
+LINKPKG = $(PKG) -linkpkg -dllpath-pkg pprz,pprzlink,$(USE_LABELGTK)
 
 AIRBORNE = ../airborne
 VARINCLUDE=$(PAPARAZZI_HOME)/var/include
@@ -44,24 +37,15 @@ ACINCLUDE = $(PAPARAZZI_HOME)/var/$(AIRCRAFT)
 
 CAML_CFLAGS = -I $(shell $(OCAMLC) -where)
 
-
-all : gaia sitl.cma
-
-sitl.cma : fg.o $(SIMSCMO) $(LIBPPRZCMA) $(LIBPPRZLINKCMA)
-	@echo OL $@
-	$(Q)$(OCAMLMKLIB) -o sitl $^
-
-sitl.cmxa : $(SIMSCMX) $(LIBPPRZCMXA) $(LIBPPRZLINKCMXA)
-	@echo OC $@
-	$(Q)$(OCAMLOPT) -o $@ -a $^
+ifeq ($(USE_LABELGTK),lablgtk2)
+all : gaia
+else
+all :
+endif
 
 gaia : gaia.cmo $(LIBPPRZCMA) $(LIBPPRZLINKCMA)
 	@echo OL $@
 	$(Q)$(OCAMLC) $(INCLUDES) -o $@ $(LINKPKG) gtkInit.cmo $<
-
-diffusion : simlib.cmo diffusion.cmo
-	@echo OL $@
-	$(Q)$(OCAMLC) $(INCLUDES) -o $@ $(LINKPKG) gtkInit.cmo $^
 
 %.cmo : %.ml
 	@echo OC $<
@@ -80,7 +64,7 @@ diffusion : simlib.cmo diffusion.cmo
 	$(Q)$(OCAMLC) $(INCLUDES) -c $(PKG) $<
 
 clean :
-	$(Q)rm -f *.cm* *~ *.out .depend *.o *.a *.so gaia simhitl diffusion
+	$(Q)rm -f *.cm* *~ *.out .depend *.o *.a *.so gaia
 
 .PHONY: all clean
 

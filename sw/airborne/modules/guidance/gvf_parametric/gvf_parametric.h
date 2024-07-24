@@ -119,6 +119,9 @@ extern bezier_t gvf_bezier_2D[GVF_PARAMETRIC_2D_BEZIER_N_SEG];
 
 extern gvf_parametric_tra gvf_parametric_trajectory;
 
+// Bezier struct
+extern bezier_t gvf_bezier_2D[GVF_PARAMETRIC_2D_BEZIER_N_SEG];
+
 // Init function
 extern void gvf_parametric_init(void);
 
