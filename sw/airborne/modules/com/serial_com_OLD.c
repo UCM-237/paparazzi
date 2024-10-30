@@ -35,7 +35,6 @@
 #include "state.h"
 #include "modules/sonar/sonar_bluerobotics.h"
 #include "modules/radio_control/radio_control.h"
-#include "modules/nav/waypoints.h"
 
 #include "std.h"
 #include <stdio.h>
@@ -43,8 +42,6 @@
 
 struct serial_parse_t serial_msg;
 struct serial_send_t serial_snd;
-// struct serial_send_t serial_test;		// Este es para probar
-bool message_received = false;				// Este es para probar
 
 bool serial_msg_setting;
 
@@ -85,7 +82,6 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define MEASURE_SN 2
 #define SONDA_DOWN 3
 #define SONDA_UP 4
-#define WAYPOINT_RESPONSE 5
 
 //Messages received
 #define SR_OK 79
@@ -94,7 +90,7 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SR_POS 80
 #define SR_ERR_L 76
 #define SR_ERR_D 78
-#define SR_WAYPOINT 87
+#define SR_WAYPOINT 81
 
 //Measuring mode
 #define BR_SONAR_MS_1 1
@@ -237,20 +233,6 @@ void itoh(int value, unsigned char* str, int nbytes){
 }
 
 
-// Función para añadir el waypoint a Paparazzi (no se si funcionara)
-static void waypoint_add(uint8_t x, uint8_t y){
-
-    uint8_t waypoint_id = 13;  // Este es el ID del waypoint que he definido en el xml(REVISAR como hacerlo mejor)
-
-    // Paparazzi implementa varias funciones en el modulo nav_rover_base. La funcion waypoint_set_xy_i
-		// sirve para cambiar las coordenadas de un waypoint
-		waypoint_set_xy_i(waypoint_id, x, y);
-}
-
-
-
-// Creo que aqui se define como llegan los mensajes
-// Los dos primeros bytes son para el tiempo, los dos siguientes (para este tipo de mensajes) son la profundidad
 static void message_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
@@ -258,33 +240,19 @@ static void message_parse(void){
 	msgBytes[0]=serial_msg.msgData[5];
 	msgBytes[1]=serial_msg.msgData[4];
 	serial_msg.depth=serial_byteToint(msgBytes,2);
-}
+  }
   
-// Aqui podria poner alguna otra funcion como la anterior para recibir los datos
-static void message_waypoint_parse(void){
-	memset(serial_msg.msgData,0,6);
-	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
-	serial_msg.time = serial_byteToint(msgBytes,2);
-	// memset(msgBytes,0,2);
-	// serial_msg.depth=serial_byteToint(msgBytes,2);
-	serial_msg.waypoint_x=serial_msg.msgData[5];
-	serial_msg.waypoint_y=serial_msg.msgData[4];
-
-	// Función para agregar el waypoint a Paparazzi (PONER esto bien)
-	waypoint_add(serial_msg.waypoint_x, serial_msg.waypoint_y);
-}
-
-
+  
 
 static void message_OK_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
 
-}
+  }
   
   
 /* Serial message parser */
-// Aqui lee el mensaje
+
 void serial_read_message(void){
 
 // Checksum
@@ -328,11 +296,6 @@ void serial_read_message(void){
  			break;
  		case SR_ERR_D:
  			serial_msg.error_last = SR_ERR_D;
- 			break;
-		case SR_WAYPOINT:
-			message_waypoint_parse();
-			serial_msg.error_last = SERIAL_BR_ERR_NONE;
-			message_received = true;
  			break;
  		default:
  			serial_msg.error_last = SERIAL_ERR_UNEXPECTED;
@@ -438,10 +401,10 @@ void serial_event(void)
  while(uart_char_available(&(SERIAL_DEV))){
  	uint8_t ch= uart_getch(&(SERIAL_DEV));
 	
- 	serial_parse(ch);		// Este lee del puerto serie
+ 	serial_parse(ch);
 	
  	if (serial_msg.msg_available) {
-      		serial_read_message();	// Este procesa el mensaje leido
+      		serial_read_message();
 
          
        	}	
@@ -469,8 +432,6 @@ if (radio_control_get(RADIO_GAIN2)>0)
 	message_type=SONDA_UP;
 else if (radio_control_get(RADIO_GAIN2)<0)
 	message_type=SONDA_DOWN;
-// else if (message_received == true)
-// 	message_type=WAYPOINT_RESPONSE;
 else	
 	message_type=TELEMETRY_SN;
 
@@ -492,7 +453,6 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				serial_snd.msgData[3]=msg_time[1];
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
-				message_received = false;
 				
 				break;
 			case TELEMETRY_SN:
@@ -614,23 +574,6 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 				break;
-			case WAYPOINT_RESPONSE:		// Reutilizo el mensaje de la sonda, para no tener que cambiar el codigo de la respuesta
-				serial_snd.msg_length=6;
-				
-				serial_snd.msgData[0]=PPZ_START_BYTE;
-				serial_snd.msgData[1]=PPZ_SONAR_BYTE;
-				serial_snd.time=sys_time.nb_sec;
-				message_type=TELEMETRY_SN;
-				// ito2h(serial_snd.time, msg_time);
-				// serial_snd.msgData[2]=waypoint_get_x(13);
-				// serial_snd.msgData[3]=waypoint_get_y(13);
-				serial_snd.msgData[2] = serial_msg.waypoint_x;
-				serial_snd.msgData[3] = serial_msg.waypoint_y;
-				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
-				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
-				message_received = false;				
-				break;
-
 			default:
 				serial_snd.error_last=10 ;
 				}

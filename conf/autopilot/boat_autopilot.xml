@@ -59,6 +59,7 @@
     
     <!-- NAV mode: Speed crtl (from state speed on enter) + heading ctrl (from GCS & flight plans) -->
     <mode name="NAV">
+      <select cond="$DEFAULT_MODE"/>
       <select cond="RCMode2()"/>
       <control freq="NAVIGATION_FREQUENCY">
         <call fun="nav_periodic_task()"/>
@@ -67,9 +68,7 @@
       	<!--TODO: Hay que repensarlo, necesitamos módulo de programación --> 
         <!--call fun="rover_guidance_steering_speed_ctrl()"/>
         <call fun="rover_guidance_steering_heading_ctrl()"/-->
-	<call fun = "boat_guidance_read_NAV()"/>
- 
-	
+	      <call fun = "boat_guidance_read_NAV()"/>
         <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
@@ -91,7 +90,7 @@
 
     <!-- KILL throttle -->
     <mode name="KILL">
-      <select cond="$DEFAULT_MODE"/>
+      <!-- <select cond="$DEFAULT_MODE"/> -->
       <select cond="kill_switch_is_on()"/>
       <on_enter>
         <call fun="autopilot_set_in_flight(false)"/>
@@ -99,7 +98,6 @@
       </on_enter>
       <control>
         <call fun="SetCommands(commands_failsafe)"/>
-        
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
     </mode>

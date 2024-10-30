@@ -32,11 +32,29 @@
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
-   <module name="telemetry" type="xbee_api">
+
+    <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>
     	<define name="BOAT_DEBUG"     value="TRUE"/>
     </module>
+
+    <!-- Este es mi modulo de prueba -->
+    <!-- <module name="telemetry" type="serial">
+    	<configure name="USB_SERIAL"  value="UART5"/> -->
+      <!-- No se porque, sino pongo aqui los baudios falla -->
+      <!-- <configure name="USB_BAUD"  value="B9600"/>  
+    	<define name="BOAT_DEBUG"     value="TRUE"/>
+    </module>  -->
     
+    <!-- <module name="telemetry" type="transparent">
+    	<configure name="MODEM_PORT"  value="UART5"/>
+    	<define name="BOAT_DEBUG"     value="TRUE"/>
+    </module> -->
+    <!-- <module name="telemetry" type="test">
+    	<configure name="MODEM_PORT"  value="UART5"/>
+    	<define name="BOAT_DEBUG"     value="TRUE"/>
+    </module> -->
+
     <!-- LIA: pruebas para incluir la brujula. No estoy segura ni de que sea este módulo-->
 
     <module name="mag_hmc58xx">
@@ -46,18 +64,27 @@
     	
     </module>
     
-    <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
+    <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco 
+    No lo puedo quitar sin mas porque hay otras funciones que dependen de esto-->
     <module name="sonar" type="bluerobotics">
     	<configure name="SONAR_UART" value="UART6"/>
     </module>
+
+
     <module name="serial" type="com">
     	<configure name="SERIAL_UART" value="UART5"/>
     </module>
+
+    <!-- <module name="datalink" type="common">
+    	<configure name="SERIAL_UART" value="UART5"/>
+    </module> -->
+
+
     <!--LIDAR-->
-    <module name="lidar" type="tfmini">
+    <!-- <module name="lidar" type="tfmini">
     	<configure name="TFMINI_PORT" value="UART3"/>
     	<configure name="TFMINI_BAUD" value="B115200"/>
-    </module>
+    </module> -->
 
     <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
       <define name="ROVER_BASE_SEND_TRAJECTORY" value="FALSE"/>

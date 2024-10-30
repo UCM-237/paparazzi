@@ -1,0 +1,39 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="telemetry_serial" dir="datalink" task="datalink">
+  <doc>
+    <description>
+      Telemetry using PPRZ_DL over serial port (TESTING)
+    </description>
+    <configure name="USB_SERIAL" value="UARTx" description="UART where the modem is connected to (UART1, UART2, etc)"/>
+    <configure name="USB_BAUD" value="B9600" description="UART baud rate"/>
+  </doc>
+  <dep>
+    <depends>uart,datalink_common</depends>
+    <provides>datalink,telemetry</provides>
+  </dep>
+  <header>
+    <file name="pprz_dl.h"/>
+  </header>
+  <init fun="pprz_dl_init()"/>
+  <event fun="pprz_dl_event()"/>
+  <makefile>
+    <configure name="USB_SERIAL" default = "UART1" case="upper|lower"/>
+    <define name="USE_$(USB_SERIAL_UPPER)"/>
+    <define name="$(USB_SERIAL_UPPER)_BAUD" value="$(USB_BAUD)"/>
+    <define name="DOWNLINK_DEVICE" value="$(USB_SERIAL_LOWER)"/>
+    <define name="PPRZ_UART" value="$(MODEM_PORT_LOWER)"/>
+    <define name="PPRZ_BAUD" value="$(MODEM_BAUD)"/>
+    <define name="DOWNLINK_TRANSPORT" value="pprz_tp"/>
+    <define name="DATALINK" value="PPRZ"/>
+    <file name="pprz_dl.c"/>
+    <file name="pprz_transport.c" dir="pprzlink/src"/>
+    <!-- El test da igual, lo puse por si acaso -->
+    <!-- <test>
+      <define name="DOWNLINK_DEVICE" value="uart1"/>
+      <define name="PPRZ_UART" value="uart1"/>
+      <define name="PPRZ_BAUD" value="B57600"/>
+      <define name="USE_UART1"/>
+    </test> -->
+  </makefile>
+</module>

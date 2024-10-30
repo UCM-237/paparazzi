@@ -82,6 +82,10 @@ struct serial_parse_t {
  
   uint16_t time;
   uint16_t depth;
+
+  uint8_t waypoint_x;
+  uint8_t waypoint_y;
+  // uint16_t waypoint_y;
  
 
 };

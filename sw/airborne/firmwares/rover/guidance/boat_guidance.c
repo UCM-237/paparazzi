@@ -82,7 +82,7 @@ void boat_guidance_init(void)
   
   #ifdef BOAT_DEBUG
   #if PERIODIC_TELEMETRY
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INFO_MSG, send_telemetry);
+  // register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INFO_MSG, send_telemetry);
   #endif
   #endif
 }
