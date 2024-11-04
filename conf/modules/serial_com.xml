@@ -8,7 +8,7 @@
       Data are extracted and sent from a serial link 
     </description>
     <configure name="SERIAL_UART" value="UARTX" description="SERIAL on which other device is connected"/>
-    <configure name="SERIAL_BAUD" value="B9600" description="UART Baudrate, default to 115200"/>
+    <configure name="SERIAL_BAUD" value="B9600" description="UART Baudrate, default to 9600"/>
   </doc>
   <settings>
     <dl_settings>
@@ -19,6 +19,7 @@
   </settings>
   <dep>
     <depends>uart</depends>
+    <provides>navigation,datalink,telemetry</provides>
   </dep>
   <header>
     <file name="serial_com.h"/>
@@ -26,11 +27,7 @@
   <init fun="serial_init()"/>
   <periodic fun="serial_ping()" freq="10" autorun="TRUE"/>    <!-- Esto es para mandar la telemetria -->
   <event fun="serial_event()"/>                               <!-- Esto es para leer los mensajes -->
-  <!--
-  <periodic fun="sonar_report()" freq="5" autorun="FALSE"/>
-  <periodic fun="sonar_send_state()" freq="4" autorun="TRUE"/>
-  <event fun="sonar_event()"/>
-  -->
+
   <makefile>
     <configure name="SERIAL_UART" default = "UART5" case="upper|lower"/> <!-- Revisar estos configure | Mirar gps_ublox.xml -->
     <configure name="SERIAL_BAUD" default="B9600"/>

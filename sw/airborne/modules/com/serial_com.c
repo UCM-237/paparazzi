@@ -17,14 +17,15 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
+
 /*
- * @file "modules/sensors/sonar/sonar_bluerobotics.c"
- * @authors Jesús Bautista Villar
- *          Juan Francisco Jiménez Castellanos
- *          Lía García Pérez
- *          Hector Garcia de Marina
- * 
- */
+@file "modules/com/serial_com.c"
+@authors Jesús Bautista Villar
+         Juan Francisco Jiménez Castellanos
+				 Lía García Pérez
+ 	       Hector Garcia de Marina
+*/
+
 
 #include "modules/com/serial_com.h"
 #include "mcu_periph/sys_time.h"
@@ -37,14 +38,18 @@
 #include "modules/radio_control/radio_control.h"
 #include "modules/nav/waypoints.h"
 
+#include "firmwares/rover/navigation.h"
+#include "pprzlink/messages.h"
+
 #include "std.h"
 #include <stdio.h>
+
+#include "math/pprz_geodetic_int.h"
+#include "modules/datalink/downlink.h"
 
 
 struct serial_parse_t serial_msg;
 struct serial_send_t serial_snd;
-// struct serial_send_t serial_test;		// Este es para probar
-bool message_received = false;				// Este es para probar
 
 bool serial_msg_setting;
 
@@ -71,13 +76,12 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SR_PAYLOAD4 5
 #define SR_CHECKSUM1 6
 #define SR_CHECKSUM2 7
+
 // Sonar errors
 /* last error type */
 #define SERIAL_BR_ERR_NONE         0
 #define SERIAL_BR_ERR_CHECKSUM    1
 #define SERIAL_ERR_UNEXPECTED   2
-
-
 
 // Messages sent
 #define TELEMETRY_SN 0
@@ -101,9 +105,6 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define BR_SONAR_MS_0 0
 
 uint8_t message_type=TELEMETRY_SN;
-/*Quitar*/
-int cont=0;
-/*-------------------*/
 
 int modo_medida=BR_SONAR_MS_0;
 
@@ -237,20 +238,30 @@ void itoh(int value, unsigned char* str, int nbytes){
 }
 
 
-// Función para añadir el waypoint a Paparazzi (no se si funcionara)
-static void waypoint_add(uint8_t x, uint8_t y){
+static void parse_MOVE_WP(void)
+{
+	uint8_t ac_id = 2;		// Esto no nos hace falta
+  // if (ac_id != AC_ID) { return; }
+ 
+	uint8_t msg[serial_msg.payload_len + 2];	// Esto es por simplicidad
+  memcpy(msg, serial_msg.msgData, serial_msg.payload_len + 2);
+	
+	uint8_t wp_id = msg[2];
 
-    uint8_t waypoint_id = 13;  // Este es el ID del waypoint que he definido en el xml(REVISAR como hacerlo mejor)
+  struct LlaCoor_i lla;
+	lla.lat=(int32_t)(msg[3] | msg[4] << 8 | msg[5] << 16 | msg[6] << 24);
+  // lla.lat = 40.4498915 * 1E+7;;
+	lla.lon=(int32_t)(msg[7] | msg[8] << 8 | msg[9] << 16 | msg[10] << 24);
+  // lla.lon = -3.7250035 * 1E+7;;
+	lla.alt=(int32_t)(msg[11] | msg[12] << 8 | msg[13] << 16 | msg[14] << 24);
+  lla.alt = lla.alt - state.ned_origin_i.hmsl + state.ned_origin_i.lla.alt;
+  waypoint_move_lla(wp_id, &lla);
 
-    // Paparazzi implementa varias funciones en el modulo nav_rover_base. La funcion waypoint_set_xy_i
-		// sirve para cambiar las coordenadas de un waypoint
-		waypoint_set_xy_i(waypoint_id, x, y);
 }
 
 
 
-// Creo que aqui se define como llegan los mensajes
-// Los dos primeros bytes son para el tiempo, los dos siguientes (para este tipo de mensajes) son la profundidad
+// Aqui se procesaban los mensajes (no se esta usando ahora mismo)
 static void message_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
@@ -260,22 +271,8 @@ static void message_parse(void){
 	serial_msg.depth=serial_byteToint(msgBytes,2);
 }
   
-// Aqui podria poner alguna otra funcion como la anterior para recibir los datos
-static void message_waypoint_parse(void){
-	memset(serial_msg.msgData,0,6);
-	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
-	serial_msg.time = serial_byteToint(msgBytes,2);
-	// memset(msgBytes,0,2);
-	// serial_msg.depth=serial_byteToint(msgBytes,2);
-	serial_msg.waypoint_x=serial_msg.msgData[5];
-	serial_msg.waypoint_y=serial_msg.msgData[4];
 
-	// Función para agregar el waypoint a Paparazzi (PONER esto bien)
-	waypoint_add(serial_msg.waypoint_x, serial_msg.waypoint_y);
-}
-
-
-
+// Aqui se procesaban los mensajes (no se esta usando ahora mismo)
 static void message_OK_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
@@ -292,7 +289,11 @@ void serial_read_message(void){
 	if (serial_msg.msg_id == SR_OK){
 		chksBytes[0]=serial_msg.msgData[5];
 		chksBytes[1]=serial_msg.msgData[4];
-		}
+	}
+	else if (serial_msg.msg_id == SR_WAYPOINT){
+		chksBytes[0]=serial_msg.msgData[2+serial_msg.payload_len+1];
+		chksBytes[1]=serial_msg.msgData[2+serial_msg.payload_len];
+	}
 	else {
 		chksBytes[0]=serial_msg.msgData[7];
 		chksBytes[1]=serial_msg.msgData[6];
@@ -302,47 +303,53 @@ void serial_read_message(void){
 	chks=serial_byteToint(chksBytes,2);
 	serial_calculateChecksum();
 	switch (serial_msg.msg_id){
- 		case SR_OK:			// Este es el mensaje de respuesta de medida
+		case SR_WAYPOINT:	// Este es para procesar los waypoints 
+			parse_MOVE_WP();
+			serial_msg.error_last = SERIAL_BR_ERR_NONE;
+ 			break;
+ 		
+		case SR_OK:	 // Este es el mensaje de respuesta de medida (sin usar)
  			message_OK_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
  			message_type = 10;
  			break;
- 		case SR_FIN:
+ 		
+		case SR_FIN:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
 			message_type = TELEMETRY_SN;
 			modo_medida = BR_SONAR_MS_0;
  			break;
- 		case SR_MEASURE:
+ 		
+		case SR_MEASURE:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
 			message_type = 10;
  			break;
- 		case SR_POS:
+ 		
+		case SR_POS:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
  			message_type = 10;
  			break;
- 		case SR_ERR_L:	// Estos mensajes son para cuando hay problemas con la sonda, (creo)
+ 		
+		case SR_ERR_L:
  			serial_msg.error_last = SR_ERR_L;
  			break;
- 		case SR_ERR_D:
+ 		
+		case SR_ERR_D:
  			serial_msg.error_last = SR_ERR_D;
  			break;
-		case SR_WAYPOINT:
-			message_waypoint_parse();
-			serial_msg.error_last = SERIAL_BR_ERR_NONE;
-			message_received = true;
- 			break;
+
  		default:
  			serial_msg.error_last = SERIAL_ERR_UNEXPECTED;
  			break;
  		};
+
  	if(chks!=(unsigned int) serial_msg.ck){
 		serial_msg.error_last=SERIAL_BR_ERR_CHECKSUM;
 		serial_msg.error_cnt++;
 		}
- 
 }
 
 
@@ -353,65 +360,80 @@ static void serial_parse(uint8_t byte){
 	switch (serial_msg.status){
 		
 		case SR_INIT: // First byte of a new message
-			
 			if (byte == COM_START_BYTE) { //Has to be an 'R'
-				memset(serial_msg.msgData,0,8);
+				memset(serial_msg.msgData,0,17);
 				serial_msg.status++;
 				serial_msg.msgData[0]=byte;
 				serial_msg.msg_available=false; 
 				}
 			break;
+
 		case SR_SYNC: //Second byte
-			
 			serial_msg.status++;
 			serial_msg.msg_id = byte;
 			if(byte == SR_OK) serial_msg.payload_len=2;
+			else if (byte = SR_WAYPOINT){
+				serial_msg.payload_len= 13;
+				serial_msg.count = 0;
+				serial_msg.status = SR_WAYPOINT;
+			} 
 			else serial_msg.payload_len=4;			
 			serial_msg.msgData[1]=byte;
 			break;
-		case SR_PAYLOAD1: //3th byte 
-			serial_msg.status++;
-			serial_msg.msgData[2]=byte;		
+
+		case SR_WAYPOINT:	// 3th and the rest for the waypoint message
+			serial_msg.msgData[serial_msg.count+2]=byte;
+			serial_msg.count++;
+
+			if (serial_msg.count >= serial_msg.payload_len+2){
+				serial_msg.msg_available = true;
+				serial_msg.status=SR_INIT;
+			}
 			break;
 
-		case SR_PAYLOAD2: //4th byte payload length byte 2
-			if(serial_msg.msg_id==SR_OK){
-				serial_msg.status +=2;
-				
-				}
-			serial_msg.status++;
-			serial_msg.msgData[3]=byte;
-			break;
-		case SR_PAYLOAD3:
-			serial_msg.error_last = 0;
-			serial_msg.status++;
-			serial_msg.msgData[4]=byte;
-			break;
-		case SR_PAYLOAD4:
-			serial_msg.error_last = 0;
-			serial_msg.status++;
-			serial_msg.msgData[5]=byte;
-			break;
-		case SR_CHECKSUM1:
-			serial_msg.error_last = 0;
-			serial_msg.status++;
-			if (serial_msg.msg_id==SR_OK)
-				serial_msg.msgData[4]=byte;
-			else
-				serial_msg.msgData[6]=byte;
-				
-			break;
-		case SR_CHECKSUM2:
-			serial_msg.error_last = 0;
-			serial_msg.status++;
-			if (serial_msg.msg_id==SR_OK)
-				serial_msg.msgData[5]=byte;
-			else 
-				serial_msg.msgData[7]=byte;
-			serial_msg.msg_available = true;
-			serial_msg.status=0;
-			restart=true;
-			break;	
+		// TODO ESTO YA NO SE ESTA USANDO 
+		// case SR_PAYLOAD1: //3th byte 
+		// 	serial_msg.status++;
+		// 	serial_msg.msgData[2]=byte;		
+		// 	break;
+
+		// case SR_PAYLOAD2: //4th byte payload length byte 2
+		// 	if(serial_msg.msg_id==SR_OK){
+		// 		serial_msg.status +=2;
+		// 		}
+		// 	serial_msg.status++;
+		// 	serial_msg.msgData[3]=byte;
+		// 	break;
+		// case SR_PAYLOAD3:
+		// 	serial_msg.error_last = 0;
+		// 	serial_msg.status++;
+		// 	serial_msg.msgData[4]=byte;
+		// 	break;
+		// case SR_PAYLOAD4:
+		// 	serial_msg.error_last = 0;
+		// 	serial_msg.status++;
+		// 	serial_msg.msgData[5]=byte;
+		// 	break;
+		// case SR_CHECKSUM1:
+		// 	serial_msg.error_last = 0;
+		// 	serial_msg.status++;
+		// 	if (serial_msg.msg_id==SR_OK)
+		// 		serial_msg.msgData[4]=byte;
+		// 	else
+		// 		serial_msg.msgData[6]=byte;
+		// 	break;
+		// case SR_CHECKSUM2:
+		// 	serial_msg.error_last = 0;
+		// 	serial_msg.status++;
+		// 	if (serial_msg.msg_id==SR_OK)
+		// 		serial_msg.msgData[5]=byte;
+		// 	else 
+		// 		serial_msg.msgData[7]=byte;
+		// 	serial_msg.msg_available = true;
+		// 	serial_msg.status=0;
+		// 	restart=true;
+		// 	break;
+
 		default:
 			serial_msg.error_last = SERIAL_ERR_UNEXPECTED;
 			serial_msg.status= 0;
@@ -432,6 +454,7 @@ static void serial_parse(uint8_t byte){
 }; 
 
 
+// Para recibir los mensajes
 void serial_event(void)
 {
  
@@ -442,7 +465,6 @@ void serial_event(void)
 	
  	if (serial_msg.msg_available) {
       		serial_read_message();	// Este procesa el mensaje leido
-
          
        	}	
     }
@@ -451,34 +473,27 @@ void serial_event(void)
 // Send ping message
 void serial_ping()
 {   
- uint32_t now_s = get_sys_time_msec();
- /*
-struct LlaCoor_i {
-  int32_t lat; ///< in degrees*1e7
-  int32_t lon; ///< in degrees*1e7
-  int32_t alt; ///< in millimeters above WGS84 reference ellipsoid
-};
- */
-struct LlaCoor_i *gps_coord;
-struct sonar_parse_t *sonar_data;
-uint8_t msg_gps[5]={0,0,0,0,0};
-uint8_t msg_time[2]={0,0};
-uint8_t msg_dist[5]={0,0,0,0,0};
+	uint32_t now_s = get_sys_time_msec();
 
-if (radio_control_get(RADIO_GAIN2)>0)
-	message_type=SONDA_UP;
-else if (radio_control_get(RADIO_GAIN2)<0)
-	message_type=SONDA_DOWN;
-// else if (message_received == true)
-// 	message_type=WAYPOINT_RESPONSE;
-else	
-	message_type=TELEMETRY_SN;
+	struct LlaCoor_i *gps_coord;
+	struct sonar_parse_t *sonar_data;
+	uint8_t msg_gps[5]={0,0,0,0,0};
+	uint8_t msg_time[2]={0,0};
+	uint8_t msg_dist[5]={0,0,0,0,0};
 
-if (now_s > (last_s+ SEND_INTERVAL)) {
-    	last_s = now_s; 
+	if (radio_control_get(RADIO_GAIN2)>0)
+		message_type=SONDA_UP;
+	else if (radio_control_get(RADIO_GAIN2)<0)
+		message_type=SONDA_DOWN;
+	// else if (message_received == true)
+	// 	message_type=WAYPOINT_RESPONSE;
+	else	
+		message_type=TELEMETRY_SN;
 
-//	if(serial_msg.msg_available){
-//		serial_read_message();
+	if (now_s > (last_s+ SEND_INTERVAL)) {
+		
+		last_s = now_s; 
+
 		switch(message_type){
 			case SONDA_RQ:
 				serial_snd.msg_length=6;
@@ -492,7 +507,6 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				serial_snd.msgData[3]=msg_time[1];
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
-				message_received = false;
 				
 				break;
 			case TELEMETRY_SN:
@@ -537,14 +551,14 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
-				cont++;
-				/*QUITAR:Para hacer pruebas*/
-				if(cont>=20){
-					message_type=MEASURE_SN;
-					cont=0;
-				}
-				/*------------------------------*/
+				// cont++;
+				// /*QUITAR:Para hacer pruebas*/
+				// if(cont>=20){
+				// 	message_type=MEASURE_SN;
+				// 	cont=0;
+				// }
 				break;
+
 			case MEASURE_SN:
 				message_type=10;
 				serial_snd.msg_length=26;
@@ -574,22 +588,20 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				itoh(serial_snd.alt,msg_gps,5);
 				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i+1];
 				// Get Sonar
-				
 				sonar_data= sonar_get();
 				serial_snd.distance=sonar_data->distance;
 				serial_snd.confidence=sonar_data->confidence;
 				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
 				an signed (using one extra byte) int but sign byte is discarded
 				*/
-				
 				itoh(sonar_data->distance,msg_dist,5);
 				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
 				serial_snd.msgData[22]=sonar_data->confidence;
 				serial_snd.msgData[23]=modo_medida;
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
-
 				break;
+
 			case SONDA_UP:
 				serial_snd.msg_length=6;
 				serial_snd.msgData[0]=PPZ_START_BYTE;
@@ -602,6 +614,7 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 				break;
+
 			case SONDA_DOWN:
 				serial_snd.msg_length=6;
 				serial_snd.msgData[0]=PPZ_START_BYTE;
@@ -614,28 +627,11 @@ if (now_s > (last_s+ SEND_INTERVAL)) {
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 				break;
-			case WAYPOINT_RESPONSE:		// Reutilizo el mensaje de la sonda, para no tener que cambiar el codigo de la respuesta
-				serial_snd.msg_length=6;
-				
-				serial_snd.msgData[0]=PPZ_START_BYTE;
-				serial_snd.msgData[1]=PPZ_SONAR_BYTE;
-				serial_snd.time=sys_time.nb_sec;
-				message_type=TELEMETRY_SN;
-				// ito2h(serial_snd.time, msg_time);
-				// serial_snd.msgData[2]=waypoint_get_x(13);
-				// serial_snd.msgData[3]=waypoint_get_y(13);
-				serial_snd.msgData[2] = serial_msg.waypoint_x;
-				serial_snd.msgData[3] = serial_msg.waypoint_y;
-				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
-				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
-				message_received = false;				
-				break;
 
 			default:
 				serial_snd.error_last=10 ;
-				}
-
-//		}
+		
+		}
 	}
 }
 

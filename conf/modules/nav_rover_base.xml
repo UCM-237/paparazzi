@@ -34,8 +34,8 @@
     <test firmware="rover">
       <define name="USE_GENERATED_AUTOPILOT"/>
       <define name="DOWNLINK_TRANSPORT" value="pprz_tp"/>
-      <define name="DOWNLINK_DEVICE" value="uart0"/>
-      <define name="USE_UART0"/>
+      <define name="DOWNLINK_DEVICE" value="uart5"/>
+      <define name="USE_UART5"/>
     </test>
   </makefile>
 </module>

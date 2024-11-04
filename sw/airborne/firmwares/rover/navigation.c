@@ -120,7 +120,7 @@ void nav_parse_MOVE_WP(uint8_t *buf)
 {
   uint8_t ac_id = DL_MOVE_WP_ac_id(buf);
   if (ac_id != AC_ID) { return; }
-  if (stateIsLocalCoordinateValid()) {
+//  if (stateIsLocalCoordinateValid()) {
     uint8_t wp_id = DL_MOVE_WP_wp_id(buf);
     struct LlaCoor_i lla;
     lla.lat = DL_MOVE_WP_lat(buf);
@@ -131,7 +131,7 @@ void nav_parse_MOVE_WP(uint8_t *buf)
     lla.alt = DL_MOVE_WP_alt(buf) - state.ned_origin_i.hmsl +
       state.ned_origin_i.lla.alt;
     waypoint_move_lla(wp_id, &lla);
-  }
+//  }
 }
 
 bool nav_check_wp_time(struct EnuCoor_f *wp, float stay_time)

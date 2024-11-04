@@ -40,7 +40,7 @@ extern bool serial_msg_setting;
 
 /* Parser msg struct */
 #define SERIAL_MAX_PAYLOAD 26
-#define SERIAL_MAX_MSG 8
+#define SERIAL_MAX_MSG 17
 
 struct serial_send_t {
 
@@ -70,6 +70,7 @@ struct serial_parse_t {
 
   uint8_t msgData[SERIAL_MAX_MSG] __attribute__((aligned));
   uint8_t status;
+  uint8_t count;
   
   uint8_t error_cnt;
   uint8_t error_last;
@@ -82,11 +83,6 @@ struct serial_parse_t {
  
   uint16_t time;
   uint16_t depth;
-
-  uint8_t waypoint_x;
-  uint8_t waypoint_y;
-  // uint16_t waypoint_y;
- 
 
 };
 
