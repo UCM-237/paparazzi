@@ -1,15 +1,17 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.450631" lon0="-3.726058" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.450925" lon0="-3.727189" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
+    <!-- HOME (1), STDBY (2), ELLIPSE (3), P1 (4), P2 (5), T1 (6)  -->
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="STDBY" x="0" y="-4"/>
     <waypoint name="ELLIPSE" x="-3" y="-3"/>
     <waypoint name="P1" x="-2" y="-4"/>
     <waypoint name="P2" x="2" y="-4"/>
+    <waypoint name="T1" x="1.0" y="1.0"/>
     <!--waypoint name="OBJ" x="2" y="-4"/-->
     
     <!-- Sectors waypoints -->
@@ -21,7 +23,6 @@
     <waypoint name="_N2" x="100" y="-100"/>
     <waypoint name="_N3" x="-100" y="-100"/>
     <waypoint name="_N4" x="-100" y="100"/>
-    <waypoint name="T1" x="1.0" y="1.0"/>
   </waypoints>
   
   <sectors>

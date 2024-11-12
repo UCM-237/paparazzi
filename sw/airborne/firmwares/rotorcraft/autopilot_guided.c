@@ -107,7 +107,7 @@ void autopilot_guided_update(uint8_t flags, float x, float y, float z, float yaw
     if (!bit_is_set(flags, 0) && !bit_is_set(flags, 1)) {   // set absolute position setpoint
       guidance_h_set_pos(setpoint.x, setpoint.y);
     } else {
-      if (stateIsLocalCoordinateValid()) {
+      //if (stateIsLocalCoordinateValid()) {
         if (bit_is_set(flags, 1)) {  // set position as offset in body frame
           float psi = stateGetNedToBodyEulers_f()->psi;
 
@@ -118,7 +118,7 @@ void autopilot_guided_update(uint8_t flags, float x, float y, float z, float yaw
           setpoint.y += stateGetPositionNed_f()->y;
         }
         guidance_h_set_pos(setpoint.x, setpoint.y);
-      }
+      //}
     }
   }
 

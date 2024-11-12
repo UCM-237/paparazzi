@@ -61,6 +61,7 @@ static uint8_t PPZ_START_BYTE = 0x50; // "P"
 static uint8_t COM_START_BYTE = 0x52; // "R"
 static uint8_t PPZ_SONAR_BYTE = 0x53; // "S"
 static uint8_t PPZ_TELEMETRY_BYTE = 0x54; // "T"
+static uint8_t PPZ_HOME_BYTE = 0x48; // "H"
 static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 static uint8_t PPZ_SONDA_UP_BYTE = 0x55; // "U"
 static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
@@ -89,7 +90,7 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define MEASURE_SN 2
 #define SONDA_DOWN 3
 #define SONDA_UP 4
-#define WAYPOINT_RESPONSE 5
+#define HOME_RESPONSE 5
 
 //Messages received
 #define SR_OK 79
@@ -107,6 +108,7 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint8_t message_type=TELEMETRY_SN;
 
 int modo_medida=BR_SONAR_MS_0;
+int cont = 0;
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -250,9 +252,9 @@ static void parse_MOVE_WP(void)
 
   struct LlaCoor_i lla;
 	lla.lat=(int32_t)(msg[3] | msg[4] << 8 | msg[5] << 16 | msg[6] << 24);
-  // lla.lat = 40.4498915 * 1E+7;;
+  // lla.lat = 40.4498915 * 1E+7;
 	lla.lon=(int32_t)(msg[7] | msg[8] << 8 | msg[9] << 16 | msg[10] << 24);
-  // lla.lon = -3.7250035 * 1E+7;;
+  // lla.lon = -3.7250035 * 1E+7;
 	lla.alt=(int32_t)(msg[11] | msg[12] << 8 | msg[13] << 16 | msg[14] << 24);
   lla.alt = lla.alt - state.ned_origin_i.hmsl + state.ned_origin_i.lla.alt;
   waypoint_move_lla(wp_id, &lla);
@@ -485,9 +487,7 @@ void serial_ping()
 		message_type=SONDA_UP;
 	else if (radio_control_get(RADIO_GAIN2)<0)
 		message_type=SONDA_DOWN;
-	// else if (message_received == true)
-	// 	message_type=WAYPOINT_RESPONSE;
-	else	
+	else if (message_type != HOME_RESPONSE)	
 		message_type=TELEMETRY_SN;
 
 	if (now_s > (last_s+ SEND_INTERVAL)) {
@@ -551,16 +551,48 @@ void serial_ping()
 
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
-				// cont++;
+
 				// /*QUITAR:Para hacer pruebas*/
-				// if(cont>=20){
-				// 	message_type=MEASURE_SN;
-				// 	cont=0;
-				// }
+				cont++;
+				if(cont>=20){
+					message_type=HOME_RESPONSE;
+					cont=0;
+				}
+				break;
+
+
+			case HOME_RESPONSE:
+				serial_snd.msg_length=20;
+				memset(serial_snd.msgData, 0, serial_snd.msg_length);
+				serial_snd.msgData[0]=PPZ_START_BYTE;
+				serial_snd.msgData[1]=PPZ_HOME_BYTE;
+				serial_snd.time=sys_time.nb_sec;
+				
+				ito2h(serial_snd.time, msg_time);
+				serial_snd.msgData[2]=msg_time[0];
+				serial_snd.msgData[3]=msg_time[1];
+
+				// Coordenates from HOME
+				serial_snd.lat=(int)(waypoint_get_lat_deg(1)*1E+07);
+				serial_snd.lon=(int)(waypoint_get_lon_deg(1)*1E+07);
+				serial_snd.alt=(int)(waypoint_get_alt(1)*1E+07);
+
+				itoh(serial_snd.lon, msg_gps, 5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_gps[i];
+				memset(msg_gps,0,5);
+				itoh(serial_snd.lat, msg_gps, 5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+9]=msg_gps[i];
+				memset(msg_gps,0,5);
+				itoh(serial_snd.alt,msg_gps,5);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i+1];
+				
+				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
+				serial_send_msg(serial_snd.msg_length,serial_snd.msgData);
+				message_type=TELEMETRY_SN; 
 				break;
 
 			case MEASURE_SN:
-				message_type=10;
+				message_type=10;	// ¿¿??
 				serial_snd.msg_length=26;
 				memset(serial_snd.msgData,0,26);
 				serial_snd.msgData[0]=PPZ_START_BYTE;
