@@ -99,7 +99,8 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SR_POS 80
 #define SR_ERR_L 76
 #define SR_ERR_D 78
-#define SR_WAYPOINT 87
+#define SR_WAYPOINT 87			// 'W'
+#define SR_HOME 72 					// 'H'
 
 //Measuring mode
 #define BR_SONAR_MS_1 1
@@ -309,6 +310,12 @@ void serial_read_message(void){
 			parse_MOVE_WP();
 			serial_msg.error_last = SERIAL_BR_ERR_NONE;
  			break;
+
+		case SR_HOME:	// Este es para procesar el home request
+			// parse_HOME();		// REVISAR ESTO 
+			message_type = HOME_RESPONSE;
+			serial_msg.error_last = SERIAL_BR_ERR_NONE;
+ 			break;
  		
 		case SR_OK:	 // Este es el mensaje de respuesta de medida (sin usar)
  			message_OK_parse();
@@ -370,7 +377,7 @@ static void serial_parse(uint8_t byte){
 				}
 			break;
 
-		case SR_SYNC: //Second byte
+		case SR_SYNC: //Second byte (type of message)
 			serial_msg.status++;
 			serial_msg.msg_id = byte;
 			if(byte == SR_OK) serial_msg.payload_len=2;
@@ -379,11 +386,16 @@ static void serial_parse(uint8_t byte){
 				serial_msg.count = 0;
 				serial_msg.status = SR_WAYPOINT;
 			} 
+			else if (byte = SR_HOME){
+				serial_msg.payload_len= 1;
+				serial_msg.count = 0;
+				serial_msg.status = SR_WAYPOINT;
+			} 
 			else serial_msg.payload_len=4;			
 			serial_msg.msgData[1]=byte;
 			break;
 
-		case SR_WAYPOINT:	// 3th and the rest for the waypoint message
+		case SR_WAYPOINT:	// 3th and the rest for the waypoint message (sirve realmente para cualquiera)
 			serial_msg.msgData[serial_msg.count+2]=byte;
 			serial_msg.count++;
 
@@ -553,11 +565,11 @@ void serial_ping()
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 
 				// /*QUITAR:Para hacer pruebas*/
-				cont++;
-				if(cont>=20){
-					message_type=HOME_RESPONSE;
-					cont=0;
-				}
+				// cont++;
+				// if(cont>=20){
+				// 	message_type=HOME_RESPONSE;
+				// 	cont=0;
+				// }
 				break;
 
 
