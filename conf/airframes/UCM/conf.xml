@@ -5,7 +5,7 @@
    airframe="airframes/UCM/rover_steering.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
    telemetry="telemetry/default_rover_pidcontrol.xml"
-   flight_plan="flight_plans/UCM/flight_plan_pruebaQT_2_opt.xml"
+   flight_plan="flight_plans/UCM/flight_plan_pruebaQT_JALO.xml"
    settings=""
    settings_modules="modules/ahrs_float_dcm.xml modules/gps.xml modules/gps_ublox.xml modules/gps_ubx_ucenter.xml modules/guidance_rover_steering.xml~SR modules/gvf_module.xml~GVF~ [modules/gvf_parametric.xml~GVF_PARAMETRIC~] modules/imu_common.xml modules/nav_rover_base.xml modules/gvf_common.xml"
    gui_color="red"
