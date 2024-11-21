@@ -9,7 +9,11 @@
         "editor.tabSize": 4,
     },
     "files.associations": {
-        "Makefile.*": "makefile"
+        "Makefile.*": "makefile",
+        "abi.h": "c",
+        "linear_kalman_filter.h": "c",
+        "pprz_algebra_float.h": "c",
+        "gps.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

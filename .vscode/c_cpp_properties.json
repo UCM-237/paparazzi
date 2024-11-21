@@ -9,7 +9,13 @@
                 "limitSymbolsToIncludedHeaders": true
             },
             "includePath": [
-                "${workspaceFolder}"
+                "${workspaceFolder}",
+                "${workspaceFolder}/sw/airborne",
+                "${workspaceFolder}/sw/airborne/modules/digital_cam/catia",
+                "${workspaceFolder}/sw/airborne/test/ahrs",
+                "${workspaceFolder}/var/include",
+                "${workspaceFolder}/sw/include",
+                "${workspaceFolder}/sw/airborne/arch/chibios"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",

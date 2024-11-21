@@ -26,7 +26,21 @@
  *
  */
 
-#include "modules/ins/ins_int.h"
+
+
+// KALMAN FILTER ----------------------
+#include "filters/linear_kalman_filter.c"
+
+#define R2_IMU 1      // Varianza sobre la IMU
+#define RP_GPS 1      // Varianza sobre la posición
+#define RV_GPS 0.01   // Varianza sobre la velocidad
+
+#define DELTA_T  0.5  // Tiempo entre medidas (CAMBIAR)
+
+struct linear_kalman_filter kalman_filter;
+uint8_t time_calculated = 0;    // Esto es lo mejor que se me ha ocurrido por ahora
+
+// ------------------------------------
 
 #include "modules/core/abi.h"
 
@@ -54,6 +68,7 @@
 #include "math/pprz_geodetic_int.h"
 #include "math/pprz_isa.h"
 #include "math/pprz_stat.h"
+#include <math.h>
 
 #ifndef VFF_R_AGL
 #define VFF_R_AGL 0.2
@@ -200,15 +215,89 @@ static void ins_update_from_hff(void);
 #endif
 
 
+void init_filter(struct linear_kalman_filter *filter, float dt){
+
+  uint8_t n = 4; // [px, py, vx, vy]
+  uint8_t c = 2; // [ax, ay]
+  uint8_t m = 4; // Revisar
+
+  // float dt = DELTA_T;
+
+  linear_kalman_filter_init(filter, n, c, m);
+
+  filter->n = n;
+  filter->c = c;
+  filter->m = m;
+
+
+  float A[4][4] = {
+        {1, 0, dt, 0},
+        {0, 1, 0, dt},
+        {0, 0, 1, 0},
+        {0, 0, 0, 1}
+  };
+
+  float B[4][2] = {
+        {0,  0},
+        {0,  0},
+        {dt, 0},
+        {0, dt}
+  };
+
+  float C[4][4] = {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {0, 0, 0, 1}
+  };
+
+  float Q[4][4] = {
+        {R2_IMU*pow(dt, 4), 0, 0, 0},
+        {0, R2_IMU*pow(dt, 4), 0, 0},
+        {0, 0, R2_IMU*pow(dt, 4), 0},
+        {0, 0, 0, R2_IMU*pow(dt, 4)}
+  };
+
+  float R[4][4] = {
+        {RP_GPS, 0, 0, 0},
+        {0, RP_GPS, 0, 0},
+        {0, 0, RV_GPS, 0},
+        {0, 0, 0, RV_GPS}
+  };
+
+  float P[4][4] = {
+        {100, 0, 0, 0},
+        {0, 100, 0, 0},
+        {0, 0, 100, 0},
+        {0, 0, 0, 100}
+  };
+
+  float X[4] = {ins_int.ltp_pos.x, ins_int.ltp_pos.y, 
+  ins_int.ltp_speed.x, ins_int.ltp_speed.x};
+
+  memcpy(filter->A, A, sizeof(A));
+  memcpy(filter->B, B, sizeof(B));
+  memcpy(filter->C, C, sizeof(C));
+  memcpy(filter->Q, Q, sizeof(Q));
+  memcpy(filter->R, R, sizeof(R));
+  memcpy(filter->P, P, sizeof(P));
+  memcpy(filter->X, X, sizeof(X));
+
+}
+
+
+
 void ins_int_init(void)
 {
 
   #if USE_INS_NAV_INIT
-    ins_init_origin_i_from_flightplan(&ins_int.ltp_def);    // Si quito esto, no funciona nada (ni la IMU ni el x_0)
+    ins_init_origin_i_from_flightplan(&ins_int.ltp_def);
     ins_int.ltp_initialized = true;
   #else
     ins_int.ltp_initialized  = false;
   #endif
+
+  init_filter(&kalman_filter, DELTA_T);   // DEFINICION DEL FILTRO DE KALMAN
 
   /* we haven't had any measurement updates yet, so set the counter to max */
   ins_int.propagation_cnt = INS_MAX_PROPAGATION_STEPS;
@@ -432,6 +521,22 @@ void ins_int_update_gps(struct GpsState *gps_s)
   struct EcefCoor_i ecef_vel_i = ecef_vel_int_from_gps(gps_s);
   ned_of_ecef_vect_i(&gps_speed_cm_s_ned, &ins_int.ltp_def, &ecef_vel_i);
 
+
+  // ¿Cual es la Y? -- En teoria son las medidas
+  float Y[4];
+  Y[0] = gps_pos_cm_ned.x;
+  Y[1] = gps_pos_cm_ned.y;
+  Y[2] = gps_speed_cm_s_ned.x;
+  Y[3] = gps_speed_cm_s_ned.y;
+  linear_kalman_filter_update(&kalman_filter, Y);
+
+  ins_int.ltp_pos.x = kalman_filter.X[0];
+  ins_int.ltp_pos.y = kalman_filter.X[1];
+  ins_int.ltp_speed.x = kalman_filter.X[2];
+  ins_int.ltp_speed.y = kalman_filter.X[3];
+
+
+  // Esto es para la altitud, en principio nos da igual
   #if INS_USE_GPS_ALT
     vff_update_z_conf(((float)gps_pos_cm_ned.z) / 100.0, INS_VFF_R_GPS);
   #endif
@@ -440,32 +545,34 @@ void ins_int_update_gps(struct GpsState *gps_s)
     ins_int.propagation_cnt = 0;
   #endif
 
-  #if USE_HFF
-    /* horizontal gps transformed to NED in meters as float */
-    struct FloatVect2 gps_pos_m_ned;
-    VECT2_ASSIGN(gps_pos_m_ned, gps_pos_cm_ned.x, gps_pos_cm_ned.y);
-    VECT2_SDIV(gps_pos_m_ned, gps_pos_m_ned, 100.0f);
+  
+  // Esto en Teoria no hace falta, porque vamos a usar lo que devuelve el filtro
+  // #if USE_HFF
+  //   /* horizontal gps transformed to NED in meters as float */
+  //   struct FloatVect2 gps_pos_m_ned;
+  //   VECT2_ASSIGN(gps_pos_m_ned, gps_pos_cm_ned.x, gps_pos_cm_ned.y);
+  //   VECT2_SDIV(gps_pos_m_ned, gps_pos_m_ned, 100.0f);
 
-    struct FloatVect2 gps_speed_m_s_ned;
-    VECT2_ASSIGN(gps_speed_m_s_ned, gps_speed_cm_s_ned.x, gps_speed_cm_s_ned.y);
-    VECT2_SDIV(gps_speed_m_s_ned, gps_speed_m_s_ned, 100.f);
+  //   struct FloatVect2 gps_speed_m_s_ned;
+  //   VECT2_ASSIGN(gps_speed_m_s_ned, gps_speed_cm_s_ned.x, gps_speed_cm_s_ned.y);
+  //   VECT2_SDIV(gps_speed_m_s_ned, gps_speed_m_s_ned, 100.f);
 
-    if (ins_int.hf_realign) {
-      ins_int.hf_realign = false;
-      hff_realign(gps_pos_m_ned, gps_speed_m_s_ned);
-    }
-    // run horizontal filter
-    hff_update_gps(&gps_pos_m_ned, &gps_speed_m_s_ned);
-    // convert and copy result to ins_int
-    ins_update_from_hff();
+  //   if (ins_int.hf_realign) {
+  //     ins_int.hf_realign = false;
+  //     hff_realign(gps_pos_m_ned, gps_speed_m_s_ned);
+  //   }
+  //   // run horizontal filter
+  //   hff_update_gps(&gps_pos_m_ned, &gps_speed_m_s_ned);
+  //   // convert and copy result to ins_int
+  //   ins_update_from_hff();
 
-  #else  /* hff not used */
-    /* simply copy horizontal pos/speed from gps */
-    INT32_VECT2_SCALE_2(ins_int.ltp_pos, gps_pos_cm_ned,
-                        INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
-    INT32_VECT2_SCALE_2(ins_int.ltp_speed, gps_speed_cm_s_ned,
-                        INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
-  #endif /* USE_HFF */
+  // #else  /* hff not used */
+  //   /* simply copy horizontal pos/speed from gps */
+  //   INT32_VECT2_SCALE_2(ins_int.ltp_pos, gps_pos_cm_ned,
+  //                       INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
+  //   INT32_VECT2_SCALE_2(ins_int.ltp_speed, gps_speed_cm_s_ned,
+  //                       INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
+  // #endif /* USE_HFF */
 
   ins_ned_to_state();
 
@@ -560,6 +667,25 @@ static void accel_cb(uint8_t sender_id __attribute__((unused)),
 
   if (last_stamp > 0) {
     float dt = (float)(stamp - last_stamp) * 1e-6;
+    // Esto no me sirve, al llamar a init reinicio las matrices
+    // if (time_calculated == 0){
+    //   init_filter(dt);
+    //   time_calculated = 1;
+    // }
+
+    float U[2] = {accel->x, accel->y};
+    linear_kalman_filter_predict(&kalman_filter, U);
+
+    ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+    ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
+    ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
+
+    // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);    // Por algun motivo x = ltp_pos.x / 256
+    // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+    // ins_int.ltp_speed.x = 0;
+    // ins_int.ltp_speed.y = 0;
+
     ins_int_propagate(accel, dt);
   }
   last_stamp = stamp;

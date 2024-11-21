@@ -31,10 +31,20 @@
     	<configure name="GPS_PORT"  value="UART4"/>
     </module>
     <module name="gps_ubx_ucenter"/>
+
+
+    <module name="serial" type="com">
+    	<configure name="SERIAL_UART" value="UART5"/>
+    </module>
     
+
+    <!-- Speed estimated from GPS -->
+    <module name="ins"/> 
+
+    <!-- Speed estimated with Kalman Filter -->
+    <!-- <module name="ins_kf"/> -->
     
-    <module name="ins"/> <!-- Speed estimated from GPS -->
-    
+
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
@@ -49,7 +59,6 @@
     	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
-    	
     </module>
     
     
@@ -103,7 +112,7 @@
   <!-- Low level commands (PWM signal) -->
   <commands>
     <axis name="THROTTLE"    failsafe_value="0"/>
-    <axis name="STEERING" failsafe_value="0"/>
+    <axis name="STEERING"    failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
