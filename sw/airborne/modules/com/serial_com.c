@@ -524,7 +524,7 @@ void serial_ping()
 				gps_coord = stateGetPositionLla_i();
 				serial_snd.lon=gps_coord->lon;
 				serial_snd.lat=gps_coord->lat;
-				serial_snd.alt=gps_coord->alt;
+				serial_snd.alt=650000;		// Changed to avoid issues with the rover
 				itoh(gps_coord->lon,msg_gps,5);
 				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_gps[i];
 				memset(msg_gps,0,5);
@@ -555,12 +555,12 @@ void serial_ping()
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 
 				// /*QUITAR:Para hacer pruebas*/
-				cont++;
-				if(cont>=20){
-					message_type=HOME_RESPONSE;
-					cont=0;
-				}
-				break;
+				// cont++;
+				// if(cont>=20){
+				// 	message_type=HOME_RESPONSE;
+				// 	cont=0;
+				// }
+				// break;
 
 
 			case HOME_RESPONSE:
@@ -577,7 +577,7 @@ void serial_ping()
 				// Coordenates from HOME
 				serial_snd.lat=(int)(waypoint_get_lat_deg(1)*1E+07);
 				serial_snd.lon=(int)(waypoint_get_lon_deg(1)*1E+07);
-				serial_snd.alt=(int)(waypoint_get_alt(1)*1E+07);
+				serial_snd.alt=(int)(650*1E+03);
 
 				itoh(serial_snd.lon, msg_gps, 5);
 				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_gps[i];
@@ -593,6 +593,7 @@ void serial_ping()
 				message_type=TELEMETRY_SN; 
 				break;
 
+			// Estos por ahora no hacen falta para nada, no los quito por si hacen falta en un futuro
 			// case MEASURE_SN:
 			// 	message_type=10;	// ¿¿??
 			// 	serial_snd.msg_length=26;
