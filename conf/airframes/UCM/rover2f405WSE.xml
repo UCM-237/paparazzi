@@ -39,10 +39,10 @@
     
 
     <!-- Speed estimated from GPS -->
-    <module name="ins"/> 
+    <!-- <module name="ins"/>  -->
 
     <!-- Speed estimated with Kalman Filter -->
-    <!-- <module name="ins_kf"/> -->
+    <module name="ins_kf"/>
     
 
     <module name="ahrs" type="float_dcm">

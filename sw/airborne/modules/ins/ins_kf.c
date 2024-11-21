@@ -408,15 +408,29 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
     ins_int.ltp_accel.z = accel_meas_ltp.z + ACCEL_BFP_OF_REAL(9.81);
   }
 
-#if USE_HFF
-  /* propagate horizontal filter */
-  hff_propagate();
-  /* convert and copy result to ins_int */
-  ins_update_from_hff();
-#else
-  ins_int.ltp_accel.x = accel_meas_ltp.x;
-  ins_int.ltp_accel.y = accel_meas_ltp.y;
-#endif /* USE_HFF */
+  #if USE_HFF
+    /* propagate horizontal filter */
+    hff_propagate();
+    /* convert and copy result to ins_int */
+    ins_update_from_hff();
+  #else
+    ins_int.ltp_accel.x = accel_meas_ltp.x;
+    ins_int.ltp_accel.y = accel_meas_ltp.y;
+  #endif /* USE_HFF */
+
+  // ins_int.ltp_accel.x esta ya en unidades reales
+  float U[2] = {ins_int.ltp_accel.x, ins_int.ltp_accel.y};
+  linear_kalman_filter_predict(&kalman_filter, U);
+
+  ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
+  ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
+
+  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);    // Por algun motivo x = ltp_pos.x / 256
+  // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  // ins_int.ltp_speed.x = 0;
+  // ins_int.ltp_speed.y = 0;
 
   ins_ned_to_state();
 
@@ -667,24 +681,20 @@ static void accel_cb(uint8_t sender_id __attribute__((unused)),
 
   if (last_stamp > 0) {
     float dt = (float)(stamp - last_stamp) * 1e-6;
+
+    kalman_filter.A[0][2] = dt;
+    kalman_filter.A[1][3] = dt;
+    kalman_filter.B[2][0] = dt;
+    kalman_filter.B[3][1] = dt;
+
+    kalman_filter.B[0][0] = 0.5*dt*dt;
+    kalman_filter.B[1][1] = 0.5*dt*dt;
+
     // Esto no me sirve, al llamar a init reinicio las matrices
     // if (time_calculated == 0){
     //   init_filter(dt);
     //   time_calculated = 1;
     // }
-
-    float U[2] = {accel->x, accel->y};
-    linear_kalman_filter_predict(&kalman_filter, U);
-
-    ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-    ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
-    ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
-
-    // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);    // Por algun motivo x = ltp_pos.x / 256
-    // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-    // ins_int.ltp_speed.x = 0;
-    // ins_int.ltp_speed.y = 0;
 
     ins_int_propagate(accel, dt);
   }
