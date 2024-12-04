@@ -31,9 +31,9 @@
 // KALMAN FILTER ----------------------
 #include "filters/linear_kalman_filter.c"
 
-#define R2_IMU 1      // Varianza sobre la IMU
-#define RP_GPS 1      // Varianza sobre la posición
-#define RV_GPS 0.01   // Varianza sobre la velocidad
+#define R2_IMU 2.5E-4       // Varianza sobre la IMU
+#define RP_GPS 1            // Varianza sobre la posición (REVISAR)
+#define RV_GPS 0.01         // Varianza sobre la velocidad (REVISAR)
 
 #define DELTA_T  0.5  // Tiempo entre medidas (CAMBIAR)
 
@@ -330,8 +330,8 @@ void ins_int_init(void)
    */
   AbiBindMsgIMU_ACCEL(INS_INT_IMU_ID, &accel_ev, accel_cb);
   AbiBindMsgGPS(INS_INT_GPS_ID, &gps_ev, gps_cb);
-  AbiBindMsgVELOCITY_ESTIMATE(INS_INT_VEL_ID, &vel_est_ev, vel_est_cb);
-  AbiBindMsgPOSITION_ESTIMATE(INS_INT_POS_ID, &pos_est_ev, pos_est_cb);
+  // AbiBindMsgVELOCITY_ESTIMATE(INS_INT_VEL_ID, &vel_est_ev, vel_est_cb);
+  // AbiBindMsgPOSITION_ESTIMATE(INS_INT_POS_ID, &pos_est_ev, pos_est_cb);
   AbiBindMsgAGL(INS_INT_AGL_ID, &agl_ev, agl_cb); // ABI to the altitude above ground level
 }
 
@@ -422,10 +422,12 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   float U[2] = {ins_int.ltp_accel.x, ins_int.ltp_accel.y};
   linear_kalman_filter_predict(&kalman_filter, U);
 
-  ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-  ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
-  ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
+  ins_int.ltp_pos.x(1000);
+
+  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  // ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
+  // ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
 
   // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);    // Por algun motivo x = ltp_pos.x / 256
   // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
@@ -544,10 +546,10 @@ void ins_int_update_gps(struct GpsState *gps_s)
   Y[3] = gps_speed_cm_s_ned.y;
   linear_kalman_filter_update(&kalman_filter, Y);
 
-  ins_int.ltp_pos.x = kalman_filter.X[0];
-  ins_int.ltp_pos.y = kalman_filter.X[1];
-  ins_int.ltp_speed.x = kalman_filter.X[2];
-  ins_int.ltp_speed.y = kalman_filter.X[3];
+  ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
+  ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
 
 
   // Esto es para la altitud, en principio nos da igual

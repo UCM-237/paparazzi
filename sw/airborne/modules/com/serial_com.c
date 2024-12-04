@@ -47,7 +47,10 @@
 #include "math/pprz_geodetic_int.h"
 #include "modules/datalink/downlink.h"
 
+#include "modules/ins/ins_int.h"
+#include "modules/gps/gps.c"
 
+// extern struct InsInt ins_int;
 struct serial_parse_t serial_msg;
 struct serial_send_t serial_snd;
 
@@ -62,6 +65,7 @@ static uint8_t COM_START_BYTE = 0x52; // "R"
 static uint8_t PPZ_SONAR_BYTE = 0x53; // "S"
 static uint8_t PPZ_TELEMETRY_BYTE = 0x54; // "T"
 static uint8_t PPZ_HOME_BYTE = 0x48; // "H"
+static uint8_t PPZ_IMU_BYTE = 0x49; // "I"
 // static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 // static uint8_t PPZ_SONDA_UP_BYTE = 0x55; // "U"
 // static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
@@ -91,6 +95,7 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SONDA_DOWN 3
 #define SONDA_UP 4
 #define HOME_RESPONSE 5
+#define IMU_MESSAGE 6
 
 //Messages received
 #define SR_OK 79
@@ -99,7 +104,8 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SR_POS 80
 #define SR_ERR_L 76
 #define SR_ERR_D 78
-#define SR_WAYPOINT 87
+#define SR_WAYPOINT 87			// 'W'
+#define SR_HOME 72 					// 'H'
 
 //Measuring mode
 #define BR_SONAR_MS_1 1
@@ -309,6 +315,12 @@ void serial_read_message(void){
 			parse_MOVE_WP();
 			serial_msg.error_last = SERIAL_BR_ERR_NONE;
  			break;
+
+		case SR_HOME:	// Este es para procesar el home request
+			// parse_HOME();		// REVISAR ESTO 
+			message_type = HOME_RESPONSE;
+			serial_msg.error_last = SERIAL_BR_ERR_NONE;
+ 			break;
  		
 		case SR_OK:	 // Este es el mensaje de respuesta de medida (sin usar)
  			message_OK_parse();
@@ -378,12 +390,17 @@ static void serial_parse(uint8_t byte){
 				serial_msg.payload_len= 13;
 				serial_msg.count = 0;
 				serial_msg.status = SR_WAYPOINT;
+			}
+			else if (byte = SR_HOME){
+				serial_msg.payload_len= 1;
+				serial_msg.count = 0;
+				serial_msg.status = SR_WAYPOINT;
 			} 
 			else serial_msg.payload_len=4;			
 			serial_msg.msgData[1]=byte;
 			break;
 
-		case SR_WAYPOINT:	// 3th and the rest for the waypoint message
+		case SR_WAYPOINT:	// 3th and the rest for the messages
 			serial_msg.msgData[serial_msg.count+2]=byte;
 			serial_msg.count++;
 
@@ -478,8 +495,10 @@ void serial_ping()
 	uint32_t now_s = get_sys_time_msec();
 
 	struct LlaCoor_i *gps_coord;
+	struct Int32Vect3 *accel_state;
 	// struct sonar_parse_t *sonar_data;
 	uint8_t msg_gps[5]={0,0,0,0,0};
+	uint8_t msg_imu[5]={0,0,0,0,0};
 	uint8_t msg_time[2]={0,0};
 	uint8_t msg_dist[5]={0,0,0,0,0};
 
@@ -487,8 +506,8 @@ void serial_ping()
 		message_type=SONDA_UP;
 	else if (radio_control_get(RADIO_GAIN2)<0)
 		message_type=SONDA_DOWN;
-	else if (message_type != HOME_RESPONSE)	
-		message_type=TELEMETRY_SN;
+	// else if (message_type != HOME_RESPONSE)	
+	// 	message_type=TELEMETRY_SN;
 
 	if (now_s > (last_s+ SEND_INTERVAL)) {
 		
@@ -509,6 +528,7 @@ void serial_ping()
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 				
 				break;
+
 			case TELEMETRY_SN:
 				serial_snd.msg_length=25;
 				memset(serial_snd.msgData,0,25);
@@ -524,7 +544,8 @@ void serial_ping()
 				gps_coord = stateGetPositionLla_i();
 				serial_snd.lon=gps_coord->lon;
 				serial_snd.lat=gps_coord->lat;
-				serial_snd.alt=650000;		// Changed to avoid issues with the rover
+				// int32_t alt = 650000;
+				// serial_snd.alt=alt;		// Changed to avoid issues with the rover
 				itoh(gps_coord->lon,msg_gps,5);
 				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_gps[i];
 				memset(msg_gps,0,5);
@@ -554,13 +575,16 @@ void serial_ping()
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData); 
 
+				message_type=IMU_MESSAGE; 
+
 				// /*QUITAR:Para hacer pruebas*/
 				// cont++;
 				// if(cont>=20){
 				// 	message_type=HOME_RESPONSE;
 				// 	cont=0;
 				// }
-				// break;
+				
+				break;  // Cuidado al usar lo de arriba, que si se comenta esto deja de funcionar bien
 
 
 			case HOME_RESPONSE:
@@ -591,6 +615,57 @@ void serial_ping()
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData);
 				message_type=TELEMETRY_SN; 
+				break;
+
+			case IMU_MESSAGE:
+
+				serial_snd.msg_length=21;
+				memset(serial_snd.msgData,0,serial_snd.msg_length);
+				serial_snd.msgData[0]=PPZ_START_BYTE;
+				serial_snd.msgData[1]=PPZ_IMU_BYTE;
+				serial_snd.time=sys_time.nb_sec;
+				
+				ito2h(serial_snd.time, msg_time);
+				serial_snd.msgData[2]=msg_time[0];
+				serial_snd.msgData[3]=msg_time[1];
+				
+				// (Reutilizo los snd.lon ...)
+				accel_state = stateGetAccelBody_i();
+				serial_snd.lon=accel_state->x;
+				serial_snd.lat=accel_state->y;
+				serial_snd.alt=accel_state->z;
+
+				itoh(accel_state->x,msg_imu,5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_imu[i];
+				memset(msg_imu,0,5);
+				itoh(accel_state->y,msg_imu,5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+9]=msg_imu[i];
+				memset(msg_imu,0,5);
+				/*NOTE: serial_snd.alt is an unsigned int. It is codified as 
+				an signed (using one extra byte) int but sign byte is discarded
+				*/
+				itoh(serial_snd.alt,msg_imu,5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+14]=msg_imu[i];
+				// Get Sonar
+				
+				// sonar_data= sonar_get();
+				// serial_snd.distance=sonar_data->distance;
+				// serial_snd.confidence=sonar_data->confidence;
+				// serial_snd.distance=0;
+				// serial_snd.confidence=0;
+				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
+				an signed (using one extra byte) int but sign byte is discarded
+				*/
+				
+				// itoh(serial_snd.distance,msg_dist,5);
+				// for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
+				// serial_snd.msgData[22]=serial_snd.confidence;
+
+				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
+				serial_send_msg(serial_snd.msg_length,serial_snd.msgData);
+
+				message_type=TELEMETRY_SN;
+
 				break;
 
 			// Estos por ahora no hacen falta para nada, no los quito por si hacen falta en un futuro
