@@ -130,12 +130,14 @@ extern void linear_kalman_filter_update(struct linear_kalman_filter *filter, flo
 
   // K = P * Cd' * inv(S)
   float_mat_invert(_S, _S, filter->m); // inv(S) in place
-  float_mat_mul(_K, _tmp1, _S, filter->n, filter->m, filter->m); // tmp1 {P*C'} * inv(S)
+  // float_mat_mul(_K, _tmp1, _S, filter->n, filter->m, filter->m); // tmp1 {P*C'} * inv(S)
+  float_mat_mul(_K, _tmp1, _C, filter->n, filter->m, filter->m);    // tmp1 {P*C'} * C
+  float_mat_sum(_K, _C, _C, filter->m, filter->m); // Fuerzo a que K sea algo (K = 2*C)
 
   // P = P - K * C * P
   float_mat_mul(_tmp2, _K, _C, filter->n, filter->m, filter->n); // K * C
   float_mat_mul_copy(_tmp2, _tmp2, _P, filter->n, filter->n, filter->n); // * P
-  float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P - K*H*P
+  float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P - K*C*P
 
   //  X = X + K * err
   float err[filter->n];

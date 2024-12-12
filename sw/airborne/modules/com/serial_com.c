@@ -48,8 +48,10 @@
 #include "modules/datalink/downlink.h"
 
 #include "modules/ins/ins_int.h"
-#include "modules/gps/gps.c"
+#include "modules/gps/gps.h"
 
+
+extern struct GpsState gps;
 // extern struct InsInt ins_int;
 struct serial_parse_t serial_msg;
 struct serial_send_t serial_snd;
@@ -66,12 +68,13 @@ static uint8_t PPZ_SONAR_BYTE = 0x53; // "S"
 static uint8_t PPZ_TELEMETRY_BYTE = 0x54; // "T"
 static uint8_t PPZ_HOME_BYTE = 0x48; // "H"
 static uint8_t PPZ_IMU_BYTE = 0x49; // "I"
+static uint8_t PPZ_GPS_BYTE = 0x47; // "G"
 // static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 // static uint8_t PPZ_SONDA_UP_BYTE = 0x55; // "U"
 // static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
 
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
-#define SEND_INTERVAL 1000 // time between sending messages
+#define SEND_INTERVAL 50 // time between sending messages
 // Sonar parse states
 #define SR_INIT 0
 #define SR_SYNC 1
@@ -96,6 +99,7 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 #define SONDA_UP 4
 #define HOME_RESPONSE 5
 #define IMU_MESSAGE 6
+#define GPS_MESSAGE 7
 
 //Messages received
 #define SR_OK 79
@@ -544,8 +548,8 @@ void serial_ping()
 				gps_coord = stateGetPositionLla_i();
 				serial_snd.lon=gps_coord->lon;
 				serial_snd.lat=gps_coord->lat;
-				// int32_t alt = 650000;
-				// serial_snd.alt=alt;		// Changed to avoid issues with the rover
+				int32_t alt = 650000;
+				serial_snd.alt=alt;		// Changed to avoid issues with the rover
 				itoh(gps_coord->lon,msg_gps,5);
 				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_gps[i];
 				memset(msg_gps,0,5);
@@ -630,7 +634,7 @@ void serial_ping()
 				serial_snd.msgData[3]=msg_time[1];
 				
 				// (Reutilizo los snd.lon ...)
-				accel_state = stateGetAccelBody_i();
+				accel_state = stateGetAccelNed_i();
 				serial_snd.lon=accel_state->x;
 				serial_snd.lat=accel_state->y;
 				serial_snd.alt=accel_state->z;
@@ -646,27 +650,45 @@ void serial_ping()
 				*/
 				itoh(serial_snd.alt,msg_imu,5);
 				for(int i=0;i<5;i++) serial_snd.msgData[i+14]=msg_imu[i];
-				// Get Sonar
-				
-				// sonar_data= sonar_get();
-				// serial_snd.distance=sonar_data->distance;
-				// serial_snd.confidence=sonar_data->confidence;
-				// serial_snd.distance=0;
-				// serial_snd.confidence=0;
-				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
-				an signed (using one extra byte) int but sign byte is discarded
-				*/
-				
-				// itoh(serial_snd.distance,msg_dist,5);
-				// for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
-				// serial_snd.msgData[22]=serial_snd.confidence;
 
 				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
 				serial_send_msg(serial_snd.msg_length,serial_snd.msgData);
 
-				message_type=TELEMETRY_SN;
+				message_type=GPS_MESSAGE;
 
 				break;
+
+			case GPS_MESSAGE:
+				serial_snd.msg_length = 20;
+				memset(serial_snd.msgData, 0, serial_snd.msg_length);
+				serial_snd.msgData[0] = PPZ_START_BYTE;
+				serial_snd.msgData[1] = PPZ_GPS_BYTE;
+				serial_snd.time = sys_time.nb_sec;
+
+				ito2h(serial_snd.time, msg_time);
+				serial_snd.msgData[2] = msg_time[0];
+				serial_snd.msgData[3] = msg_time[1];
+
+				// Datos del GPS
+				serial_snd.lat = gps.lla_pos.lat;
+				serial_snd.lon = gps.lla_pos.lon;
+				serial_snd.alt = 650000;
+
+				itoh(serial_snd.lon, msg_gps, 5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_gps[i];
+				memset(msg_gps,0,5);
+				itoh(serial_snd.lat, msg_gps, 5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+9]=msg_gps[i];
+				memset(msg_gps,0,5);
+				itoh(serial_snd.alt,msg_gps,5);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i+1];
+
+				serial_calculateChecksumMsg(serial_snd.msgData, (int)serial_snd.msg_length);
+				serial_send_msg(serial_snd.msg_length, serial_snd.msgData);
+				message_type = TELEMETRY_SN; 
+				break;
+
+
 
 			// Estos por ahora no hacen falta para nada, no los quito por si hacen falta en un futuro
 			// case MEASURE_SN:

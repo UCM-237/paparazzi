@@ -35,7 +35,7 @@
 #define RP_GPS 1            // Varianza sobre la posición (REVISAR)
 #define RV_GPS 0.01         // Varianza sobre la velocidad (REVISAR)
 
-#define DELTA_T  0.5  // Tiempo entre medidas (CAMBIAR)
+#define DELTA_T  0.5  // Tiempo entre medidas por defecto
 
 struct linear_kalman_filter kalman_filter;
 uint8_t time_calculated = 0;    // Esto es lo mejor que se me ha ocurrido por ahora
@@ -179,6 +179,7 @@ static abi_event agl_ev;                 ///< The agl ABI event
 static void agl_cb(uint8_t sender_id, uint32_t stamp, float distance);
 
 struct InsInt ins_int;
+struct NedCoor_i world_accel;   // Aceleración en ejes mundo
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -206,6 +207,11 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
                           &ins_int.ltp_def.hmsl, &ins_int.qfe);
   }
 }
+
+static void send_kf_filter(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_KF(trans, dev, AC_ID, &kalman_filter);
+}
 #endif
 
 static void ins_ned_to_state(void);
@@ -219,9 +225,7 @@ void init_filter(struct linear_kalman_filter *filter, float dt){
 
   uint8_t n = 4; // [px, py, vx, vy]
   uint8_t c = 2; // [ax, ay]
-  uint8_t m = 4; // Revisar
-
-  // float dt = DELTA_T;
+  uint8_t m = 4; // Measurement Vector
 
   linear_kalman_filter_init(filter, n, c, m);
 
@@ -266,10 +270,10 @@ void init_filter(struct linear_kalman_filter *filter, float dt){
   };
 
   float P[4][4] = {
-        {100, 0, 0, 0},
-        {0, 100, 0, 0},
-        {0, 0, 100, 0},
-        {0, 0, 0, 100}
+        {20, 0, 0, 0},
+        {0, 20, 0, 0},
+        {0, 0, 20, 0},
+        {0, 0, 0, 20}
   };
 
   float X[4] = {ins_int.ltp_pos.x, ins_int.ltp_pos.y, 
@@ -323,6 +327,7 @@ void ins_int_init(void)
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS, send_ins);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_REF, send_ins_ref);
+    // register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_KALMAN_FILTER_STATUS, send_kf_filter);
   #endif
 
   /*
@@ -418,21 +423,23 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
     ins_int.ltp_accel.y = accel_meas_ltp.y;
   #endif /* USE_HFF */
 
-  // ins_int.ltp_accel.x esta ya en unidades reales
-  float U[2] = {ins_int.ltp_accel.x, ins_int.ltp_accel.y};
+  // ins_int.ltp_accel.x esta ya en unidades reales (pero en ejes cuerpo)
+  struct FloatEulers *att = stateGetNedToBodyEulers_f();
+  float theta = att->psi;   // Este es el angulo
+
+  kalman_filter.A[0][2] = dt;
+  kalman_filter.A[1][3] = dt;
+  kalman_filter.B[2][0] = dt;
+  kalman_filter.B[3][1] = dt;
+
+
+  // Cambia de ejes cuerpo a ejes mundo (provisional)
+  world_accel.x = accel->x * cos(theta) - accel->y * sin(theta);
+  world_accel.y = accel->x * sin(theta) + accel->y * cos(theta);
+  world_accel.z = accel->z;  // Esta me da igual
+
+  float U[2] = {world_accel.x, world_accel.y};
   linear_kalman_filter_predict(&kalman_filter, U);
-
-  ins_int.ltp_pos.x(1000);
-
-  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-  // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  // ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
-  // ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
-
-  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);    // Por algun motivo x = ltp_pos.x / 256
-  // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  // ins_int.ltp_speed.x = 0;
-  // ins_int.ltp_speed.y = 0;
 
   ins_ned_to_state();
 
@@ -537,19 +544,47 @@ void ins_int_update_gps(struct GpsState *gps_s)
   struct EcefCoor_i ecef_vel_i = ecef_vel_int_from_gps(gps_s);
   ned_of_ecef_vect_i(&gps_speed_cm_s_ned, &ins_int.ltp_def, &ecef_vel_i);
 
+  struct NedCoor_i pos_est;
+  struct NedCoor_i vel_est;
 
   // ¿Cual es la Y? -- En teoria son las medidas
   float Y[4];
-  Y[0] = gps_pos_cm_ned.x;
-  Y[1] = gps_pos_cm_ned.y;
-  Y[2] = gps_speed_cm_s_ned.x;
-  Y[3] = gps_speed_cm_s_ned.y;
+  Y[0] = gps_pos_cm_ned.x/100.0f;
+  Y[1] = gps_pos_cm_ned.y/100.0f;
+  Y[2] = gps_speed_cm_s_ned.x/100.0f;
+  Y[3] = gps_speed_cm_s_ned.y/100.0f;
+
+  // kalman_filter.P[0][0] = 100;
+  // kalman_filter.P[0][1] = 0;
+  // kalman_filter.P[0][2] = 0;
+  // kalman_filter.P[0][3] = 0;
+  // kalman_filter.P[1][0] = 0;
+  // kalman_filter.P[1][1] = 100;
+  // kalman_filter.P[1][2] = 0;
+  // kalman_filter.P[1][3] = 0;
+  // kalman_filter.P[2][0] = 0;
+  // kalman_filter.P[2][1] = 0;
+  // kalman_filter.P[2][2] = 100;
+  // kalman_filter.P[2][3] = 0;
+  // kalman_filter.P[3][0] = 0;
+  // kalman_filter.P[3][1] = 0;
+  // kalman_filter.P[3][2] = 0;
+  // kalman_filter.P[3][3] = 100;
+
   linear_kalman_filter_update(&kalman_filter, Y);
 
-  ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-  ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
-  ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
+  // Datos del filtro
+  // kalman_filter.X[0] = 10;
+  pos_est.x = (int32_t)(kalman_filter.X[0]*100);
+  pos_est.y = (int32_t)(kalman_filter.X[1]*100);
+  vel_est.x = (int32_t)(kalman_filter.X[2]*100);
+  vel_est.y = (int32_t)(kalman_filter.X[3]*100);
+
+  // Mete la salida del filtro en la posición (por algun motivo, en cm)
+  INT32_VECT2_SCALE_2(ins_int.ltp_pos, pos_est,                   // Equivale a multiplicar por 2.56
+                      INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
+  INT32_VECT2_SCALE_2(ins_int.ltp_speed, vel_est,
+                      INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
 
 
   // Esto es para la altitud, en principio nos da igual
@@ -643,7 +678,7 @@ static void ins_ned_to_state(void)
 {
   stateSetPositionNed_i(&ins_int.ltp_pos);
   stateSetSpeedNed_i(&ins_int.ltp_speed);
-  stateSetAccelNed_i(&ins_int.ltp_accel);
+  stateSetAccelNed_i(&world_accel);
 
 #if defined SITL && USE_NPS
   if (nps_bypass_ins) {
@@ -684,14 +719,6 @@ static void accel_cb(uint8_t sender_id __attribute__((unused)),
   if (last_stamp > 0) {
     float dt = (float)(stamp - last_stamp) * 1e-6;
 
-    kalman_filter.A[0][2] = dt;
-    kalman_filter.A[1][3] = dt;
-    kalman_filter.B[2][0] = dt;
-    kalman_filter.B[3][1] = dt;
-
-    kalman_filter.B[0][0] = 0.5*dt*dt;
-    kalman_filter.B[1][1] = 0.5*dt*dt;
-
     // Esto no me sirve, al llamar a init reinicio las matrices
     // if (time_calculated == 0){
     //   init_filter(dt);
@@ -713,95 +740,95 @@ static void gps_cb(uint8_t sender_id __attribute__((unused)),
 /* body relative velocity estimate
  *
  */
-static void vel_est_cb(uint8_t sender_id __attribute__((unused)),
-                       uint32_t stamp __attribute__((unused)),
-                       float x, float y, float z,
-                       float noise_x, float noise_y, float noise_z)
-{
-  struct FloatVect3 vel_body = {x, y, z};
+// static void vel_est_cb(uint8_t sender_id __attribute__((unused)),
+//                        uint32_t stamp __attribute__((unused)),
+//                        float x, float y, float z,
+//                        float noise_x, float noise_y, float noise_z)
+// {
+//   struct FloatVect3 vel_body = {x, y, z};
 
-  /* rotate velocity estimate to nav/ltp frame */
-  struct FloatQuat q_b2n = *stateGetNedToBodyQuat_f();
-  QUAT_INVERT(q_b2n, q_b2n);
-  struct FloatVect3 vel_ned;
-  float_quat_vmult(&vel_ned, &q_b2n, &vel_body);
+//   /* rotate velocity estimate to nav/ltp frame */
+//   struct FloatQuat q_b2n = *stateGetNedToBodyQuat_f();
+//   QUAT_INVERT(q_b2n, q_b2n);
+//   struct FloatVect3 vel_ned;
+//   float_quat_vmult(&vel_ned, &q_b2n, &vel_body);
 
-  // abi message contains an update to the horizontal velocity estimate
-#if USE_HFF
-  struct FloatVect2 vel = {vel_ned.x, vel_ned.y};
-  struct FloatVect2 Rvel = {noise_x, noise_y};
+//   // abi message contains an update to the horizontal velocity estimate
+// #if USE_HFF
+//   struct FloatVect2 vel = {vel_ned.x, vel_ned.y};
+//   struct FloatVect2 Rvel = {noise_x, noise_y};
 
-  hff_update_vel(vel,  Rvel);
-  ins_update_from_hff();
-#else
-  if (noise_x >= 0.f)
-  {
-    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(vel_ned.x);
-  }
-  if (noise_y >= 0.f)
-  {
-    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(vel_ned.y);
-  }
+//   hff_update_vel(vel,  Rvel);
+//   ins_update_from_hff();
+// #else
+//   if (noise_x >= 0.f)
+//   {
+//     ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(vel_ned.x);
+//   }
+//   if (noise_y >= 0.f)
+//   {
+//     ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(vel_ned.y);
+//   }
 
-  static uint32_t last_stamp_x = 0, last_stamp_y = 0;
-  if (noise_x >= 0.f) {
-    if (last_stamp_x > 0)
-    {
-      float dt = (float)(stamp - last_stamp_x) * 1e-6;
-      ins_int.ltp_pos.x += lround(POS_BFP_OF_REAL(dt * vel_ned.x));
-    }
-    last_stamp_x = stamp;
-  }
+//   static uint32_t last_stamp_x = 0, last_stamp_y = 0;
+//   if (noise_x >= 0.f) {
+//     if (last_stamp_x > 0)
+//     {
+//       float dt = (float)(stamp - last_stamp_x) * 1e-6;
+//       ins_int.ltp_pos.x += lround(POS_BFP_OF_REAL(dt * vel_ned.x));
+//     }
+//     last_stamp_x = stamp;
+//   }
 
-  if (noise_y >= 0.f)
-  {
-    if (last_stamp_y > 0)
-    {
-      float dt = (float)(stamp - last_stamp_y) * 1e-6;
-      ins_int.ltp_pos.y += lround(POS_BFP_OF_REAL(dt * vel_ned.y));
-    }
-    last_stamp_y = stamp;
-  }
-#endif
+//   if (noise_y >= 0.f)
+//   {
+//     if (last_stamp_y > 0)
+//     {
+//       float dt = (float)(stamp - last_stamp_y) * 1e-6;
+//       ins_int.ltp_pos.y += lround(POS_BFP_OF_REAL(dt * vel_ned.y));
+//     }
+//     last_stamp_y = stamp;
+//   }
+// #endif
 
-  // abi message contains an update to the vertical velocity estimate
-  vff_update_vz_conf(vel_ned.z, noise_z);
+//   // abi message contains an update to the vertical velocity estimate
+//   vff_update_vz_conf(vel_ned.z, noise_z);
 
-  ins_ned_to_state();
+//   ins_ned_to_state();
 
-  /* reset the counter to indicate we just had a measurement update */
-  ins_int.propagation_cnt = 0;
-}
+//   /* reset the counter to indicate we just had a measurement update */
+//   ins_int.propagation_cnt = 0;
+// }
 
 /* NED position estimate relative to ltp origin
  */
-static void pos_est_cb(uint8_t sender_id __attribute__((unused)),
-                       uint32_t stamp __attribute__((unused)),
-                       float x, float y, float z,
-                       float noise_x, float noise_y, float noise_z)
-{
+// static void pos_est_cb(uint8_t sender_id __attribute__((unused)),
+//                        uint32_t stamp __attribute__((unused)),
+//                        float x, float y, float z,
+//                        float noise_x, float noise_y, float noise_z)
+// {
 
-#if USE_HFF
-  struct FloatVect2 pos = {x, y};
-  struct FloatVect2 Rpos = {noise_x, noise_y};
+// #if USE_HFF
+//   struct FloatVect2 pos = {x, y};
+//   struct FloatVect2 Rpos = {noise_x, noise_y};
 
-  hff_update_pos(pos, Rpos);
-  ins_update_from_hff();
-#else
-  if (noise_x >= 0.f)
-  {
-    ins_int.ltp_pos.x = POS_BFP_OF_REAL(x);
-  }
-  if (noise_y >= 0.f)
-  {
-    ins_int.ltp_pos.y = POS_BFP_OF_REAL(y);
-  }
-#endif
+//   hff_update_pos(pos, Rpos);
+//   ins_update_from_hff();
+// #else
+//   if (noise_x >= 0.f)
+//   {
+//     ins_int.ltp_pos.x = POS_BFP_OF_REAL(x);
+//   }
+//   if (noise_y >= 0.f)
+//   {
+//     ins_int.ltp_pos.y = POS_BFP_OF_REAL(y);
+//   }
+// #endif
 
-  vff_update_z_conf(z, noise_z);
+//   vff_update_z_conf(z, noise_z);
 
-  ins_ned_to_state();
+//   ins_ned_to_state();
 
-  /* reset the counter to indicate we just had a measurement update */
-  ins_int.propagation_cnt = 0;
-}
+//   /* reset the counter to indicate we just had a measurement update */
+//   ins_int.propagation_cnt = 0;
+// }

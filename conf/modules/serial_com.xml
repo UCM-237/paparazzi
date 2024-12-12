@@ -25,7 +25,7 @@
     <file name="serial_com.h"/>
   </header>
   <init fun="serial_init()"/>
-  <periodic fun="serial_ping()" period=".5" autorun="TRUE"/>    <!-- Esto es para mandar la telemetria -->
+  <periodic fun="serial_ping()" freq="100" autorun="TRUE"/>    <!-- Esto es para mandar la telemetria -->
   <event fun="serial_event()"/>                               <!-- Esto es para leer los mensajes -->
 
   <makefile>
