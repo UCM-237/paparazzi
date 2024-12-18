@@ -51,7 +51,7 @@
 #include "modules/gps/gps.h"
 
 
-extern struct GpsState gps;
+// extern struct GpsState gps;
 // extern struct InsInt ins_int;
 struct serial_parse_t serial_msg;
 struct serial_send_t serial_snd;
@@ -395,7 +395,7 @@ static void serial_parse(uint8_t byte){
 				serial_msg.count = 0;
 				serial_msg.status = SR_WAYPOINT;
 			}
-			else if (byte = SR_HOME){
+			else if (byte == SR_HOME){
 				serial_msg.payload_len= 1;
 				serial_msg.count = 0;
 				serial_msg.status = SR_WAYPOINT;

@@ -655,6 +655,22 @@ static inline void float_mat_zero(float **a, int m, int n)
   }
 }
 
+/** a = 1 */
+static inline void float_mat_identity(float **a, int m, int n)
+{
+  int i, j;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) {
+      if (i == j){
+        a[i][j] = 1.;
+      } 
+      else{ 
+        a[i][j] = 0.;
+      }
+    }  
+  }
+}
+
 /** a = b */
 static inline void float_mat_copy(float **a, float **b, int m, int n)
 {

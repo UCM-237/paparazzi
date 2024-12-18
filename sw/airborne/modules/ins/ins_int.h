@@ -64,7 +64,7 @@ struct InsInt {
 };
 
 /** global INS state */
-extern struct InsInt ins_int;
+// extern struct InsInt ins_int;
 
 extern void ins_int_init(void);
 extern void ins_int_propagate(struct Int32Vect3 *accel, float dt);
