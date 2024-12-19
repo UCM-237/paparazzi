@@ -49,7 +49,7 @@ bool linear_kalman_filter_init(struct linear_kalman_filter *filter, uint8_t n, u
 
   // Matrix
   MAKE_MATRIX_PTR(_A, filter->A, n);
-  float_mat_zero(_A, n, n);
+  float_mat_identity(_A, n, n);
   MAKE_MATRIX_PTR(_B, filter->B, n);
   float_mat_zero(_B, n, c);
   MAKE_MATRIX_PTR(_C, filter->C, m);

@@ -42,8 +42,8 @@
     <!-- <module name="ins"/>  -->
 
     <!-- Speed estimated with Kalman Filter -->
-    <!-- <module name="ins_kf"/> -->
-    <module name="ins_ekf"/>
+    <module name="ins_kf"/>
+    <!-- <module name="ins_ekf"/> -->
     
 
     <module name="ahrs" type="float_dcm">

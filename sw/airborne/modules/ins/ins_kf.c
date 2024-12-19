@@ -35,10 +35,11 @@
 #define RP_GPS 0.01            // Varianza sobre la posición (REVISAR)
 #define RV_GPS 0.01         // Varianza sobre la velocidad (REVISAR)
 
-#define DELTA_T  0.5  // Tiempo entre medidas por defecto
+#define DELTA_T  0.2  // Tiempo entre medidas por defecto
 
 struct linear_kalman_filter kalman_filter;
-uint8_t time_calculated = 0;    // Esto es lo mejor que se me ha ocurrido por ahora
+uint8_t counter_test = 0;   // Esto es para pruebas 
+// uint8_t time_calculated = 0;    // Esto es lo mejor que se me ha ocurrido por ahora
 
 // ------------------------------------
 
@@ -153,20 +154,11 @@ static void gps_cb(uint8_t sender_id, uint32_t stamp, struct GpsState *gps_s);
 #define INS_INT_VEL_ID ABI_BROADCAST
 #endif
 PRINT_CONFIG_VAR(INS_INT_VEL_ID)
-// static abi_event vel_est_ev;
-// static void vel_est_cb(uint8_t sender_id,
-//                        uint32_t stamp,
-//                        float x, float y, float z,
-//                        float noise_x, float noise_y, float noise_z);
+
 #ifndef INS_INT_POS_ID
 #define INS_INT_POS_ID ABI_BROADCAST
 #endif
 PRINT_CONFIG_VAR(INS_INT_POS_ID)
-// static abi_event pos_est_ev;
-// static void pos_est_cb(uint8_t sender_id,
-//                        uint32_t stamp,
-//                        float x, float y, float z,
-//                        float noise_x, float noise_y, float noise_z);
 
 /** ABI binding for AGL.
  * Usually this is comes from sonar or gps.
@@ -225,7 +217,7 @@ void init_filter(struct linear_kalman_filter *filter, float dt){
 
   uint8_t n = 4; // [px, py, vx, vy]
   uint8_t c = 2; // [ax, ay]
-  uint8_t m = 4; // Measurement Vector
+  uint8_t m = 4; // Measurement Vector (same as state)
 
   linear_kalman_filter_init(filter, n, c, m);
 
@@ -307,17 +299,17 @@ void ins_int_init(void)
   ins_int.propagation_cnt = INS_MAX_PROPAGATION_STEPS;
 
   // Bind to BARO_ABS message
-  AbiBindMsgBARO_ABS(INS_INT_BARO_ID, &baro_ev, baro_cb);
-  ins_int.baro_initialized = false;
+  // AbiBindMsgBARO_ABS(INS_INT_BARO_ID, &baro_ev, baro_cb);
+  // ins_int.baro_initialized = false;
 
-  ins_int.vf_reset = false;
-  ins_int.hf_realign = false;
+  // ins_int.vf_reset = false;
+  // ins_int.hf_realign = false;
 
-  /* init vertical and horizontal filters */
-  vff_init_zero();
-  #if USE_HFF
-    hff_init(0., 0., 0., 0.);
-  #endif
+  // /* init vertical and horizontal filters */
+  // vff_init_zero();
+  // #if USE_HFF
+  //   hff_init(0., 0., 0., 0.);
+  // #endif
 
   INT32_VECT3_ZERO(ins_int.ltp_pos);
   INT32_VECT3_ZERO(ins_int.ltp_speed);
@@ -327,7 +319,6 @@ void ins_int_init(void)
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS, send_ins);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_REF, send_ins_ref);
-    // register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_KALMAN_FILTER_STATUS, send_kf_filter);
   #endif
 
   /*
@@ -389,7 +380,7 @@ void ins_reset_vertical_pos(void)
 
 void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 {
-  // Set body acceleration in the state
+  // Set body acceleration in the state (ejes cuerpo)
   stateSetAccelBody_i(accel);
 
   struct FloatEulers *att = stateGetNedToBodyEulers_f();
@@ -410,9 +401,28 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   float U[2] = {world_accel.x, world_accel.y};
   linear_kalman_filter_predict(&kalman_filter, U);
 
-  ins_int.ltp_accel.x = ACCEL_BFP_OF_REAL(world_accel.x);
-  ins_int.ltp_accel.y = ACCEL_BFP_OF_REAL(world_accel.y);
-  ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(world_accel.z);
+  // -------------------------------------------------------------
+  // De aqui ...
+  // float Y[4];
+  // Y[0] = 10.0;
+  // Y[1] = 10.0;
+  // Y[2] = 0.0;
+  // Y[3] = 0.0;
+
+  // linear_kalman_filter_update(&kalman_filter, Y);
+
+  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  // ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[1]);
+  // ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+
+  // ... a aqui va en el GPS
+  // -------------------------------------------------------------
+
+  // Aqui me interesa más mandar por telemetria en ejes cuerpo
+  ins_int.ltp_accel.x = accel->x;
+  ins_int.ltp_accel.y = accel->y;
+  ins_int.ltp_accel.z = accel->z + ACCEL_BFP_OF_REAL(9.81);
   ins_ned_to_state();
 
   /* increment the propagation counter, while making sure it doesn't overflow */
@@ -516,10 +526,7 @@ void ins_int_update_gps(struct GpsState *gps_s)
   struct EcefCoor_i ecef_vel_i = ecef_vel_int_from_gps(gps_s);
   ned_of_ecef_vect_i(&gps_speed_cm_s_ned, &ins_int.ltp_def, &ecef_vel_i);
 
-  struct NedCoor_i pos_est;
-  struct NedCoor_i vel_est;
-
-  // ¿Cual es la Y? -- En teoria son las medidas
+  // Vector de Medidas (ESTO ES LO UNICO QUE ME FALTA POR REVISAR, casi seguro esta bien)
   float Y[4];
   Y[0] = gps_pos_cm_ned.x/100.0f;
   Y[1] = gps_pos_cm_ned.y/100.0f;
@@ -529,17 +536,11 @@ void ins_int_update_gps(struct GpsState *gps_s)
   linear_kalman_filter_update(&kalman_filter, Y);
 
   // Datos del filtro
-  // kalman_filter.X[0] = 10;
-  pos_est.x = (int32_t)(kalman_filter.X[0]*100*1024);
-  pos_est.y = (int32_t)(kalman_filter.X[1]*100*1024);
-  vel_est.x = (int32_t)(kalman_filter.X[2]*100*1024);
-  vel_est.y = (int32_t)(kalman_filter.X[3]*100*1024);
-
-  // Mete la salida del filtro en la posición (por algun motivo, en cm)
-  INT32_VECT2_SCALE_2(ins_int.ltp_pos, pos_est,                   // Equivale a multiplicar por 2.56
-                      INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
-  INT32_VECT2_SCALE_2(ins_int.ltp_speed, vel_est,
-                      INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
+  ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+  ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+  ins_ned_to_state();
 
 
   // Esto es para la altitud, en principio nos da igual
@@ -579,8 +580,6 @@ void ins_int_update_gps(struct GpsState *gps_s)
   //   INT32_VECT2_SCALE_2(ins_int.ltp_speed, gps_speed_cm_s_ned,
   //                       INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
   // #endif /* USE_HFF */
-
-  ins_ned_to_state();
 
   /* reset the counter to indicate we just had a measurement update */
   ins_int.propagation_cnt = 0;

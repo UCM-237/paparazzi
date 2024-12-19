@@ -35,7 +35,7 @@
 
 // maximum size for the command vector
 #ifndef KF_MAX_CMD_SIZE
-#define KF_MAX_CMD_SIZE 2
+#define KF_MAX_CMD_SIZE 3
 #endif
 
 // maximum size for the measurement vector

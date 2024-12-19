@@ -378,8 +378,8 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   // Set body acceleration in the state
   stateSetAccelBody_i(accel);
 
-  // Cambia de ejes cuerpo a ejes mundo --> Esta en int32, 
-  // dividir entre 1024 para obtener el valor en m/s2
+  // Esta en int32, dividir entre 1024 para obtener el valor en m/s2
+  // Estas son en ejes cuerpo
   world_accel.x = ACCEL_FLOAT_OF_BFP(accel->x);
   world_accel.y = ACCEL_FLOAT_OF_BFP(accel->y);
   world_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
@@ -387,16 +387,16 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   float U[3] = {world_accel.x, world_accel.y, world_accel.z};
   extended_kalman_filter_predict(&kalman_filter, U, dt);
 
+  // Actualiza (y manda por telemetria, las aceleraciones en ejes cuerpo)
   ins_int.ltp_accel.x = ACCEL_BFP_OF_REAL(world_accel.x);
   ins_int.ltp_accel.y = ACCEL_BFP_OF_REAL(world_accel.y);
   ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(world_accel.z);
-  
 
   // TEMPORAL: Para probar las unidades del estado
-  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(Y[0]);
   // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
   // ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
-  // ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);;
+  // ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
   
   ins_ned_to_state();
 
@@ -406,63 +406,7 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   }
 }
 
-// static void baro_cb(uint8_t __attribute__((unused)) sender_id, __attribute__((unused)) uint32_t stamp, float pressure)
-// {
-//   if (pressure < 1.f)
-//   {
-//     // bad baro pressure, don't use
-//     return;
-//   }
 
-//   if (!ins_int.baro_initialized) {
-// #define press_hist_len 10
-//     static float press_hist[press_hist_len];
-//     static uint8_t idx = 0;
-
-//     press_hist[idx] = pressure;
-//     idx = (idx + 1) % press_hist_len;
-//     float var = variance_f(press_hist, press_hist_len);
-//     if (var < INS_BARO_MAX_INIT_VAR){
-//       // wait for a first positive value
-//       ins_int.vf_reset = true;
-//       ins_int.baro_initialized = true;
-//     }
-//   }
-
-//   if (ins_int.baro_initialized) {
-//     float height_correction = 0.f;
-//     if(ins_int.ltp_initialized){
-//       // Calculate the distance to the origin
-//       struct EnuCoor_f *enu = stateGetPositionEnu_f();
-//       double dist2_to_origin = enu->x * enu->x + enu->y * enu->y;
-
-//       // correction for the earth's curvature
-//       const double earth_radius = 6378137.0;
-//       height_correction = (float)(sqrt(earth_radius * earth_radius + dist2_to_origin) - earth_radius);
-//     }
-
-//     if (ins_int.vf_reset) {
-//       ins_int.vf_reset = false;
-//       ins_int.qfe = pressure;
-//       vff_realign(height_correction);
-//       ins_update_from_vff();
-//     }
-
-//     float baro_up = pprz_isa_height_of_pressure(pressure, ins_int.qfe);
-
-//     // The VFF will update in the NED frame
-//     ins_int.baro_z = -(baro_up - height_correction);
-
-// #if USE_VFF_EXTENDED
-//     vff_update_baro(ins_int.baro_z);
-// #else
-//     vff_update(ins_int.baro_z);
-// #endif
-
-//     /* reset the counter to indicate we just had a measurement update */
-//     ins_int.propagation_cnt = 0;
-//   }
-// }
 
 #if USE_GPS
 void ins_int_update_gps(struct GpsState *gps_s)
@@ -504,16 +448,19 @@ void ins_int_update_gps(struct GpsState *gps_s)
   // struct NedCoor_i pos_est;
   // struct NedCoor_i vel_est;
 
+  // Actitud
   struct FloatEulers *att = stateGetNedToBodyEulers_f();
-  float theta = att->psi;   // Este es el angulo
+  struct FloatEulers new_att;
+  new_att.phi = att->phi;
+  new_att.theta = att->theta;
 
-  // Vector de Medidas (ESTO ES LO UNICO QUE ME FALTA POR REVISAR, creo que esta bien)
+  // Vector de Medidas (ESTO ES LO UNICO QUE ME FALTA POR REVISAR, casi seguro esta bien)
   float Y[5];
   Y[0] = gps_pos_cm_ned.x/100.0f;
   Y[1] = gps_pos_cm_ned.y/100.0f;
   Y[2] = gps_speed_cm_s_ned.x/100.0f;
   Y[3] = gps_speed_cm_s_ned.y/100.0f;
-  Y[4] = theta;
+  Y[4] = att->psi;
 
   extended_kalman_filter_update(&kalman_filter, Y);
 
@@ -521,8 +468,11 @@ void ins_int_update_gps(struct GpsState *gps_s)
   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
   ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
   ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
-
   ins_ned_to_state();
+
+  new_att.psi = kalman_filter.X[4];
+  stateSetNedToBodyEulers_f(&new_att);  // Actualiza la actitud
+
 
   /* reset the counter to indicate we just had a measurement update */
   ins_int.propagation_cnt = 0;

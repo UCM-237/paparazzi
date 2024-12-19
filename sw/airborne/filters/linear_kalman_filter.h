@@ -30,7 +30,7 @@
 
 // maximum size for the state vector
 #ifndef KF_MAX_STATE_SIZE
-#define KF_MAX_STATE_SIZE 6
+#define KF_MAX_STATE_SIZE 4
 #endif
 
 // maximum size for the command vector
@@ -40,7 +40,7 @@
 
 // maximum size for the measurement vector
 #ifndef KF_MAX_MEAS_SIZE
-#define KF_MAX_MEAS_SIZE 6
+#define KF_MAX_MEAS_SIZE 4
 #endif
 
 struct linear_kalman_filter {
