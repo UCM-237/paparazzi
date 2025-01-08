@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2010 The Paparazzi Team
+ * Copyright (C) 2024 Alejandro Rochas Fernández <alrochas@ucm.es>
  *
  * This file is part of paparazzi.
  *
@@ -22,9 +22,7 @@
 /**
  * @file modules/ins/ins_int.c
  *
- * INS for rotorcrafts combining vertical and horizontal filters.
- *
- * @authors Alejandro Rochas Fernández
+ * INS for the rovers using Extended Kalman Filter.
  *
  */
 
@@ -35,13 +33,13 @@
 
 #define R2_IMU 2.5E-4       // Varianza sobre la IMU
 #define RP_GPS 0.005        // Varianza sobre la posición (REVISAR)
-#define RV_GPS 1            // Varianza sobre la velocidad (REVISAR)
+#define RV_GPS 0.01            // Varianza sobre la velocidad (REVISAR)
 #define RT 0.1              // Varianza sobre la actitud
 
-#define DELTA_T  0.5  // Tiempo entre medidas por defecto
+#define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
 struct extended_kalman_filter kalman_filter;
-uint8_t time_calculated = 0;    // Esto es lo mejor que se me ha ocurrido por ahora
+uint8_t counter_test = 0;   // Esto es para pruebas 
 
 struct InsInt ins_int;
 struct FloatVector {
@@ -49,7 +47,7 @@ struct FloatVector {
   float y;  ///< East
   float z;  ///< Down
 };
-struct FloatVector world_accel;   // Aceleración en ejes mundo
+struct FloatVector body_accel;   // Aceleración en ejes cuerpo
 
 // ------------------------------------
 
@@ -66,10 +64,6 @@ struct FloatVector world_accel;   // Aceleración en ejes mundo
 #include "modules/ins/vf_float.h"
 #endif
 
-// #if USE_HFF
-// #include "modules/ins/hf_float.h"
-// #endif
-
 #if defined SITL && USE_NPS
 //#include "nps_fdm.h"
 #include "nps_autopilot.h"
@@ -84,28 +78,6 @@ struct FloatVector world_accel;   // Aceleración en ejes mundo
 #ifndef VFF_R_AGL
 #define VFF_R_AGL 0.2
 #endif
-
-// #if USE_SONAR
-// #if !USE_VFF_EXTENDED
-// #error USE_SONAR needs USE_VFF_EXTENDED
-// #endif
-
-// #ifdef INS_SONAR_THROTTLE_THRESHOLD
-// #include "firmwares/rotorcraft/stabilization.h"
-// #endif
-
-// #ifndef INS_SONAR_MIN_RANGE
-// #define INS_SONAR_MIN_RANGE 0.001
-// #endif
-// #ifndef INS_SONAR_MAX_RANGE
-// #define INS_SONAR_MAX_RANGE 4.0
-// #endif
-// #define VFF_R_SONAR_0 0.2
-// #ifndef VFF_R_SONAR_OF_M
-// #define VFF_R_SONAR_OF_M 0.2
-// #endif
-
-// #endif // USE_SONAR
 
 #if USE_GPS
   #ifndef INS_VFF_R_GPS
@@ -138,7 +110,6 @@ struct FloatVector world_accel;   // Aceleración en ejes mundo
 #endif
 PRINT_CONFIG_VAR(INS_INT_BARO_ID)
 abi_event baro_ev;
-// static void baro_cb(uint8_t sender_id, uint32_t stamp, float pressure);
 
 /** ABI binding for IMU data.
  * Used accel ABI messages.
@@ -156,18 +127,6 @@ static void accel_cb(uint8_t sender_id, uint32_t stamp, struct Int32Vect3 *accel
 PRINT_CONFIG_VAR(INS_INT_GPS_ID)
 static abi_event gps_ev;
 static void gps_cb(uint8_t sender_id, uint32_t stamp, struct GpsState *gps_s);
-
-
-/** ABI binding for AGL.
- * Usually this is comes from sonar or gps.
- */
-// #ifndef INS_INT_AGL_ID
-// #define INS_INT_AGL_ID ABI_BROADCAST
-// #endif
-// PRINT_CONFIG_VAR(INS_INT_AGL_ID)
-// static abi_event agl_ev;                 ///< The agl ABI event
-// static void agl_cb(uint8_t sender_id, uint32_t stamp, float distance);
-
 
 
 #if PERIODIC_TELEMETRY
@@ -199,11 +158,6 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
 #endif
 
 static void ins_ned_to_state(void);
-// static void ins_update_from_vff(void);
-// #if USE_HFF
-// static void ins_update_from_hff(void);
-// #endif
-
 
 
 void init_filter(struct extended_kalman_filter *filter, float dt){
@@ -242,11 +196,11 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
   };
 
   float Q[5][5] = {
-        {R2_IMU*pow(dt, 4), 0, 0, 0, 0},
-        {0, R2_IMU*pow(dt, 4), 0, 0, 0},
-        {0, 0, R2_IMU*pow(dt, 4), 0, 0},
-        {0, 0, 0, R2_IMU*pow(dt, 4), 0},
-        {0, 0, 0, 0, R2_IMU*pow(dt, 4)}
+        {R2_IMU, 0, 0, 0, 0},
+        {0, R2_IMU, 0, 0, 0},
+        {0, 0, R2_IMU, 0, 0},
+        {0, 0, 0, R2_IMU, 0},
+        {0, 0, 0, 0, R2_IMU}
   };
 
   float R[5][5] = {
@@ -294,19 +248,6 @@ void ins_int_init(void)
   /* we haven't had any measurement updates yet, so set the counter to max */
   ins_int.propagation_cnt = INS_MAX_PROPAGATION_STEPS;
 
-  // Bind to BARO_ABS message
-  // AbiBindMsgBARO_ABS(INS_INT_BARO_ID, &baro_ev, baro_cb);
-  // ins_int.baro_initialized = false;
-
-  // ins_int.vf_reset = false;
-  // ins_int.hf_realign = false;
-
-  /* init vertical and horizontal filters */
-  // vff_init_zero();
-  // #if USE_HFF
-  //   hff_init(0., 0., 0., 0.);
-  // #endif
-
   INT32_VECT3_ZERO(ins_int.ltp_pos);
   INT32_VECT3_ZERO(ins_int.ltp_speed);
   INT32_VECT3_ZERO(ins_int.ltp_accel);
@@ -318,11 +259,11 @@ void ins_int_init(void)
   #endif
 
   /*
-   * Subscribe to scaled IMU measurements and attach callbacks
+   * Subscribe to scaled IMU and GPS measurements
    */
   AbiBindMsgIMU_ACCEL(INS_INT_IMU_ID, &accel_ev, accel_cb);
   AbiBindMsgGPS(INS_INT_GPS_ID, &gps_ev, gps_cb);
-  // AbiBindMsgAGL(INS_INT_AGL_ID, &agl_ev, agl_cb); // ABI to the altitude above ground level
+
 }
 
 void ins_reset_local_origin(void)
@@ -379,24 +320,45 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   stateSetAccelBody_i(accel);
 
   // Esta en int32, dividir entre 1024 para obtener el valor en m/s2
-  // Estas son en ejes cuerpo
-  world_accel.x = ACCEL_FLOAT_OF_BFP(accel->x);
-  world_accel.y = ACCEL_FLOAT_OF_BFP(accel->y);
-  world_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
+  body_accel.x = ACCEL_FLOAT_OF_BFP(accel->x);
+  body_accel.y = ACCEL_FLOAT_OF_BFP(accel->y);
+  body_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
 
-  float U[3] = {world_accel.x, world_accel.y, world_accel.z};
+  float U[3] = {body_accel.x, body_accel.y, body_accel.z};
   extended_kalman_filter_predict(&kalman_filter, U, dt);
 
-  // Actualiza (y manda por telemetria, las aceleraciones en ejes cuerpo)
-  ins_int.ltp_accel.x = ACCEL_BFP_OF_REAL(world_accel.x);
-  ins_int.ltp_accel.y = ACCEL_BFP_OF_REAL(world_accel.y);
-  ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(world_accel.z);
+  // Actualiza (y manda por telemetria), las aceleraciones en ejes cuerpo
+  ins_int.ltp_accel.x = ACCEL_BFP_OF_REAL(body_accel.x);
+  ins_int.ltp_accel.y = ACCEL_BFP_OF_REAL(body_accel.y);
+  ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(body_accel.z);
 
-  // TEMPORAL: Para probar las unidades del estado
-  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(Y[0]);
-  // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  // ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
-  // ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
+// -------------------------------------------------------------
+  // De aqui ...
+  if (counter_test > 5){
+    float Y[5];
+    Y[0] = 10.0;
+    Y[1] = 10.0;
+    Y[2] = 0.0;
+    Y[3] = 0.0;
+    Y[4] = 1.57;
+
+    extended_kalman_filter_update(&kalman_filter, Y);
+
+    ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[1]);
+    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+    
+    counter_test = 0;
+
+  }
+  else{
+    counter_test++;
+  }
+
+
+  // ... a aqui va en el GPS
+// -------------------------------------------------------------
   
   ins_ned_to_state();
 
@@ -445,8 +407,6 @@ void ins_int_update_gps(struct GpsState *gps_s)
   struct EcefCoor_i ecef_vel_i = ecef_vel_int_from_gps(gps_s);
   ned_of_ecef_vect_i(&gps_speed_cm_s_ned, &ins_int.ltp_def, &ecef_vel_i);
 
-  // struct NedCoor_i pos_est;
-  // struct NedCoor_i vel_est;
 
   // Actitud
   struct FloatEulers *att = stateGetNedToBodyEulers_f();
@@ -466,8 +426,8 @@ void ins_int_update_gps(struct GpsState *gps_s)
 
   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  ins_int.ltp_speed.x = POS_BFP_OF_REAL(kalman_filter.X[2]);
-  ins_int.ltp_speed.y = POS_BFP_OF_REAL(kalman_filter.X[3]);
+  ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+  ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
   ins_ned_to_state();
 
   new_att.psi = kalman_filter.X[4];
@@ -480,32 +440,6 @@ void ins_int_update_gps(struct GpsState *gps_s)
 #else
 void ins_int_update_gps(struct GpsState *gps_s __attribute__((unused))) {}
 #endif /* USE_GPS */
-
-/** agl_cb
- * This callback handles all estimates of the height of the vehicle above the ground under it
- * This is only used with the extended version of the vertical float filter
- */
-// #if USE_VFF_EXTENDED
-// static void agl_cb(uint8_t __attribute__((unused)) sender_id, __attribute__((unused)) uint32_t stamp, float distance) {
-//   if (distance <= 0 || !(ins_int.baro_initialized)) {
-//     return;
-//   }
-
-// #if USE_SONAR
-//   if (distance > INS_SONAR_MAX_RANGE || distance < INS_SONAR_MIN_RANGE){
-//     return;
-//   }
-// #endif
-// #ifdef INS_AGL_THROTTLE_THRESHOLD
-//    if(stabilization.cmd[COMMAND_THRUST] < INS_AGL_THROTTLE_THRESHOLD){
-//      return;
-//    }
-// #endif
-// #ifdef INS_AGL_BARO_THRESHOLD
-//   if(ins_int.baro_z < -INS_SONAR_BARO_THRESHOLD){ /* z down */
-//     return;
-//   }
-// #endif
 
 
 /** copy position and speed to state interface */
@@ -521,8 +455,6 @@ static void ins_ned_to_state(void)
     }
   #endif
 }
-
-
 
 static void accel_cb(uint8_t sender_id __attribute__((unused)),
                      uint32_t stamp, struct Int32Vect3 *accel)

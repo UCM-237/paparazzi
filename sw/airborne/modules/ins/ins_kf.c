@@ -35,11 +35,10 @@
 #define RP_GPS 0.01            // Varianza sobre la posición (REVISAR)
 #define RV_GPS 0.01         // Varianza sobre la velocidad (REVISAR)
 
-#define DELTA_T  0.2  // Tiempo entre medidas por defecto
+#define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
 struct linear_kalman_filter kalman_filter;
 uint8_t counter_test = 0;   // Esto es para pruebas 
-// uint8_t time_calculated = 0;    // Esto es lo mejor que se me ha ocurrido por ahora
 
 // ------------------------------------
 
@@ -176,7 +175,7 @@ struct FloatVector {
   float y;  ///< East
   float z;  ///< Down
 };
-struct FloatVector world_accel;   // Aceleración en ejes mundo
+struct FloatVector body_accel;   // Aceleración en ejes mundo
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -248,10 +247,10 @@ void init_filter(struct linear_kalman_filter *filter, float dt){
   };
 
   float Q[4][4] = {
-        {R2_IMU*pow(dt, 4), 0, 0, 0},
-        {0, R2_IMU*pow(dt, 4), 0, 0},
-        {0, 0, R2_IMU*pow(dt, 4), 0},
-        {0, 0, 0, R2_IMU*pow(dt, 4)}
+        {R2_IMU, 0, 0, 0},
+        {0, R2_IMU, 0, 0},
+        {0, 0, R2_IMU, 0},
+        {0, 0, 0, R2_IMU}
   };
 
   float R[4][4] = {
@@ -394,27 +393,36 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 
   // Cambia de ejes cuerpo a ejes mundo --> Esta en int32, 
   // dividir entre 1024 para obtener el valor en m/s2
-  world_accel.x = ACCEL_FLOAT_OF_BFP(accel->x * cos(theta) - accel->y * sin(theta));
-  world_accel.y = ACCEL_FLOAT_OF_BFP(accel->x * sin(theta) + accel->y * cos(theta));
-  world_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
+  body_accel.x = ACCEL_FLOAT_OF_BFP(accel->x * cos(theta) - accel->y * sin(theta));
+  body_accel.y = ACCEL_FLOAT_OF_BFP(accel->x * sin(theta) + accel->y * cos(theta));
+  body_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
 
-  float U[2] = {world_accel.x, world_accel.y};
+  float U[2] = {body_accel.x, body_accel.y};
   linear_kalman_filter_predict(&kalman_filter, U);
 
   // -------------------------------------------------------------
   // De aqui ...
-  // float Y[4];
-  // Y[0] = 10.0;
-  // Y[1] = 10.0;
-  // Y[2] = 0.0;
-  // Y[3] = 0.0;
+  // if (counter_test > 5){
+  //   float Y[4];
+  //   Y[0] = 10.0;
+  //   Y[1] = 10.0;
+  //   Y[2] = 0.0;
+  //   Y[3] = 0.0;
 
-  // linear_kalman_filter_update(&kalman_filter, Y);
+  //   linear_kalman_filter_update(&kalman_filter, Y);
 
-  // ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-  // ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  // ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[1]);
-  // ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+  //   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  //   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  //   ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+  //   ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+    
+  //   counter_test = 0;
+
+  // }
+  // else{
+  //   counter_test++;
+  // }
+
 
   // ... a aqui va en el GPS
   // -------------------------------------------------------------
@@ -543,43 +551,14 @@ void ins_int_update_gps(struct GpsState *gps_s)
   ins_ned_to_state();
 
 
-  // Esto es para la altitud, en principio nos da igual
-  #if INS_USE_GPS_ALT
-    vff_update_z_conf(((float)gps_pos_cm_ned.z) / 100.0, INS_VFF_R_GPS);
-  #endif
-  #if INS_USE_GPS_ALT_SPEED
-    vff_update_vz_conf(((float)gps_speed_cm_s_ned.z) / 100.0, INS_VFF_VZ_R_GPS);
-    ins_int.propagation_cnt = 0;
-  #endif
-
-  
-  // Esto en Teoria no hace falta, porque vamos a usar lo que devuelve el filtro
-  // #if USE_HFF
-  //   /* horizontal gps transformed to NED in meters as float */
-  //   struct FloatVect2 gps_pos_m_ned;
-  //   VECT2_ASSIGN(gps_pos_m_ned, gps_pos_cm_ned.x, gps_pos_cm_ned.y);
-  //   VECT2_SDIV(gps_pos_m_ned, gps_pos_m_ned, 100.0f);
-
-  //   struct FloatVect2 gps_speed_m_s_ned;
-  //   VECT2_ASSIGN(gps_speed_m_s_ned, gps_speed_cm_s_ned.x, gps_speed_cm_s_ned.y);
-  //   VECT2_SDIV(gps_speed_m_s_ned, gps_speed_m_s_ned, 100.f);
-
-  //   if (ins_int.hf_realign) {
-  //     ins_int.hf_realign = false;
-  //     hff_realign(gps_pos_m_ned, gps_speed_m_s_ned);
-  //   }
-  //   // run horizontal filter
-  //   hff_update_gps(&gps_pos_m_ned, &gps_speed_m_s_ned);
-  //   // convert and copy result to ins_int
-  //   ins_update_from_hff();
-
-  // #else  /* hff not used */
-  //   /* simply copy horizontal pos/speed from gps */
-  //   INT32_VECT2_SCALE_2(ins_int.ltp_pos, gps_pos_cm_ned,
-  //                       INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
-  //   INT32_VECT2_SCALE_2(ins_int.ltp_speed, gps_speed_cm_s_ned,
-  //                       INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
-  // #endif /* USE_HFF */
+  // // Esto es para la altitud, en principio nos da igual
+  // #if INS_USE_GPS_ALT
+  //   vff_update_z_conf(((float)gps_pos_cm_ned.z) / 100.0, INS_VFF_R_GPS);
+  // #endif
+  // #if INS_USE_GPS_ALT_SPEED
+  //   vff_update_vz_conf(((float)gps_speed_cm_s_ned.z) / 100.0, INS_VFF_VZ_R_GPS);
+  //   ins_int.propagation_cnt = 0;
+  // #endif
 
   /* reset the counter to indicate we just had a measurement update */
   ins_int.propagation_cnt = 0;
