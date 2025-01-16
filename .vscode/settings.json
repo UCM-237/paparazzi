@@ -14,7 +14,9 @@
         "linear_kalman_filter.h": "c",
         "pprz_algebra_float.h": "c",
         "gps.h": "c",
-        "imu.h": "c"
+        "imu.h": "c",
+        "cstddef": "c",
+        "system_error": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

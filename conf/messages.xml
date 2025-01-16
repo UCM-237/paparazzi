@@ -1644,7 +1644,8 @@
       <field name="mag_y" type="float" unit="mGauss">Magnetometer y-bias in mGauss</field>
       <field name="mag_z" type="float" unit="mGauss">Magnetometer z-bias in mGauss</field>
     </message>
-      <message name="ACTUATORS" id="172">
+
+    <message name="ACTUATORS" id="172">
       <field name="values" type="int16[]" unit="none"/>
     </message>
 

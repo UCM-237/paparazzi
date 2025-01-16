@@ -21,6 +21,7 @@
  *          Juan Francisco Jiménez Castellanos
  *          Lía García Pérez
  *          Hector Garcia de Marina
+ *          Alejandro Rochas Fernández
  * 
  */
  
@@ -41,6 +42,20 @@ extern bool serial_msg_setting;
 /* Parser msg struct */
 #define SERIAL_MAX_PAYLOAD 26
 #define SERIAL_MAX_MSG 17
+// #define SERIAL_MAX_N  255 // Max number of messages (BORRAR)
+
+
+/* Macros for bit manipulation */
+#define SET_BIT(buffer, N)     ((buffer) |= (1 << (N)))
+#define CLEAR_BIT(buffer, N)   ((buffer) &= ~(1 << (N)))
+#define CHECK_BIT(buffer, N)   (((buffer) & (1 << (N))) != 0)
+#define RESET_BUFFER(buffer)   ((buffer) = 0)
+#define SET_BIT_IF(counter, interval, buffer, message) \
+    if ((counter) % (interval) == 0) { \
+        SET_BIT(buffer, message); \
+    }
+
+
 
 struct serial_send_t {
 

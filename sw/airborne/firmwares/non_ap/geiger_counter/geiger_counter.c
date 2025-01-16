@@ -90,7 +90,7 @@ void loop()
     switch (stat) {
       case INIT:
         /* sync on the last byte of the prev message */
-        if (b == END_MSG) {
+        if (b == END_MESSAGE) {
           count_geiger_1 = 0;
           count_geiger_2 = 0;
           volt_geiger = 0;

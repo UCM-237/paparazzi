@@ -57,6 +57,8 @@ struct extended_kalman_filter {
   float X[KF_MAX_STATE_SIZE];                     ///< estimated state X
   float X_pred[KF_MAX_STATE_SIZE];                     ///< predicted state X
 
+  float K2[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  // Esta es para probar
+
   uint8_t n;  ///< state vector size (<= KF_MAX_STATE_SIZE)
   uint8_t c;  ///< command vector size (<= KF_MAX_CMD_SIZE)
   uint8_t m;  ///< measurement vector size (<= KF_MAX_MEAS_SIZE)
@@ -97,4 +99,4 @@ extern void extended_kalman_filter_update(struct extended_kalman_filter *filter,
 extern void ekf_f(struct extended_kalman_filter *filter, float *U, float dt);
 extern void ekf_compute_F(struct extended_kalman_filter *filter, float *U, float dt);
 
-#endif /* DISCRETE_EKF_H */
+#endif 

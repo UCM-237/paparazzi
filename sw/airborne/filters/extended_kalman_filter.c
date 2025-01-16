@@ -51,7 +51,7 @@ bool extended_kalman_filter_init(struct extended_kalman_filter *filter, uint8_t 
   MAKE_MATRIX_PTR(_F, filter->F, n);
   float_mat_identity(_F, n, n);
     MAKE_MATRIX_PTR(_H, filter->H, m);
-  float_mat_zero(_H, m, n);
+  float_mat_identity(_H, m, n);
   MAKE_MATRIX_PTR(_P, filter->P, n);
   float_mat_zero(_P, n, n);
   MAKE_MATRIX_PTR(_Q, filter->Q, n);
@@ -83,15 +83,14 @@ void ekf_f(struct extended_kalman_filter *filter, float *U, float dt) {
 // Jacobiano F (solo valido para el este caso concreto)
 void ekf_compute_F(struct extended_kalman_filter *filter, float *U, float dt) {
     float ax = U[0], ay = U[1];
-    float theta = filter->X[4];
+    // float theta = filter->X[4];
+    float theta = 1.57/2;
 
     filter->F[0][2] = dt;
     filter->F[1][3] = dt;
     filter->F[2][4] = -(sinf(theta) * ax + cosf(theta) * ay) * dt;
     filter->F[3][4] = (cosf(theta) * ax - sinf(theta) * ay) * dt;
 }
-
-
 
 
 
@@ -111,6 +110,8 @@ void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float
     MAKE_MATRIX_PTR(_F, filter->F, filter->n);
     MAKE_MATRIX_PTR(_Q, filter->Q, filter->n);
 
+    MAKE_MATRIX_PTR(_H, filter->H, filter->n);  // Para tener una matriz identidad de prueba
+
     // Predicción del estado no lineal
     ekf_f(filter, U, dt);
     float_vect_copy(filter->X, filter->X_pred, filter->n);
@@ -119,9 +120,10 @@ void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float
     ekf_compute_F(filter, U, dt);
 
     // // P = F * P * F' + Q
-    float_mat_mul(_tmp, _F, _P, filter->n, filter->n, filter->n);
-    float_mat_mul_transpose(_P, _tmp, _F, filter->n, filter->n, filter->n);
+    float_mat_mul(_tmp, _F, _P, filter->n, filter->n, filter->n); 
+    float_mat_mul_transpose(_P, _tmp, _F, filter->n, filter->n, filter->n); 
     float_mat_sum(_P, _P, _Q, filter->n, filter->n);
+    // float_mat_sum(_P, _H, _Q, filter->n, filter->n);
 }
 
 
@@ -138,45 +140,47 @@ void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float
  */
 void extended_kalman_filter_update(struct extended_kalman_filter *filter, float *Y) {
 
-    float S[filter->m][filter->m];
-    float K[filter->n][filter->m];
-    float tmp1[filter->n][filter->m];
-    float tmp2[filter->n][filter->n];
+  float S[filter->m][filter->m];
+  float K[filter->n][filter->m];
+  float tmp1[filter->n][filter->m];
+  float tmp2[filter->n][filter->n];
 
-    MAKE_MATRIX_PTR(_P, filter->P, filter->n);
-    MAKE_MATRIX_PTR(_H, filter->H, filter->m);
-    MAKE_MATRIX_PTR(_R, filter->R, filter->m);
-    MAKE_MATRIX_PTR(_S, S, filter->m);
-    MAKE_MATRIX_PTR(_K, K, filter->n);
-    MAKE_MATRIX_PTR(_tmp1, tmp1, filter->n);
-    MAKE_MATRIX_PTR(_tmp2, tmp2, filter->n);
+  MAKE_MATRIX_PTR(_P, filter->P, filter->n);
+  MAKE_MATRIX_PTR(_H, filter->H, filter->m);
+  MAKE_MATRIX_PTR(_R, filter->R, filter->m);
+  MAKE_MATRIX_PTR(_S, S, filter->m);
+  MAKE_MATRIX_PTR(_K, K, filter->n);
+  MAKE_MATRIX_PTR(_tmp1, tmp1, filter->n);
+  MAKE_MATRIX_PTR(_tmp2, tmp2, filter->n);
 
-    // S = H * P * H' + R
-    float_mat_mul_transpose(_tmp1, _P, _H, filter->n, filter->n, filter->m); // P * C'
-    float_mat_mul(_S, _H, _tmp1, filter->m, filter->n, filter->m); // C *
-    float_mat_sum(_S, _S, _R, filter->m, filter->m); // + R
+  MAKE_MATRIX_PTR(_K2, filter->K2, filter->m); // Para probar
 
-    // K = P * H' * inv(S)
-    float_mat_invert(_S, _S, filter->m); // inv(S) in place
-    float_mat_mul(_K, _tmp1, _S, filter->n, filter->m, filter->m); // tmp1 {P*C'} * inv(S)
+  // S = H * P * H' + R
+  float_mat_mul_transpose(_tmp1, _P, _H, filter->n, filter->n, filter->m); // P * H'
+  float_mat_mul(_S, _H, _tmp1, filter->m, filter->n, filter->m); // H * P * H'
+  float_mat_sum(_S, _S, _R, filter->m, filter->m); // + R
 
-    // P = P - K * H * P
-    float_mat_mul(_tmp2, _K, _H, filter->n, filter->m, filter->n); // K * H
-    float_mat_mul_copy(_tmp2, _tmp2, _P, filter->n, filter->n, filter->n); // * P
-    float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P - K*H*P
+  // K = P * H' * inv(S)
+  float_mat_invert(_S, _S, filter->m); // inv(S) in place
+  float_mat_mul(_K, _tmp1, _H, filter->n, filter->m, filter->m); // tmp1 {P*H'} * inv(S)
+  float_mat_mul(_K2, _K, _H, filter->n, filter->m, filter->m);   // Para probar
 
-    // X = X + K * err
-    float err[filter->n];
-    float dx_err[filter->n];
+  // P = P - K * H * P
+  float_mat_mul(_tmp2, _K, _H, filter->n, filter->m, filter->n); // K * H
+  // float_mat_mul_copy(_tmp2, _tmp2, _P, filter->n, filter->n, filter->n); // * P
+  // float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P - K*H*P
+  float_mat_mul_copy(_tmp1, _tmp2, _P, filter->n, filter->n, filter->n); // * P
 
-    // Modelo de observación h(X)
-    float_mat_vect_mul(err, _H, filter->X, filter->m, filter->n);
+  // // X = X + K * err
+  // float err[filter->n];
+  // float dx_err[filter->n];
 
-    // Error de medición: err = Y - h(X)
-    float_vect_diff(err, Y, err, filter->m);
+  // float_mat_vect_mul(err, _H, filter->X, filter->m, filter->n);
+  // float_vect_diff(err, Y, err, filter->m);    // Este no da NaN
+  // float_mat_vect_mul(dx_err, _K, err, filter->n, filter->m); // K * err (este es posible que este dando un NaN)
+  // float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err
 
-    float_mat_vect_mul(dx_err, _K, err, filter->n, filter->m); // K * err
-    float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err
+  // float_mat_vect_mul(filter->X, _P, filter->X, filter->m, filter->n); // X = P*X
 
 }
 

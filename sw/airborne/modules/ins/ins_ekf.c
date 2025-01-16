@@ -187,48 +187,73 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
   //       {0, dt}
   // };
 
-  float H[5][5] = {
-        {1, 0, 0, 0, 0},
-        {0, 1, 0, 0, 0},
-        {0, 0, 1, 0, 0},
-        {0, 0, 0, 1, 0},
-        {0, 0, 0, 0, 1}
-  };
+  // float H[5][5] = {
+  //       {1, 0, 0, 0, 0},
+  //       {0, 1, 0, 0, 0},
+  //       {0, 0, 1, 0, 0},
+  //       {0, 0, 0, 1, 0},
+  //       {0, 0, 0, 0, 1}
+  // };
 
-  float Q[5][5] = {
-        {R2_IMU, 0, 0, 0, 0},
-        {0, R2_IMU, 0, 0, 0},
-        {0, 0, R2_IMU, 0, 0},
-        {0, 0, 0, R2_IMU, 0},
-        {0, 0, 0, 0, R2_IMU}
-  };
+  // float Q[5][5] = {
+  //       {R2_IMU, 0, 0, 0, 0},
+  //       {0, R2_IMU, 0, 0, 0},
+  //       {0, 0, R2_IMU, 0, 0},
+  //       {0, 0, 0, R2_IMU, 0},
+  //       {0, 0, 0, 0, R2_IMU}
+  // };
 
-  float R[5][5] = {
-        {RP_GPS, 0, 0, 0, 0},
-        {0, RP_GPS, 0, 0, 0},
-        {0, 0, RV_GPS, 0, 0},
-        {0, 0, 0, RV_GPS, 0},
-        {0, 0, 0, 0, RT}
-  };
+  // float R[5][5] = {
+  //       {RP_GPS, 0, 0, 0, 0},
+  //       {0, RP_GPS, 0, 0, 0},
+  //       {0, 0, RV_GPS, 0, 0},
+  //       {0, 0, 0, RV_GPS, 0},
+  //       {0, 0, 0, 0, RT}
+  // };
 
-  const int P_init = 100;
-  float P[5][5] = {
-        {P_init, 0, 0, 0, 0},
-        {0, P_init, 0, 0, 0},
-        {0, 0, P_init, 0, 0},
-        {0, 0, 0, P_init, 0},
-        {0, 0, 0, 0, P_init}
-  };
+  // float P[5][5] = {
+  //       {P_init, 0, 0, 0, 0},
+  //       {0, P_init, 0, 0, 0},
+  //       {0, 0, P_init, 0, 0},
+  //       {0, 0, 0, P_init, 0},
+  //       {0, 0, 0, 0, P_init}
+  // };
 
-  float X[5] = {0, 0, 0, 0, 0};
+  // float X[5] = {0, 0, 0, 0, 0};
 
   // memcpy(filter->A, A, sizeof(A));
   // memcpy(filter->B, B, sizeof(B));
-  memcpy(filter->H, H, sizeof(H));
-  memcpy(filter->Q, Q, sizeof(Q));
-  memcpy(filter->R, R, sizeof(R));
-  memcpy(filter->P, P, sizeof(P));
-  memcpy(filter->X, X, sizeof(X));
+  // memcpy(filter->H, H, sizeof(H));
+  // memcpy(filter->Q, Q, sizeof(Q));
+  // memcpy(filter->R, R, sizeof(R));
+  // memcpy(filter->P, P, sizeof(P));
+  // memcpy(filter->X, X, sizeof(X));
+
+  // No se porque, solo funciona si lo hago asi
+  filter->H[0][0] = 1;
+  filter->H[1][1] = 1;
+  filter->H[2][2] = 1;
+  filter->H[3][3] = 1;
+  filter->H[4][4] = 1;
+
+  const float P_init = 100.0;
+  filter->P[0][0] = P_init;
+  filter->P[1][1] = P_init;
+  filter->P[2][2] = P_init;
+  filter->P[3][3] = P_init;
+  filter->P[4][4] = P_init;
+
+  filter->R[0][0] = RP_GPS;
+  filter->R[1][1] = RP_GPS;
+  filter->R[2][2] = RV_GPS;
+  filter->R[3][3] = RV_GPS;
+  filter->R[4][4] = RT;
+
+  filter->Q[0][0] = R2_IMU;
+  filter->Q[1][1] = R2_IMU;
+  filter->Q[2][2] = R2_IMU;
+  filter->Q[3][3] = R2_IMU;
+  filter->Q[4][4] = R2_IMU;
 
 }
 
@@ -333,7 +358,7 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(body_accel.z);
 
 // -------------------------------------------------------------
-  // De aqui ...
+  //De aqui ...
   if (counter_test > 5){
     float Y[5];
     Y[0] = 10.0;
@@ -344,10 +369,14 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 
     extended_kalman_filter_update(&kalman_filter, Y);
 
+    // kalman_filter.F[3][4] = kalman_filter.F[3][4] + 1;
+    // kalman_filter.P[3][3] = kalman_filter.P[3][3] + 1;
+    // kalman_filter.X[4] = kalman_filter.X[4] + 1.57;
+
     ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[1]);
-    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[4]);
+    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.K2[2][2]);
+    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.P[0][0]);
     
     counter_test = 0;
 
@@ -414,23 +443,33 @@ void ins_int_update_gps(struct GpsState *gps_s)
   new_att.phi = att->phi;
   new_att.theta = att->theta;
 
-  // Vector de Medidas (ESTO ES LO UNICO QUE ME FALTA POR REVISAR, casi seguro esta bien)
+  // Vector de Medidas
   float Y[5];
   Y[0] = gps_pos_cm_ned.x/100.0f;
   Y[1] = gps_pos_cm_ned.y/100.0f;
   Y[2] = gps_speed_cm_s_ned.x/100.0f;
   Y[3] = gps_speed_cm_s_ned.y/100.0f;
-  Y[4] = att->psi;
+  Y[4] = att->psi;  // Estoy seguro que son radianes
 
+  // kalman_filter.X[0] = kalman_filter.X[0] + 1;
   extended_kalman_filter_update(&kalman_filter, Y);
+  kalman_filter.X[0] = kalman_filter.X[0] + 1;
 
   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
-  ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+  ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.F[2][4]);
+  ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.F[3][4]);
   ins_ned_to_state();
 
-  new_att.psi = kalman_filter.X[4];
+  // Para comprobar si este es el problema
+  // if (abs(kalman_filter.X[4]) < 6.28){
+  //   new_att.psi = kalman_filter.X[4];
+  // }
+  // else{
+    kalman_filter.X[4] = 0; // Por seguridad 
+    new_att.psi = att->psi;
+  // }
+  
   stateSetNedToBodyEulers_f(&new_att);  // Actualiza la actitud
 
 
