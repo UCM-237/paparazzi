@@ -1778,12 +1778,21 @@
     </message>
 
     <message name="KALMAN_FILTER_STATUS" id="194">
-      <field name="X_posX"   type="int32" />
-      <field name="X_posY"   type="int32" />
-      <field name="X_velX"   type="int32" />
-      <field name="X_velY"   type="int32" />
-      <!-- <field name="Y"        type="int32" />
-      <field name="U"        type="int32" /> -->
+      <!-- <field name="X"       type="float[5]" format="%.2f"/> -->
+      <field name="P_0"     type="float[5]" format="%.2f"/>
+      <field name="P_1"     type="float[5]" format="%.2f"/>
+      <field name="P_2"     type="float[5]" format="%.2f"/>
+      <field name="P_3"     type="float[5]" format="%.2f"/>
+      <field name="P_4"     type="float[5]" format="%.2f"/>
+      <!-- <field name="P_1"     type="float[5]" />
+      <field name="P_2"     type="float[5]" />
+      <field name="P_3"     type="float[5]" />
+      <field name="P_4"     type="float[5]" /> -->
+      <!-- <field name="F_0"     type="float[5]" />
+      <field name="F_1"     type="float[5]" />
+      <field name="F_2"     type="float[5]" />
+      <field name="F_3"     type="float[5]" />
+      <field name="F_4"     type="float[5]" /> -->
     </message>
 
     <!-- 195 is free -->

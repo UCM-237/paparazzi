@@ -110,7 +110,7 @@ void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float
     MAKE_MATRIX_PTR(_F, filter->F, filter->n);
     MAKE_MATRIX_PTR(_Q, filter->Q, filter->n);
 
-    MAKE_MATRIX_PTR(_H, filter->H, filter->n);  // Para tener una matriz identidad de prueba
+    // MAKE_MATRIX_PTR(_H, filter->H, filter->n);  // Para tener una matriz identidad de prueba
 
     // Predicción del estado no lineal
     ekf_f(filter, U, dt);

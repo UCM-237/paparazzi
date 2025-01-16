@@ -65,12 +65,11 @@ static uint8_t checksumLength = 2;
 
 static uint8_t PPZ_START_BYTE = 0x50; // "P"
 static uint8_t COM_START_BYTE = 0x52; // "R"
-static uint8_t PPZ_SONAR_BYTE = 0x53; // "S"
+// static uint8_t PPZ_SONAR_BYTE = 0x53; // "S"
 static uint8_t PPZ_TELEMETRY_BYTE = 0x54; // "T"
 static uint8_t PPZ_HOME_BYTE = 0x48; // "H"
 static uint8_t PPZ_IMU_BYTE = 0x49; // "I"
 static uint8_t PPZ_GPS_BYTE = 0x47; // "G"
-static uint8_t PPZ_PERIODIC_BYTE = 0x42;	// B""
 // static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 // static uint8_t PPZ_SONDA_UP_BYTE = 0x55; // "U"
 // static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"

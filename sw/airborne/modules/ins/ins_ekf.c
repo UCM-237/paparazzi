@@ -155,12 +155,22 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
                           &ins_int.ltp_def.hmsl, &ins_int.qfe);
   }
 }
-#endif
+
+static void send_kf_status(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_KALMAN_FILTER_STATUS(trans, dev, AC_ID,
+                    kalman_filter.P[0], kalman_filter.P[1], kalman_filter.P[2], kalman_filter.P[3], kalman_filter.P[4]);
+}
+
+
+#endif    // PERIODIC_TELEMETRY
 
 static void ins_ned_to_state(void);
 
 
 void init_filter(struct extended_kalman_filter *filter, float dt){
+
+  dt = dt;    // Para evitar el warning
 
   uint8_t n = 5; // [px, py, vx, vy, theta]
   uint8_t c = 3; // [ax, ay, az]
@@ -281,6 +291,7 @@ void ins_int_init(void)
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS, send_ins);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_REF, send_ins_ref);
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_KALMAN_FILTER_STATUS, send_kf_status);
   #endif
 
   /*
@@ -341,6 +352,7 @@ void ins_reset_vertical_pos(void)
 
 void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 {
+  // TODO: Buscar la aceleración angular
   // Set body acceleration in the state
   stateSetAccelBody_i(accel);
 
@@ -349,7 +361,7 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   body_accel.y = ACCEL_FLOAT_OF_BFP(accel->y);
   body_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
 
-  float U[3] = {body_accel.x, body_accel.y, body_accel.z};
+  float U[3] = {body_accel.x, body_accel.y, 0};
   extended_kalman_filter_predict(&kalman_filter, U, dt);
 
   // Actualiza (y manda por telemetria), las aceleraciones en ejes cuerpo
