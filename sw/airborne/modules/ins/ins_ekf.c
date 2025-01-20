@@ -159,7 +159,7 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
 static void send_kf_status(struct transport_tx *trans, struct link_device *dev)
 {
   pprz_msg_send_KALMAN_FILTER_STATUS(trans, dev, AC_ID,
-                    kalman_filter.P[0], kalman_filter.P[1], kalman_filter.P[2], kalman_filter.P[3], kalman_filter.P[4]);
+                    kalman_filter.K2[0], kalman_filter.K2[1], kalman_filter.K2[2], kalman_filter.K2[3], kalman_filter.K2[4]);
 }
 
 
@@ -239,14 +239,13 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
   // memcpy(filter->P, P, sizeof(P));
   // memcpy(filter->X, X, sizeof(X));
 
-  // No se porque, solo funciona si lo hago asi
   filter->H[0][0] = 1;
   filter->H[1][1] = 1;
   filter->H[2][2] = 1;
   filter->H[3][3] = 1;
   filter->H[4][4] = 1;
 
-  const float P_init = 100.0;
+  const float P_init = 50.0;
   filter->P[0][0] = P_init;
   filter->P[1][1] = P_init;
   filter->P[2][2] = P_init;
@@ -264,6 +263,8 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
   filter->Q[2][2] = R2_IMU;
   filter->Q[3][3] = R2_IMU;
   filter->Q[4][4] = R2_IMU;
+
+  filter->K2[0][0] = -1;    // Para depurar
 
 }
 
@@ -386,9 +387,9 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
     // kalman_filter.X[4] = kalman_filter.X[4] + 1.57;
 
     ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[4]);
-    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.K2[2][2]);
-    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.P[0][0]);
+    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
     
     counter_test = 0;
 

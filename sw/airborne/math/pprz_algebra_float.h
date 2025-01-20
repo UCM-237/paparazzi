@@ -920,6 +920,43 @@ static inline void float_mat_mul_scalar(float **o, float **a, float scalar, int 
    }
 }
 
+/* Matrix determinant. Be careful, can be very slow and is not tested */
+// static inline float float_mat_det(float **mat, int n) {
+//     int i, j, k;
+//     float det = 0.0;
+
+//     if (n == 1) {
+//         return mat[0][0];
+//     }
+//     if (n == 2) {
+//         return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+//     }
+//     for (i = 0; i < n; i++) {
+//         float **submat = (float **)malloc((n - 1) * sizeof(float *));
+//         for (j = 0; j < n - 1; j++) {
+//             submat[j] = (float *)malloc((n - 1) * sizeof(float));
+//         }
+
+//         for (j = 1; j < n; j++) {
+//             int submat_col = 0;
+//             for (k = 0; k < n; k++) {
+//                 if (k == i) continue;
+//                 submat[j - 1][submat_col++] = mat[j][k];
+//             }
+//         }
+
+//         float sub_det = float_mat_det(submat, n - 1);
+//         det += (i % 2 == 0 ? 1 : -1) * mat[0][i] * sub_det;
+
+//         for (j = 0; j < n - 1; j++) {
+//             free(submat[j]);
+//         }
+//         free(submat);
+//     }
+//     return det;
+// }
+
+
 
 
 extern bool float_mat_inv_2d(float inv_out[4], float mat_in[4]);

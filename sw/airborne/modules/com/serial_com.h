@@ -106,7 +106,14 @@ void itoh(int value, unsigned char* str, int nbytes);
 unsigned int serial_byteToint(uint8_t * bytes,int length);
 void ito2h(int value, unsigned char* str) ;
 void serial_calculateChecksumMsg(uint8_t *msg, int msgLength);
+void send_full_message(uint8_t msgLength);
 extern struct serial_parse_t serial_msg;
+
+// Message functions
+uint8_t set_header(uint8_t type);
+void set_gps_message(uint8_t start_byte);
+void set_imu_message(uint8_t start_byte);
+void set_telemetry_message(uint8_t start_byte);
 
 	
 /* External functions (called by the autopilot)*/

@@ -25,7 +25,7 @@
     
     <module name="actuators" type="pwm"/>
 
-<!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
+    <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
 
     <module name="gps" type="ublox">
     	<configure name="GPS_PORT"  value="UART4"/>
@@ -42,15 +42,15 @@
     <!-- <module name="ins"/>  -->
 
     <!-- Speed estimated with Kalman Filter -->
-    <!-- <module name="ins_kf"/> -->
-    <module name="ins_ekf"/>
+    <module name="ins_kf"/>
+    <!-- <module name="ins_ekf"/> -->
     
 
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
-   <module name="telemetry" type="xbee_api">
+    <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>
     </module>
     

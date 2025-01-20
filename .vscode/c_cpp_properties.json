@@ -15,7 +15,11 @@
                 "${workspaceFolder}/sw/airborne/test/ahrs",
                 "${workspaceFolder}/var/include",
                 "${workspaceFolder}/sw/include",
-                "${workspaceFolder}/sw/airborne/arch/chibios"
+                "${workspaceFolder}/sw/airborne/arch/chibios",
+                "${workspaceFolder}/sw/airborne/firmwares/rotorcraft",
+                "${workspaceFolder}/tests/modules",
+                "${workspaceFolder}/sw/airborne/modules",
+                "${workspaceFolder}/sw/ext/chibios/os/nil/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",

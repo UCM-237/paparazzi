@@ -110,6 +110,8 @@ void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float
     MAKE_MATRIX_PTR(_F, filter->F, filter->n);
     MAKE_MATRIX_PTR(_Q, filter->Q, filter->n);
 
+    MAKE_MATRIX_PTR(_K2, filter->K2, filter->m); // Para probar
+
     // MAKE_MATRIX_PTR(_H, filter->H, filter->n);  // Para tener una matriz identidad de prueba
 
     // Predicción del estado no lineal
@@ -123,7 +125,6 @@ void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float
     float_mat_mul(_tmp, _F, _P, filter->n, filter->n, filter->n); 
     float_mat_mul_transpose(_P, _tmp, _F, filter->n, filter->n, filter->n); 
     float_mat_sum(_P, _P, _Q, filter->n, filter->n);
-    // float_mat_sum(_P, _H, _Q, filter->n, filter->n);
 }
 
 
@@ -162,14 +163,17 @@ void extended_kalman_filter_update(struct extended_kalman_filter *filter, float 
 
   // K = P * H' * inv(S)
   float_mat_invert(_S, _S, filter->m); // inv(S) in place
+  if(isnan(_S[0][0])){
+    float_mat_copy(_S, _H, filter->n, filter->m); // S = I (para probar)
+  }
   float_mat_mul(_K, _tmp1, _H, filter->n, filter->m, filter->m); // tmp1 {P*H'} * inv(S)
-  float_mat_mul(_K2, _K, _H, filter->n, filter->m, filter->m);   // Para probar
 
-  // P = P - K * H * P
-  float_mat_mul(_tmp2, _K, _H, filter->n, filter->m, filter->n); // K * H
-  // float_mat_mul_copy(_tmp2, _tmp2, _P, filter->n, filter->n, filter->n); // * P
-  // float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P - K*H*P
-  float_mat_mul_copy(_tmp1, _tmp2, _P, filter->n, filter->n, filter->n); // * P
+  
+  // // P = P - K * H * P
+  // float_mat_mul(_tmp2, _K, _H, filter->n, filter->m, filter->n); // K * H
+  float_mat_mul(_tmp2, _R, _H, filter->n, filter->m, filter->n); // H * H
+  float_mat_mul_copy(_tmp2, _tmp2, _P, filter->n, filter->n, filter->n); // * P
+  float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P - K*H*P
 
   // // X = X + K * err
   // float err[filter->n];
@@ -181,6 +185,8 @@ void extended_kalman_filter_update(struct extended_kalman_filter *filter, float 
   // float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err
 
   // float_mat_vect_mul(filter->X, _P, filter->X, filter->m, filter->n); // X = P*X
+
+  float_mat_copy(_K2, _tmp2, filter->n, filter->m);  // Para ver en el mensaje
 
 }
 
