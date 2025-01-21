@@ -42,13 +42,14 @@
     <!-- <module name="ins"/>  -->
 
     <!-- Speed estimated with Kalman Filter -->
-    <module name="ins_kf"/>
-    <!-- <module name="ins_ekf"/> -->
+    <!-- <module name="ins_kf"/> -->
+    <module name="ins_ekf"/>
     
-
+    <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
+    
     
     <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>

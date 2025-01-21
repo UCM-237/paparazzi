@@ -26,10 +26,12 @@
  *
  */
 
+// ------------------------------------
 
+#include "modules/ins/ins_int.h"
 
 // KALMAN FILTER ----------------------
-#include "filters/extended_kalman_filter.c"
+#include "filters/extended_kalman_filter.h"
 
 #define R2_IMU 2.5E-4       // Varianza sobre la IMU
 #define RP_GPS 0.005        // Varianza sobre la posición (REVISAR)
@@ -39,17 +41,14 @@
 #define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
 struct extended_kalman_filter kalman_filter;
-uint8_t counter_test = 0;   // Esto es para pruebas 
-
 struct InsInt ins_int;
 struct FloatVector {
   float x;  ///< North
   float y;  ///< East
   float z;  ///< Down
 };
-struct FloatVector body_accel;   // Aceleración en ejes cuerpo
 
-// ------------------------------------
+uint8_t counter_test = 0;   // Esto es para pruebas
 
 #include "modules/core/abi.h"
 
@@ -159,7 +158,7 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
 static void send_kf_status(struct transport_tx *trans, struct link_device *dev)
 {
   pprz_msg_send_KALMAN_FILTER_STATUS(trans, dev, AC_ID,
-                    kalman_filter.K2[0], kalman_filter.K2[1], kalman_filter.K2[2], kalman_filter.K2[3], kalman_filter.K2[4]);
+                    kalman_filter.X, kalman_filter.K2[1], kalman_filter.K2[2], kalman_filter.K2[3], kalman_filter.K2[4]);
 }
 
 
@@ -356,41 +355,61 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   // TODO: Buscar la aceleración angular
   // Set body acceleration in the state
   stateSetAccelBody_i(accel);
+  struct FloatVector body_accel;   // Aceleración en ejes cuerpo
 
   // Esta en int32, dividir entre 1024 para obtener el valor en m/s2
   body_accel.x = ACCEL_FLOAT_OF_BFP(accel->x);
   body_accel.y = ACCEL_FLOAT_OF_BFP(accel->y);
   body_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
 
-  float U[3] = {body_accel.x, body_accel.y, 0};
+  // Velocidad angular (solo hace falta Z)
+  struct FloatRates *ang_vel;
+  ang_vel = stateGetBodyRates_f();
+
+  float U[3] = {body_accel.x, body_accel.y, ang_vel->r};
   extended_kalman_filter_predict(&kalman_filter, U, dt);
 
   // Actualiza (y manda por telemetria), las aceleraciones en ejes cuerpo
   ins_int.ltp_accel.x = ACCEL_BFP_OF_REAL(body_accel.x);
   ins_int.ltp_accel.y = ACCEL_BFP_OF_REAL(body_accel.y);
   ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(body_accel.z);
+  ins_int.ltp_speed.z = SPEED_BFP_OF_REAL(ang_vel->r);  // Esta es para poder ver el mensaje
 
 // -------------------------------------------------------------
   //De aqui ...
+
+  // BORRAR
+  // // Actitud
+  // struct FloatEulers *att = stateGetNedToBodyEulers_f();
+  // struct FloatEulers new_att;
+  // new_att.phi = att->phi;
+  // new_att.theta = att->theta;
+
   if (counter_test > 5){
     float Y[5];
     Y[0] = 10.0;
     Y[1] = 10.0;
     Y[2] = 0.0;
     Y[3] = 0.0;
-    Y[4] = 1.57;
+    Y[4] = ahrs_dcm.ltp_to_body_euler.psi;
 
     extended_kalman_filter_update(&kalman_filter, Y);
 
     // kalman_filter.F[3][4] = kalman_filter.F[3][4] + 1;
     // kalman_filter.P[3][3] = kalman_filter.P[3][3] + 1;
     // kalman_filter.X[4] = kalman_filter.X[4] + 1.57;
+    kalman_filter.X[4] = 1.57;
 
     ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
     ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
     ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
     ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
-    
+    // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
+
+    // BORRAR
+    // new_att.psi = kalman_filter.X[4];
+    // stateSetNedToBodyEulers_f(&new_att);  // Actualiza la actitud
+
     counter_test = 0;
 
   }
@@ -401,7 +420,7 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 
   // ... a aqui va en el GPS
 // -------------------------------------------------------------
-  
+
   ins_ned_to_state();
 
   /* increment the propagation counter, while making sure it doesn't overflow */
@@ -479,10 +498,10 @@ void ins_int_update_gps(struct GpsState *gps_s)
   //   new_att.psi = kalman_filter.X[4];
   // }
   // else{
-    kalman_filter.X[4] = 0; // Por seguridad 
+    kalman_filter.X[4] = 0; // Por seguridad
     new_att.psi = att->psi;
   // }
-  
+
   stateSetNedToBodyEulers_f(&new_att);  // Actualiza la actitud
 
 

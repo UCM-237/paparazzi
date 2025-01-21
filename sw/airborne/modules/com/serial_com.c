@@ -35,7 +35,7 @@
 #include "autopilot.h"
 #include "navigation.h"
 #include "state.h"
-//#include "modules/sonar/sonar_bluerobotics.h"
+//#include "modules/sonar/sonar_bluerobotics.h"		// No funciona en los rover
 #include "modules/radio_control/radio_control.h"
 #include "modules/nav/waypoints.h"
 
@@ -344,6 +344,7 @@ void serial_read_message(void){
 		case SR_WAYPOINT:	// Este es para procesar los waypoints 
 			parse_MOVE_WP();
 			serial_msg.error_last = SERIAL_BR_ERR_NONE;
+			// Ahora que puedo mandar multiples mensajes ¿poner un ACK?
  			break;
 
 		case SR_HOME:	// Este es para procesar el home request
@@ -430,7 +431,7 @@ static void serial_parse(uint8_t byte){
 			serial_msg.msgData[1]=byte;
 			break;
 
-		case SR_WAYPOINT:	// 3th and the rest for the messages
+		case SR_WAYPOINT:	// 3th and the rest for the messages (cambiar algun momento el nombre)
 			serial_msg.msgData[serial_msg.count+2]=byte;
 			serial_msg.count++;
 
@@ -544,7 +545,7 @@ uint8_t set_header(uint8_t type) {
 void set_gps_message(uint8_t start_byte){
 
 	uint8_t j = start_byte;
-	struct LlaCoor_i *gps_coord;
+	// struct LlaCoor_i *gps_coord;
 	uint8_t msg_gps[5]={0,0,0,0,0};
 
 	memset(&serial_snd.msgData[j], 0, 17);
@@ -572,7 +573,9 @@ void set_imu_message(uint8_t start_byte){
 
 	uint8_t j = start_byte;
 	uint8_t msg_imu[5]={0,0,0,0,0};
-	struct Int32Vect3 *accel_state;
+	// struct Int32Vect3 *accel_state;
+	struct NedCoor_i *accel_state;
+	
 
 	memset(&serial_snd.msgData[j], 0, 18);
 
@@ -644,15 +647,20 @@ void serial_ping()
 	uint32_t now_s = get_sys_time_msec();
 
 	uint8_t msg_byte = 0;
-	// struct sonar_parse_t *sonar_data;
+	// struct sonar_parse_t *sonar_data;	// No funciona en el rover
 	uint8_t msg_gps[5]={0,0,0,0,0};
 
 	// Aqui a lo mejor habria que comprobar que solo se active uno (depende de lo se necesite)
-	// Creo que aqui el nombre esta mal (es GAIN2 sin mas)
-	if (radio_control_get(RADIO_GAIN2)>0)
+	// Creo que aqui el nombre esta mal (es GAIN2 sin mas, o la mejor no ??)
+	serial_msg.depth = radio_control_get(RADIO_PITCH);
+	if (radio_control_get(RADIO_PITCH)>10000){
+		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_UP);
-	else if (radio_control_get(RADIO_GAIN2)<0)
+	}
+	else if (radio_control_get(RADIO_PITCH)>5000){
+		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_DOWN);
+	}
 
 
 	if (now_s > (last_s + SEND_INTERVAL)) {
@@ -717,7 +725,7 @@ void serial_ping()
 			}
 
 
-			// ---- UNUSED BEGIN ---------
+			// ---- BEGIN UNUSED ---------
 			else if(CHECK_BIT(msg_buffer, SONDA_RQ)){
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONAR_BYTE);
@@ -731,7 +739,8 @@ void serial_ping()
 				// (tendria que implementar aqui algo de prueba para ver si funciona)
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONDA_UP_BYTE);
-
+				
+				serial_snd.confidence = 10;	// TEST
 				send_full_message(serial_snd.msg_length);
 				CLEAR_BIT(msg_buffer, SONDA_UP); 
 			}
@@ -741,58 +750,33 @@ void serial_ping()
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONDA_DOWN_BYTE);
 
+				serial_snd.confidence = 20;
 				send_full_message(serial_snd.msg_length);
 				CLEAR_BIT(msg_buffer, SONDA_DOWN); 
 			}
 			
-			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
-				serial_snd.msg_length=26;
-				msg_byte = set_header(PPZ_MEASURE_BYTE);
-				memset(serial_snd.msgData,0,26);
-				serial_snd.msgData[0]=PPZ_START_BYTE;
-				serial_snd.msgData[1]=PPZ_MEASURE_BYTE;
-				serial_snd.time=sys_time.nb_sec;
-				
-				ito2h(serial_snd.time, msg_time);
-				serial_snd.msgData[2]=msg_time[0];
-				serial_snd.msgData[3]=msg_time[1];
+			// else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
+			// No funciona en el rover
+			// 	serial_snd.msg_length=26;
+			// 	msg_byte = set_header(PPZ_MEASURE_BYTE);
+			// 	set_telemetry_message(msg_byte);
+			// 	// Reescribe esta parte
+			// 	// Get Sonar
+			// 	sonar_data= sonar_get();
+			// 	serial_snd.distance=sonar_data->distance;
+			// 	serial_snd.confidence=sonar_data->confidence;
+			// 	/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
+			// 	an signed (using one extra byte) int but sign byte is discarded
+			// 	*/
+			// 	itoh(sonar_data->distance,msg_dist,5);
+			// 	for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
+			// 	serial_snd.msgData[22]=sonar_data->confidence;
+			// 	serial_snd.msgData[23]=modo_medida;
+			// 	send_full_message(serial_snd.msg_length);
+			// 	CLEAR_BIT(msg_buffer, MEASURE_SN); 
+			// }
 
-				// Get Position
-				gps_coord = stateGetPositionLla_i();
-				serial_snd.lon=gps_coord->lon;
-				serial_snd.lat=gps_coord->lat;
-				serial_snd.alt=gps_coord->alt;
-				itoh(gps_coord->lon,msg_gps,5);
-				for(int i=0;i<5;i++) serial_snd.msgData[i+4]=msg_gps[i];
-				memset(msg_gps,0,5);
-				itoh(gps_coord->lat,msg_gps,5);
-				for(int i=0;i<5;i++) serial_snd.msgData[i+9]=msg_gps[i];
-				memset(msg_gps,0,5);
-
-				/*NOTE: serial_snd.alt is an unsigned int. It is codified as 
-				an signed (using one extra byte) int but sign byte is discarded
-				*/
-				itoh(serial_snd.alt,msg_gps,5);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i+1];
-
-				// Get Sonar
-				sonar_data= sonar_get();
-				serial_snd.distance=sonar_data->distance;
-				serial_snd.confidence=sonar_data->confidence;
-
-				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
-				an signed (using one extra byte) int but sign byte is discarded
-				*/
-				itoh(sonar_data->distance,msg_dist,5);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
-				serial_snd.msgData[22]=sonar_data->confidence;
-				serial_snd.msgData[23]=modo_medida;
-
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, MEASURE_SN); 
-			}
-
-			// ---- UNUSED END ---------
+			// ---- END UNUSED ---------
 
 			else{	 
 				// Si llega a aqui es que no quedan mensajes que mandar

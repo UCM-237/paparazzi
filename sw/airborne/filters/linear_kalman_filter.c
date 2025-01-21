@@ -108,7 +108,7 @@ void linear_kalman_filter_predict(struct linear_kalman_filter *filter, float *U)
  * @param filter pointer to the filter structure
  * @param Y measurement vector
  */
-extern void linear_kalman_filter_update(struct linear_kalman_filter *filter, float *Y)
+void linear_kalman_filter_update(struct linear_kalman_filter *filter, float *Y)
 {
   float S[filter->m][filter->m];
   float K[filter->n][filter->m];
@@ -122,6 +122,8 @@ extern void linear_kalman_filter_update(struct linear_kalman_filter *filter, flo
   MAKE_MATRIX_PTR(_K, K, filter->n);
   MAKE_MATRIX_PTR(_tmp1, tmp1, filter->n);
   MAKE_MATRIX_PTR(_tmp2, tmp2, filter->n);
+
+  MAKE_MATRIX_PTR(_K2, filter->K2, filter->m); // Para probar
 
   // S = Cd * P * Cd' + R
   float_mat_mul_transpose(_tmp1, _P, _C, filter->n, filter->n, filter->m); // P * C'
@@ -145,5 +147,7 @@ extern void linear_kalman_filter_update(struct linear_kalman_filter *filter, flo
   float_vect_diff(err, Y, err, filter->m); // err = Y - C * X
   float_mat_vect_mul(dx_err, _K, err, filter->n, filter->m); // K * err
   float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err
+
+  float_mat_copy(_K2, _K, filter->n, filter->m);  // Para ver en el mensaje
 }
 

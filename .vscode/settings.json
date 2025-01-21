@@ -18,7 +18,9 @@
         "cstddef": "c",
         "system_error": "cpp",
         "sys_time.h": "c",
-        "serial_com.h": "c"
+        "serial_com.h": "c",
+        "ins_int.h": "c",
+        "downlink.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

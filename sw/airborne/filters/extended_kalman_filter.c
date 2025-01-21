@@ -170,23 +170,20 @@ void extended_kalman_filter_update(struct extended_kalman_filter *filter, float 
 
   
   // // P = P - K * H * P
-  // float_mat_mul(_tmp2, _K, _H, filter->n, filter->m, filter->n); // K * H
-  float_mat_mul(_tmp2, _R, _H, filter->n, filter->m, filter->n); // H * H
-  float_mat_mul_copy(_tmp2, _tmp2, _P, filter->n, filter->n, filter->n); // * P
-  float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P - K*H*P
+  float_mat_mul(_tmp2, _K, _H, filter->n, filter->m, filter->n); // tmp2 = K * H
+  float_mat_mul_copy(_tmp2, _tmp2, _P, filter->n, filter->n, filter->n); // tmp2 = tmp2 * P = K*H*P
+  float_mat_diff(_P, _P, _tmp2, filter->n, filter->n); // P = P - tmp2 = P - K*H*P
 
   // // X = X + K * err
-  // float err[filter->n];
-  // float dx_err[filter->n];
+  float err[filter->n];
+  float dx_err[filter->n];
 
-  // float_mat_vect_mul(err, _H, filter->X, filter->m, filter->n);
-  // float_vect_diff(err, Y, err, filter->m);    // Este no da NaN
-  // float_mat_vect_mul(dx_err, _K, err, filter->n, filter->m); // K * err (este es posible que este dando un NaN)
-  // float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err
+  float_mat_vect_mul(err, _H, filter->X, filter->m, filter->n);
+  float_vect_diff(err, Y, err, filter->m);
+  float_mat_vect_mul(dx_err, _K, err, filter->n, filter->m); // K * err = K*(Y-err) = K*(Y-H*X)
+  float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err = X + K*err
 
-  // float_mat_vect_mul(filter->X, _P, filter->X, filter->m, filter->n); // X = P*X
-
-  float_mat_copy(_K2, _tmp2, filter->n, filter->m);  // Para ver en el mensaje
+  float_mat_copy(_K2, _K, filter->n, filter->m);  // Para ver en el mensaje
 
 }
 

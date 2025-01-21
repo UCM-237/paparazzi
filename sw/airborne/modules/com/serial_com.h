@@ -42,7 +42,6 @@ extern bool serial_msg_setting;
 /* Parser msg struct */
 #define SERIAL_MAX_PAYLOAD 26
 #define SERIAL_MAX_MSG 17
-// #define SERIAL_MAX_N  255 // Max number of messages (BORRAR)
 
 
 /* Macros for bit manipulation */

@@ -54,6 +54,10 @@ struct linear_kalman_filter {
 
   float X[KF_MAX_STATE_SIZE];                     ///< estimated state X
 
+  // Esto mas adelante estaria bien borrarlo para evitar gastar memoria a lo tonto
+  // Ahora esta para depurar
+  float K2[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  // Esta es para probar
+
   uint8_t n;  ///< state vector size (<= KF_MAX_STATE_SIZE)
   uint8_t c;  ///< command vector size (<= KF_MAX_CMD_SIZE)
   uint8_t m;  ///< measurement vector size (<= KF_MAX_MEAS_SIZE)

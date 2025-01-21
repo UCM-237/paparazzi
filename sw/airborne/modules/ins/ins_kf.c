@@ -28,8 +28,10 @@
 
 
 
+#include "modules/ins/ins_int.h"
+
 // KALMAN FILTER ----------------------
-#include "filters/linear_kalman_filter.c"
+#include "filters/linear_kalman_filter.h"
 
 #define R2_IMU 2.5E-4       // Varianza sobre la IMU
 #define RP_GPS 0.01            // Varianza sobre la posición (REVISAR)
@@ -203,6 +205,13 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
                           &ins_int.ltp_def.hmsl, &ins_int.qfe);
   }
 }
+
+static void send_kf_status(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_KALMAN_FILTER_STATUS(trans, dev, AC_ID,
+                    kalman_filter.X, kalman_filter.K2[0], kalman_filter.K2[1], kalman_filter.K2[2], kalman_filter.K2[3]);
+}
+
 #endif
 
 static void ins_ned_to_state(void);
@@ -318,6 +327,7 @@ void ins_int_init(void)
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS, send_ins);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_REF, send_ins_ref);
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_KALMAN_FILTER_STATUS, send_kf_status);
   #endif
 
   /*
@@ -680,13 +690,13 @@ static void gps_cb(uint8_t sender_id __attribute__((unused)),
 //   float_quat_vmult(&vel_ned, &q_b2n, &vel_body);
 
 //   // abi message contains an update to the horizontal velocity estimate
-// #if USE_HFF
+//   #if USE_HFF
 //   struct FloatVect2 vel = {vel_ned.x, vel_ned.y};
 //   struct FloatVect2 Rvel = {noise_x, noise_y};
 
 //   hff_update_vel(vel,  Rvel);
 //   ins_update_from_hff();
-// #else
+//   #else
 //   if (noise_x >= 0.f)
 //   {
 //     ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(vel_ned.x);
@@ -715,10 +725,10 @@ static void gps_cb(uint8_t sender_id __attribute__((unused)),
 //     }
 //     last_stamp_y = stamp;
 //   }
-// #endif
+//   #endif
 
 //   // abi message contains an update to the vertical velocity estimate
-//   vff_update_vz_conf(vel_ned.z, noise_z);
+//   // vff_update_vz_conf(vel_ned.z, noise_z);
 
 //   ins_ned_to_state();
 

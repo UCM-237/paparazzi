@@ -41,6 +41,12 @@ static uint8_t ahrs_dcm_id = AHRS_COMP_ID_DCM;
 
 static void set_body_orientation_and_rates(void);
 
+#if USE_KF_FILTER
+#include "modules/ins/ins_int.h"
+#else USE_EKF_FILTER
+#include "modules/ins/ins_int.h"
+#endif
+
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 #include "mcu_periph/sys_time.h"
@@ -177,10 +183,16 @@ static void set_body_orientation_and_rates(void)
     /* Set the state */
     stateSetBodyRates_f(&ahrs_dcm.body_rate);
 
-    /* Convert eulers to RMaat and set state */
-    struct FloatRMat ltp_to_body_rmat;
-    float_rmat_of_eulers(&ltp_to_body_rmat, &ahrs_dcm.ltp_to_body_euler);
-    stateSetNedToBodyRMat_f(&ltp_to_body_rmat);
+    #if USE_EKF_FILTER
+      // ahrs_dcm.ltp_to_body_euler tiene la medida absoluta
+      struct FloatEulers attitude;
+      attitude.theta = ahrs_dcm.ltp_to_body_euler.theta;
+      attitude.phi = ahrs_dcm.ltp_to_body_euler.phi;
+      attitude.psi = kalman_filter.X[4];
+      stateSetNedToBodyEulers_f(&attitude);
+    #else
+      stateSetNedToBodyEulers_f(&ahrs_dcm.ltp_to_body_euler);
+    #endif
   }
 }
 
