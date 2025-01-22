@@ -102,5 +102,6 @@ extern void ekf_f(struct extended_kalman_filter *filter, float *U, float dt);
 extern void ekf_compute_F(struct extended_kalman_filter *filter, float *U, float dt);
 
 extern void init_filter(struct extended_kalman_filter *filter, float dt);
+extern void update_matrix(struct extended_kalman_filter *filter);
 
 #endif 

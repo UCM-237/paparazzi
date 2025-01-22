@@ -28,19 +28,21 @@
 
 // ------------------------------------
 
+#include "autopilot.h"
 #include "modules/ins/ins_int.h"
 
 // KALMAN FILTER ----------------------
 #include "filters/extended_kalman_filter.h"
 
-#define R2_IMU 2.5E-4       // Varianza sobre la IMU
-#define RP_GPS 0.005        // Varianza sobre la posición (REVISAR)
-#define RV_GPS 0.01            // Varianza sobre la velocidad (REVISAR)
-#define RT 0.1              // Varianza sobre la actitud
+// #define R2_IMU 2.5E-4       // Varianza sobre la IMU
+// #define RP_GPS 0.005        // Varianza sobre la posición (REVISAR)
+// #define RV_GPS 0.01         // Varianza sobre la velocidad (REVISAR)
+// #define RT 0.01              // Varianza sobre la actitud
 
 #define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
 struct extended_kalman_filter kalman_filter;
+struct KalmanVariance kalman_variance;
 struct InsInt ins_int;
 struct FloatVector {
   float x;  ///< North
@@ -166,6 +168,29 @@ static void send_kf_status(struct transport_tx *trans, struct link_device *dev)
 
 static void ins_ned_to_state(void);
 
+void update_matrix(struct extended_kalman_filter *filter){
+
+  const float P_init = 0.5;   // Hay que dejarlo menor que 1 (sino se vuelve inestable)
+  filter->P[0][0] = P_init;
+  filter->P[1][1] = P_init;
+  filter->P[2][2] = P_init;
+  filter->P[3][3] = P_init;
+  filter->P[4][4] = P_init;
+  
+  filter->R[0][0] = kalman_variance.pos*1E-03;
+  filter->R[1][1] = kalman_variance.pos*1E-03;
+  filter->R[2][2] = kalman_variance.vel*1E-03;
+  filter->R[3][3] = kalman_variance.vel*1E-03;
+  filter->R[4][4] = kalman_variance.att*1E-03;
+
+  filter->Q[0][0] = kalman_variance.imu*1E-04;
+  filter->Q[1][1] = kalman_variance.imu*1E-04;
+  filter->Q[2][2] = kalman_variance.imu*1E-04;
+  filter->Q[3][3] = kalman_variance.imu*1E-04;
+  filter->Q[4][4] = kalman_variance.imu*1E-04;
+
+}
+
 
 void init_filter(struct extended_kalman_filter *filter, float dt){
 
@@ -181,89 +206,17 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
   filter->c = c;
   filter->m = m;
 
-
-  // float A[4][4] = {
-  //       {1, 0, dt, 0},
-  //       {0, 1, 0, dt},
-  //       {0, 0, 1, 0},
-  //       {0, 0, 0, 1}
-  // };
-
-  // float B[4][2] = {
-  //       {0,  0},
-  //       {0,  0},
-  //       {dt, 0},
-  //       {0, dt}
-  // };
-
-  // float H[5][5] = {
-  //       {1, 0, 0, 0, 0},
-  //       {0, 1, 0, 0, 0},
-  //       {0, 0, 1, 0, 0},
-  //       {0, 0, 0, 1, 0},
-  //       {0, 0, 0, 0, 1}
-  // };
-
-  // float Q[5][5] = {
-  //       {R2_IMU, 0, 0, 0, 0},
-  //       {0, R2_IMU, 0, 0, 0},
-  //       {0, 0, R2_IMU, 0, 0},
-  //       {0, 0, 0, R2_IMU, 0},
-  //       {0, 0, 0, 0, R2_IMU}
-  // };
-
-  // float R[5][5] = {
-  //       {RP_GPS, 0, 0, 0, 0},
-  //       {0, RP_GPS, 0, 0, 0},
-  //       {0, 0, RV_GPS, 0, 0},
-  //       {0, 0, 0, RV_GPS, 0},
-  //       {0, 0, 0, 0, RT}
-  // };
-
-  // float P[5][5] = {
-  //       {P_init, 0, 0, 0, 0},
-  //       {0, P_init, 0, 0, 0},
-  //       {0, 0, P_init, 0, 0},
-  //       {0, 0, 0, P_init, 0},
-  //       {0, 0, 0, 0, P_init}
-  // };
-
-  // float X[5] = {0, 0, 0, 0, 0};
-
-  // memcpy(filter->A, A, sizeof(A));
-  // memcpy(filter->B, B, sizeof(B));
-  // memcpy(filter->H, H, sizeof(H));
-  // memcpy(filter->Q, Q, sizeof(Q));
-  // memcpy(filter->R, R, sizeof(R));
-  // memcpy(filter->P, P, sizeof(P));
-  // memcpy(filter->X, X, sizeof(X));
-
   filter->H[0][0] = 1;
   filter->H[1][1] = 1;
   filter->H[2][2] = 1;
   filter->H[3][3] = 1;
   filter->H[4][4] = 1;
 
-  const float P_init = 50.0;
-  filter->P[0][0] = P_init;
-  filter->P[1][1] = P_init;
-  filter->P[2][2] = P_init;
-  filter->P[3][3] = P_init;
-  filter->P[4][4] = P_init;
-
-  filter->R[0][0] = RP_GPS;
-  filter->R[1][1] = RP_GPS;
-  filter->R[2][2] = RV_GPS;
-  filter->R[3][3] = RV_GPS;
-  filter->R[4][4] = RT;
-
-  filter->Q[0][0] = R2_IMU;
-  filter->Q[1][1] = R2_IMU;
-  filter->Q[2][2] = R2_IMU;
-  filter->Q[3][3] = R2_IMU;
-  filter->Q[4][4] = R2_IMU;
-
-  filter->K2[0][0] = -1;    // Para depurar
+  kalman_variance.pos = RP_GPS;
+  kalman_variance.vel = RV_GPS;
+  kalman_variance.att = RT;
+  kalman_variance.imu = R2_IMU;
+  update_matrix(filter);
 
 }
 
@@ -352,7 +305,9 @@ void ins_reset_vertical_pos(void)
 
 void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 {
-  // TODO: Buscar la aceleración angular
+
+  update_matrix(&kalman_filter);  // Actualiza las matrices Q y R con los param de la GCS
+
   // Set body acceleration in the state
   stateSetAccelBody_i(accel);
   struct FloatVector body_accel;   // Aceleración en ejes cuerpo
@@ -367,59 +322,50 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   ang_vel = stateGetBodyRates_f();
 
   float U[3] = {body_accel.x, body_accel.y, ang_vel->r};
+  // U[0] = 0; U[1] = 0; 
+  // U[2] = 0;
   extended_kalman_filter_predict(&kalman_filter, U, dt);
 
-  // Actualiza (y manda por telemetria), las aceleraciones en ejes cuerpo
+  // Actualiza (y manda por telemetria), las aceleraciones en ejes cuerpo y la v. angular en Z
   ins_int.ltp_accel.x = ACCEL_BFP_OF_REAL(body_accel.x);
   ins_int.ltp_accel.y = ACCEL_BFP_OF_REAL(body_accel.y);
   ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(body_accel.z);
   ins_int.ltp_speed.z = SPEED_BFP_OF_REAL(ang_vel->r);  // Esta es para poder ver el mensaje
 
-// -------------------------------------------------------------
-  //De aqui ...
+  // -------------------------------------------------------------
+  // De aqui ...
 
-  // BORRAR
-  // // Actitud
-  // struct FloatEulers *att = stateGetNedToBodyEulers_f();
-  // struct FloatEulers new_att;
-  // new_att.phi = att->phi;
-  // new_att.theta = att->theta;
+  // if (counter_test > 5){
+  //   float Y[5];
+  //   Y[0] = 40.0;
+  //   Y[1] = 55.0;
+  //   Y[2] = 0.0;
+  //   Y[3] = 0.0;
+  //   Y[4] = ahrs_dcm.ltp_to_body_euler.psi;
 
-  if (counter_test > 5){
-    float Y[5];
-    Y[0] = 10.0;
-    Y[1] = 10.0;
-    Y[2] = 0.0;
-    Y[3] = 0.0;
-    Y[4] = ahrs_dcm.ltp_to_body_euler.psi;
+  //   extended_kalman_filter_update(&kalman_filter, Y);
 
-    extended_kalman_filter_update(&kalman_filter, Y);
+  //   // kalman_filter.F[3][4] = kalman_filter.F[3][4] + 1;
+  //   // kalman_filter.P[3][3] = kalman_filter.P[3][3] + 1;
+  //   // kalman_filter.X[4] = kalman_filter.X[4] + 1.57;
+  //   // kalman_filter.X[4] = 1.57;
 
-    // kalman_filter.F[3][4] = kalman_filter.F[3][4] + 1;
-    // kalman_filter.P[3][3] = kalman_filter.P[3][3] + 1;
-    // kalman_filter.X[4] = kalman_filter.X[4] + 1.57;
-    kalman_filter.X[4] = 1.57;
+  //   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+  //   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+  //   ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+  //   // ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+  //   ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_variance.imu); 
+  //   // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
 
-    ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
-    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
-    // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
+  //   counter_test = 0;
 
-    // BORRAR
-    // new_att.psi = kalman_filter.X[4];
-    // stateSetNedToBodyEulers_f(&new_att);  // Actualiza la actitud
-
-    counter_test = 0;
-
-  }
-  else{
-    counter_test++;
-  }
-
+  // }
+  // else{
+  //   counter_test++;
+  // }
 
   // ... a aqui va en el GPS
-// -------------------------------------------------------------
+  // -------------------------------------------------------------
 
   ins_ned_to_state();
 
@@ -470,10 +416,10 @@ void ins_int_update_gps(struct GpsState *gps_s)
 
 
   // Actitud
-  struct FloatEulers *att = stateGetNedToBodyEulers_f();
-  struct FloatEulers new_att;
-  new_att.phi = att->phi;
-  new_att.theta = att->theta;
+  // struct FloatEulers *att = stateGetNedToBodyEulers_f();
+  // struct FloatEulers new_att;
+  // new_att.phi = att->phi;
+  // new_att.theta = att->theta;
 
   // Vector de Medidas
   float Y[5];
@@ -481,28 +427,16 @@ void ins_int_update_gps(struct GpsState *gps_s)
   Y[1] = gps_pos_cm_ned.y/100.0f;
   Y[2] = gps_speed_cm_s_ned.x/100.0f;
   Y[3] = gps_speed_cm_s_ned.y/100.0f;
-  Y[4] = att->psi;  // Estoy seguro que son radianes
+  Y[4] = ahrs_dcm.ltp_to_body_euler.psi;
 
-  // kalman_filter.X[0] = kalman_filter.X[0] + 1;
   extended_kalman_filter_update(&kalman_filter, Y);
-  kalman_filter.X[0] = kalman_filter.X[0] + 1;
 
   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.F[2][4]);
-  ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.F[3][4]);
+  ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+  ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
   ins_ned_to_state();
-
-  // Para comprobar si este es el problema
-  // if (abs(kalman_filter.X[4]) < 6.28){
-  //   new_att.psi = kalman_filter.X[4];
-  // }
-  // else{
-    kalman_filter.X[4] = 0; // Por seguridad
-    new_att.psi = att->psi;
-  // }
-
-  stateSetNedToBodyEulers_f(&new_att);  // Actualiza la actitud
+  // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
 
 
   /* reset the counter to indicate we just had a measurement update */

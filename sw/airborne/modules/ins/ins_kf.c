@@ -412,26 +412,26 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 
   // -------------------------------------------------------------
   // De aqui ...
-  // if (counter_test > 5){
-  //   float Y[4];
-  //   Y[0] = 10.0;
-  //   Y[1] = 10.0;
-  //   Y[2] = 0.0;
-  //   Y[3] = 0.0;
+  if (counter_test > 5){
+    float Y[4];
+    Y[0] = 10.0;
+    Y[1] = 10.0;
+    Y[2] = 0.0;
+    Y[3] = 0.0;
 
-  //   linear_kalman_filter_update(&kalman_filter, Y);
+    linear_kalman_filter_update(&kalman_filter, Y);
 
-  //   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-  //   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  //   ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
-  //   ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+    ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
     
-  //   counter_test = 0;
+    counter_test = 0;
 
-  // }
-  // else{
-  //   counter_test++;
-  // }
+  }
+  else{
+    counter_test++;
+  }
 
 
   // ... a aqui va en el GPS

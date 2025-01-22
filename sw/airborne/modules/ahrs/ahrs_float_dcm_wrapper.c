@@ -43,7 +43,7 @@ static void set_body_orientation_and_rates(void);
 
 #if USE_KF_FILTER
 #include "modules/ins/ins_int.h"
-#else USE_EKF_FILTER
+#elif USE_EKF_FILTER
 #include "modules/ins/ins_int.h"
 #endif
 
@@ -174,7 +174,7 @@ static bool ahrs_dcm_enable_output(bool enable)
   return ahrs_dcm_output_enabled;
 }
 
-/**
+/*
  * Compute body orientation and rates from imu orientation and rates
  */
 static void set_body_orientation_and_rates(void)
@@ -184,11 +184,13 @@ static void set_body_orientation_and_rates(void)
     stateSetBodyRates_f(&ahrs_dcm.body_rate);
 
     #if USE_EKF_FILTER
-      // ahrs_dcm.ltp_to_body_euler tiene la medida absoluta
       struct FloatEulers attitude;
       attitude.theta = ahrs_dcm.ltp_to_body_euler.theta;
       attitude.phi = ahrs_dcm.ltp_to_body_euler.phi;
-      attitude.psi = kalman_filter.X[4];
+      if isnan(kalman_filter.X[4])
+        attitude.psi = ahrs_dcm.ltp_to_body_euler.psi;
+      else
+        attitude.psi = kalman_filter.X[4];
       stateSetNedToBodyEulers_f(&attitude);
     #else
       stateSetNedToBodyEulers_f(&ahrs_dcm.ltp_to_body_euler);

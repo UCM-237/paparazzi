@@ -20,7 +20,9 @@
         "sys_time.h": "c",
         "serial_com.h": "c",
         "ins_int.h": "c",
-        "downlink.h": "c"
+        "downlink.h": "c",
+        "vf_float.h": "c",
+        "extended_kalman_filter.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

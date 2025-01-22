@@ -12,6 +12,18 @@
     <define name="INS_INT_VEL_ID" value="ABI_BROADCAST" description="The ABI sender id of the VELOCITY_ESTIMATE (e.g. from opticflow"/>
     <define name="USE_EKF_FILTER" value="TRUE|FALSE" description="Bypass the AHRS module and send the info to the EKF Filter"/>
   </doc>
+
+  <settings name="KALMAN_FILTER">
+    <dl_settings>
+      <dl_settings NAME="KALMAN_FILTER">
+        <dl_setting MAX="100" MIN="0.01" STEP="0.01" VAR="kalman_variance.imu" shortname="R_IMU*1E-4" param="R2_IMU"/>
+        <dl_setting MAX="100" MIN="0.1" STEP="1" VAR="kalman_variance.pos" shortname="RP_GPS*1E-3" param="RP_GPS"/>
+        <dl_setting MAX="100" MIN="0.1" STEP="1" VAR="kalman_variance.vel" shortname="RV_GPS*1E-3" param="RV_GPS"/>
+        <dl_setting MAX="100" MIN="0.1" STEP="1" VAR="kalman_variance.att" shortname="RT*1E-3" param="RT"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+
   <dep>
     <depends>@imu,@gps|@position|@velocity</depends>
     <provides>ins</provides>

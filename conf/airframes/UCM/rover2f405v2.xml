@@ -11,6 +11,9 @@
       <module name="radio_control" type="sbus">
         <configure name="SBUS_PORT" value="UART2"/>
       </module>
+      <module name="serial" type="com">
+    	  <configure name="SERIAL_UART" value="UART5"/>
+      </module>
     </target>
     
     <target name="nps" board="pc">
@@ -33,21 +36,15 @@
     <module name="gps_ubx_ucenter"/>
 
 
-    <module name="serial" type="com">
-    	<configure name="SERIAL_UART" value="UART5"/>
-    </module>
-    
-
-    <!-- Speed estimated from GPS -->
-    <!-- <module name="ins"/>  -->
-
-    <!-- Speed estimated with Kalman Filter -->
+    <!-- Pos estimated with Kalman Filter -->
+    <!-- <module name="ins"/>  --> 
     <!-- <module name="ins_kf"/> -->
     <module name="ins_ekf"/>
     
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
+      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.5"/>
     </module>
     
     
