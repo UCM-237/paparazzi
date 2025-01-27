@@ -652,12 +652,12 @@ void serial_ping()
 
 	// Aqui a lo mejor habria que comprobar que solo se active uno (depende de lo se necesite)
 	// Creo que aqui el nombre esta mal (es GAIN2 sin mas, o la mejor no ??)
-	serial_msg.depth = radio_control_get(RADIO_PITCH);
-	if (radio_control_get(RADIO_PITCH)>10000){
+	serial_msg.depth = radio_control_get(RADIO_GAIN2);
+	if (radio_control_get(RADIO_GAIN2)>0){
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_UP);
 	}
-	else if (radio_control_get(RADIO_PITCH)>5000){
+	else if (radio_control_get(RADIO_GAIN2)<0){
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_DOWN);
 	}

@@ -41,9 +41,9 @@ static uint8_t ahrs_dcm_id = AHRS_COMP_ID_DCM;
 
 static void set_body_orientation_and_rates(void);
 
-#if USE_KF_FILTER
+#ifdef USE_KF_FILTER
 #include "modules/ins/ins_int.h"
-#elif USE_EKF_FILTER
+#elif defined(USE_EKF_FILTER)
 #include "modules/ins/ins_int.h"
 #endif
 
@@ -183,11 +183,11 @@ static void set_body_orientation_and_rates(void)
     /* Set the state */
     stateSetBodyRates_f(&ahrs_dcm.body_rate);
 
-    #if USE_EKF_FILTER
+    #ifdef USE_EKF_FILTER
       struct FloatEulers attitude;
       attitude.theta = ahrs_dcm.ltp_to_body_euler.theta;
       attitude.phi = ahrs_dcm.ltp_to_body_euler.phi;
-      if isnan(kalman_filter.X[4])
+      if (isnan(kalman_filter.X[4]) || !enable_ekf_filter)
         attitude.psi = ahrs_dcm.ltp_to_body_euler.psi;
       else
         attitude.psi = kalman_filter.X[4];

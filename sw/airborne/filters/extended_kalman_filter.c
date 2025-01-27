@@ -186,7 +186,7 @@ void extended_kalman_filter_update(struct extended_kalman_filter *filter, float 
   float_mat_vect_mul(dx_err, _K, err, filter->n, filter->m); // K * err = K*(Y-err) = K*(Y-H*X)
   float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err = X + K*err
 
-  float_mat_copy(_K2, _R, filter->n, filter->m);  // Para ver en el mensaje
+  float_mat_copy(_K2, _P, filter->n, filter->m);  // Para ver en el mensaje
 
 }
 

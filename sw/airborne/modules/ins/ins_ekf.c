@@ -41,6 +41,7 @@
 
 #define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
+bool enable_ekf_filter = true;
 struct extended_kalman_filter kalman_filter;
 struct KalmanVariance kalman_variance;
 struct InsInt ins_int;
@@ -169,13 +170,6 @@ static void send_kf_status(struct transport_tx *trans, struct link_device *dev)
 static void ins_ned_to_state(void);
 
 void update_matrix(struct extended_kalman_filter *filter){
-
-  const float P_init = 0.5;   // Hay que dejarlo menor que 1 (sino se vuelve inestable)
-  filter->P[0][0] = P_init;
-  filter->P[1][1] = P_init;
-  filter->P[2][2] = P_init;
-  filter->P[3][3] = P_init;
-  filter->P[4][4] = P_init;
   
   filter->R[0][0] = kalman_variance.pos*1E-03;
   filter->R[1][1] = kalman_variance.pos*1E-03;
@@ -183,11 +177,11 @@ void update_matrix(struct extended_kalman_filter *filter){
   filter->R[3][3] = kalman_variance.vel*1E-03;
   filter->R[4][4] = kalman_variance.att*1E-03;
 
-  filter->Q[0][0] = kalman_variance.imu*1E-04;
-  filter->Q[1][1] = kalman_variance.imu*1E-04;
-  filter->Q[2][2] = kalman_variance.imu*1E-04;
-  filter->Q[3][3] = kalman_variance.imu*1E-04;
-  filter->Q[4][4] = kalman_variance.imu*1E-04;
+  filter->Q[0][0] = kalman_variance.imu*1E-05;
+  filter->Q[1][1] = kalman_variance.imu*1E-05;
+  filter->Q[2][2] = kalman_variance.imu*1E-05;
+  filter->Q[3][3] = kalman_variance.imu*1E-05;
+  filter->Q[4][4] = kalman_variance.imu*1E-05;
 
 }
 
@@ -216,6 +210,15 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
   kalman_variance.vel = RV_GPS;
   kalman_variance.att = RT;
   kalman_variance.imu = R2_IMU;
+
+  const float P_init = 0.5;   // Hay que dejarlo menor que 1 (sino se vuelve inestable)
+  filter->P[0][0] = P_init;
+  filter->P[1][1] = P_init;
+  filter->P[2][2] = P_init;
+  filter->P[3][3] = P_init;
+  filter->P[4][4] = P_init;
+
+
   update_matrix(filter);
 
 }
@@ -322,8 +325,6 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   ang_vel = stateGetBodyRates_f();
 
   float U[3] = {body_accel.x, body_accel.y, ang_vel->r};
-  // U[0] = 0; U[1] = 0; 
-  // U[2] = 0;
   extended_kalman_filter_predict(&kalman_filter, U, dt);
 
   // Actualiza (y manda por telemetria), las aceleraciones en ejes cuerpo y la v. angular en Z
@@ -345,16 +346,10 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 
   //   extended_kalman_filter_update(&kalman_filter, Y);
 
-  //   // kalman_filter.F[3][4] = kalman_filter.F[3][4] + 1;
-  //   // kalman_filter.P[3][3] = kalman_filter.P[3][3] + 1;
-  //   // kalman_filter.X[4] = kalman_filter.X[4] + 1.57;
-  //   // kalman_filter.X[4] = 1.57;
-
   //   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
   //   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
   //   ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
-  //   // ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
-  //   ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_variance.imu); 
+  //   ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
   //   // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
 
   //   counter_test = 0;
@@ -364,7 +359,7 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   //   counter_test++;
   // }
 
-  // ... a aqui va en el GPS
+  // ... a aqui va en el GPS (para depurar cuando no hay señal)
   // -------------------------------------------------------------
 
   ins_ned_to_state();
@@ -415,12 +410,6 @@ void ins_int_update_gps(struct GpsState *gps_s)
   ned_of_ecef_vect_i(&gps_speed_cm_s_ned, &ins_int.ltp_def, &ecef_vel_i);
 
 
-  // Actitud
-  // struct FloatEulers *att = stateGetNedToBodyEulers_f();
-  // struct FloatEulers new_att;
-  // new_att.phi = att->phi;
-  // new_att.theta = att->theta;
-
   // Vector de Medidas
   float Y[5];
   Y[0] = gps_pos_cm_ned.x/100.0f;
@@ -431,14 +420,21 @@ void ins_int_update_gps(struct GpsState *gps_s)
 
   extended_kalman_filter_update(&kalman_filter, Y);
 
-  ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-  ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
-  ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+  if(enable_ekf_filter){
+    ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+    ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+    ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+    // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
+  }
+  else{
+    INT32_VECT2_SCALE_2(ins_int.ltp_pos, gps_pos_cm_ned,
+                          INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
+    INT32_VECT2_SCALE_2(ins_int.ltp_speed, gps_speed_cm_s_ned,
+                          INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
+  }
+
   ins_ned_to_state();
-  // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
-
-
   /* reset the counter to indicate we just had a measurement update */
   ins_int.propagation_cnt = 0;
 }
