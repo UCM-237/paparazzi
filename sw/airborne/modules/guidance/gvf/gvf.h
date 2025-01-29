@@ -129,7 +129,7 @@ extern bool gvf_line_wp_heading(uint8_t wp, float heading);
 
 // Array of straight lines
 extern bool gvf_lines_array_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6);
-extern bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2);
+bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, uint8_t wp7, uint8_t wp8, uint8_t wp9, uint8_t wp10, uint8_t wp11, uint8_t wp12, uint8_t wp13, uint8_t wp14, uint8_t wp15, uint8_t wp16, uint8_t wp17, uint8_t wp18, uint8_t wp19, uint8_t wp20, uint8_t wp21, uint8_t wp22, uint8_t wp23, uint8_t wp24, uint8_t wp25, uint8_t wp26, uint8_t wp27, uint8_t wp28, uint8_t wp29, uint8_t wp30, uint8_t wp31, uint8_t wp32, uint8_t wp33, uint8_t wp34, uint8_t wp35, uint8_t wp36, uint8_t wp37, uint8_t wp38, uint8_t wp39, uint8_t wp40, uint8_t wp41, uint8_t wp42, uint8_t wp43, uint8_t wp44, uint8_t wp45, uint8_t wp46, uint8_t wp47, uint8_t wp48, uint8_t wp49, uint8_t wp50, float d1, float d2);
 
 // Ellipse
 extern bool gvf_ellipse_wp(uint8_t wp, float a, float b, float alpha);

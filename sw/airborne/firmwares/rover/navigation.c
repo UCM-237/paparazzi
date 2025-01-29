@@ -74,6 +74,24 @@ static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
                              &(waypoints[i].enu_i.y),
                              &(waypoints[i].enu_i.z));
 }
+
+uint8_t num_wp_moved;
+
+static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
+                             &num_wp_moved);
+}
+
+//static void send_num_wp_moved_datalink(struct transport_tx *trans, struct link_device *dev)
+//{
+//  uint8_t num_wp_moved_datalink;
+  
+//  pprz_send_NUM_WP_MOVED_DATALINK(trans, dev, AC_ID,
+//                             &num_wp_moved_datalink);
+//  uint8_t *new_num_wp_moved_datalink = &num_wp_moved_dat_msgalink; 
+//  printf("MENSAJE RECIBIDO DATALINK: \n num=%d \n", *new_num_wp_moved_datalink);
+//}
 #endif
 
 void nav_init(void)
@@ -98,6 +116,7 @@ void nav_init(void)
 
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_WP_MOVED, send_wp_moved);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
 #endif
 
   // generated init function
@@ -116,6 +135,8 @@ void nav_parse_BLOCK(uint8_t *buf)
   nav_goto_block(DL_BLOCK_block_id(buf));
 }
 
+uint8_t num_wp_moved;
+
 void nav_parse_MOVE_WP(uint8_t *buf)
 {
   uint8_t ac_id = DL_MOVE_WP_ac_id(buf);
@@ -128,11 +149,32 @@ void nav_parse_MOVE_WP(uint8_t *buf)
     /* WP_alt from message is alt above MSL in mm
      * lla.alt is above ellipsoid in mm
      */
+     
     lla.alt = DL_MOVE_WP_alt(buf) - state.ned_origin_i.hmsl +
       state.ned_origin_i.lla.alt;
     waypoint_move_lla(wp_id, &lla);
+    
+    /* PARTE DE CÓDIGO HECHA PARA RECONOCER CUANDO LLEGA UN MOVE_WP DE LA GCS
+    if(flag_wp_moved== false){
+      change_flag_wp_moved(true);
+    }*/
+    //printf("parse_move_wp\n");
+    /*flag_wp_moved = false;
+    num_wp_moved ++;
+    */
   }
 }
+
+void nav_parse_NUM_WAYPOINT_MOVED_DATALINK(uint8_t *buf)
+{
+
+  uint8_t num = DL_NUM_WAYPOINT_MOVED_DATALINK_num(buf);
+  printf("num = %d\n", num);
+  num_wp_moved = num;
+
+}
+
+
 
 bool nav_check_wp_time(struct EnuCoor_f *wp, float stay_time)
 {

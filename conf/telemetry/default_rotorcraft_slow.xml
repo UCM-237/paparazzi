@@ -14,6 +14,7 @@
       <message name="INS_REF"                period="5.1"/>
       <message name="ROTORCRAFT_NAV_STATUS"  period="2.6"/>
       <message name="WP_MOVED"               period="2.3"/>
+      <message name="NUM_WP_MOVED"             period="1.6"/>
       <message name="ROTORCRAFT_CAM"         period="2."/>
       <message name="GPS_INT"                period=".75"/>
       <message name="INS"                    period=".75"/>

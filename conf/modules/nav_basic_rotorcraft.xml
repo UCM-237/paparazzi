@@ -14,6 +14,7 @@
     <file name="nav_rotorcraft_base.h"/>
   </header>
   <init fun="nav_rotorcraft_init()"/>
+  
   <makefile target="ap|nps|hitl" firmware="rotorcraft">
     <file name="nav_rotorcraft_base.c"/>
     <test firmware="rotorcraft">

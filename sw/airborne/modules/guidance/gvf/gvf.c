@@ -23,6 +23,9 @@
 #include <math.h>
 #include "std.h"
 
+#include "pprzlink/messages.h"
+#include "pprzlink/telemetry/NUM_WP_MOVED.h"
+
 #include "modules/guidance/gvf/gvf.h"
 #include "modules/guidance/gvf/gvf_low_level_control.h"
 #include "modules/guidance/gvf/trajectories/gvf_ellipse.h"
@@ -30,6 +33,13 @@
 #include "modules/guidance/gvf/trajectories/gvf_sin.h"
 #include "autopilot.h"
 #include "../gvf_common.h"
+
+
+
+
+
+uint8_t num_pnts;    
+uint8_t num_wp_moved;  
 
 // Control
 gvf_con gvf_control;
@@ -94,6 +104,13 @@ static void send_gvf(struct transport_tx *trans, struct link_device *dev)
   }
 }
 
+static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
+                             &num_wp_moved);
+  num_pnts = num_wp_moved;
+}
+
 #endif // PERIODIC_TELEMETRY
 
 static int out_of_segment_area(float x1, float y1, float x2, float y2, float d1, float d2)
@@ -140,9 +157,9 @@ void gvf_init(void)
   gvf_c_stopwp.stop_at_wp = 0;
   gvf_c_stopwp.distance_stop = 0.1;
   gvf_c_stopwp.wait_time = 1;
-  
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GVF, send_gvf);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
 #endif
 }
 
@@ -379,7 +396,8 @@ bool gvf_line_wp_heading(uint8_t wp, float heading)
   return gvf_line_XY_heading(a, b, heading);
 }
 // Array of Lines
-bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2)
+
+bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, uint8_t wp7, uint8_t wp8, uint8_t wp9, uint8_t wp10, uint8_t wp11, uint8_t wp12, uint8_t wp13, uint8_t wp14, uint8_t wp15, uint8_t wp16, uint8_t wp17, uint8_t wp18, uint8_t wp19, uint8_t wp20, uint8_t wp21, uint8_t wp22, uint8_t wp23, uint8_t wp24, uint8_t wp25, uint8_t wp26, uint8_t wp27, uint8_t wp28, uint8_t wp29, uint8_t wp30, uint8_t wp31, uint8_t wp32, uint8_t wp33, uint8_t wp34, uint8_t wp35, uint8_t wp36, uint8_t wp37, uint8_t wp38, uint8_t wp39, uint8_t wp40, uint8_t wp41, uint8_t wp42, uint8_t wp43, uint8_t wp44, uint8_t wp45, uint8_t wp46, uint8_t wp47, uint8_t wp48, uint8_t wp49, uint8_t wp50, float d1, float d2)
 {
 	// Create the points
 	gvf_trajectory.type = 2;
@@ -391,12 +409,66 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 	x[4] = WaypointX(wp4); y[4] = WaypointY(wp4);
 	x[5] = WaypointX(wp5); y[5] = WaypointY(wp5);
 	x[6] = WaypointX(wp6); y[6] = WaypointY(wp6);
-	for(int k = 0; k < GVF_N_LINES; k++)
+	x[7] = WaypointX(wp7); y[7] = WaypointY(wp7);
+  x[8] = WaypointX(wp8); y[8] = WaypointY(wp8);
+  x[9] = WaypointX(wp9); y[9] = WaypointY(wp9);
+  x[10] = WaypointX(wp10); y[10] = WaypointY(wp10);
+  x[11] = WaypointX(wp11); y[11] = WaypointY(wp11);
+  x[12] = WaypointX(wp12); y[12] = WaypointY(wp12);
+  x[13] = WaypointX(wp13); y[13] = WaypointY(wp13);
+  x[14] = WaypointX(wp14); y[14] = WaypointY(wp14);
+  x[15] = WaypointX(wp15); y[15] = WaypointY(wp15);
+  x[16] = WaypointX(wp16); y[16] = WaypointY(wp16);
+  x[17] = WaypointX(wp17); y[17] = WaypointY(wp17);
+  x[18] = WaypointX(wp18); y[18] = WaypointY(wp18);
+  x[19] = WaypointX(wp19); y[19] = WaypointY(wp19);
+  x[20] = WaypointX(wp20); y[20] = WaypointY(wp20);
+  x[21] = WaypointX(wp21); y[21] = WaypointY(wp21);
+  x[22] = WaypointX(wp22); y[22] = WaypointY(wp22);
+  x[23] = WaypointX(wp23); y[23] = WaypointY(wp23);
+  x[24] = WaypointX(wp24); y[24] = WaypointY(wp24);
+  x[25] = WaypointX(wp25); y[25] = WaypointY(wp25);
+  x[26] = WaypointX(wp26); y[26] = WaypointY(wp26);
+  x[27] = WaypointX(wp27); y[27] = WaypointY(wp27);
+  x[28] = WaypointX(wp28); y[28] = WaypointY(wp28);
+  x[29] = WaypointX(wp29); y[29] = WaypointY(wp29);
+  x[30] = WaypointX(wp30); y[30] = WaypointY(wp30);
+  x[31] = WaypointX(wp31); y[31] = WaypointY(wp31);
+  x[32] = WaypointX(wp32); y[32] = WaypointY(wp32);
+  x[33] = WaypointX(wp33); y[33] = WaypointY(wp33);
+  x[34] = WaypointX(wp34); y[34] = WaypointY(wp34);
+  x[35] = WaypointX(wp35); y[35] = WaypointY(wp35);
+  x[36] = WaypointX(wp36); y[36] = WaypointY(wp36);
+  x[37] = WaypointX(wp37); y[37] = WaypointY(wp37);
+  x[38] = WaypointX(wp38); y[38] = WaypointY(wp38);
+  x[39] = WaypointX(wp39); y[39] = WaypointY(wp39);
+  x[40] = WaypointX(wp40); y[40] = WaypointY(wp40);
+  x[41] = WaypointX(wp41); y[41] = WaypointY(wp41);
+  x[42] = WaypointX(wp42); y[42] = WaypointY(wp42);
+  x[43] = WaypointX(wp43); y[43] = WaypointY(wp43);
+  x[44] = WaypointX(wp44); y[44] = WaypointY(wp44);
+  x[45] = WaypointX(wp45); y[45] = WaypointY(wp45);
+  x[46] = WaypointX(wp46); y[46] = WaypointY(wp46);
+  x[47] = WaypointX(wp42); y[47] = WaypointY(wp42);
+  x[48] = WaypointX(wp43); y[48] = WaypointY(wp43);
+  x[49] = WaypointX(wp44); y[49] = WaypointY(wp44);
+  x[50] = WaypointX(wp45); y[50] = WaypointY(wp45);
+
+	if (num_wp_moved != 0 ){
+	  num_pnts = num_wp_moved;
+	  //printf("num_wp_moved= %d\n", num_pnts);
+	}
+	else{
+	  num_pnts = GVF_N_LINES;
+	  //printf("GVF_N_LINES= %d\n", num_pnts);
+	}
+	for(int k = 0; k < num_pnts-1; k++)
 	{
 		gvf_lines_array[k].p1x = x[k];
 		gvf_lines_array[k].p1y = y[k];
 		gvf_lines_array[k].p2x = x[k+1];
 		gvf_lines_array[k].p2y = y[k+1];
+		
 	}
 	struct EnuCoor_f *p = stateGetPositionEnu_f();
  	float px = p->x;
@@ -404,10 +476,10 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
 	if((dist <= gvf_c_stopwp.distance_stop)){
 		if(!gvf_c_stopwp.stop_at_wp){
-			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
 			}		
 		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
 			gvf_c_stopwp.stay_still = 1;
 			}
 		}

@@ -116,11 +116,34 @@ void nav_init(void)
   auto_nav_init();
 }
 
+uint8_t num_wp_moved;
+
+/*INTENTO DE AÑADIR EL MENSAJE NUM_WP_MOVED
+
+#if PERIODIC_TELEMETRY
+#include "modules/datalink/telemetry.h"
+
+
+
+static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
+                             &num_wp_moved);
+}
+
+#endif
+
+#if PERIODIC_TELEMETRY
+ register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
+#endif
+
+*/
 void nav_parse_BLOCK(uint8_t *buf)
 {
   if (DL_BLOCK_ac_id(buf) != AC_ID) { return; }
   nav_goto_block(DL_BLOCK_block_id(buf));
 }
+
 
 void nav_parse_MOVE_WP(uint8_t *buf)
 {
@@ -134,11 +157,24 @@ void nav_parse_MOVE_WP(uint8_t *buf)
     /* WP_alt from message is alt above MSL in mm
      * lla.alt is above ellipsoid in mm
      */
+     printf("Hola");
     lla.alt = DL_MOVE_WP_alt(buf) - state.ned_origin_i.hmsl +
       state.ned_origin_i.lla.alt;
     waypoint_move_lla(wp_id, &lla);
   }
 }
+
+
+void nav_parse_NUM_WAYPOINT_MOVED_DATALINK(uint8_t *buf)
+{
+
+  uint8_t num = DL_NUM_WAYPOINT_MOVED_DATALINK_num(buf);
+  printf("num = %d\n", num);
+  num_wp_moved = num;
+
+}
+
+
 
 #ifndef CLOSE_TO_WAYPOINT
 #define CLOSE_TO_WAYPOINT 15.f

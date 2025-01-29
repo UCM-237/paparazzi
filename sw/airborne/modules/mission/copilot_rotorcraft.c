@@ -68,6 +68,8 @@
 void copilot_parse_move_wp_dl(uint8_t *buf)
 {
   if (DL_MOVE_WP_ac_id(buf) == AC_ID) {
+    
+    
     if (stateIsLocalCoordinateValid()) {
       uint8_t wp_id = DL_MOVE_WP_wp_id(buf);
       if (wp_id >= nb_waypoint) {
@@ -92,12 +94,15 @@ void copilot_parse_move_wp_dl(uint8_t *buf)
           // MOVE_WP came from extra_dl, respond over telemetry
           DOWNLINK_SEND_WP_MOVED_LLA(DefaultChannel, DefaultDevice, &wp_id,
               &lla.lat, &lla.lon, &hmsl);
+          send_num_wp_moved;
+          printf("Extra buffer\n")
         }
 
         if (buf == dl_buffer) {
           // MOVE_WP came over telemetry, respond over extra_dl
           DOWNLINK_SEND_WP_MOVED_LLA(extra_pprz_tp, DefaultDevice, &wp_id,
               &lla.lat, &lla.lon, &hmsl);
+          printf("Buffer\n")
         }
       } else {
         if (buf == extra_dl_buffer) {
@@ -106,6 +111,7 @@ void copilot_parse_move_wp_dl(uint8_t *buf)
               &waypoints[wp_id].enu_i.x,
               &waypoints[wp_id].enu_i.y,
               &waypoints[wp_id].enu_i.z);
+         printf("Extra buffer ENU\n")
         }
 
         if (buf == dl_buffer) {
@@ -114,6 +120,7 @@ void copilot_parse_move_wp_dl(uint8_t *buf)
               &waypoints[wp_id].enu_i.x,
               &waypoints[wp_id].enu_i.y,
               &waypoints[wp_id].enu_i.z);
+         printf("Buffer ENU\n")
         }
       }
     }
