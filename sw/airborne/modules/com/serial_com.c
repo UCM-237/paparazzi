@@ -29,6 +29,7 @@
 
 
 #include "modules/com/serial_com.h"
+#include "modules/lidar/tfmini.h"
 #include "mcu_periph/sys_time.h"
 #include "generated/airframe.h"
 #include "generated/modules.h"
@@ -70,6 +71,7 @@ static uint8_t PPZ_TELEMETRY_BYTE = 0x54; // "T"
 static uint8_t PPZ_HOME_BYTE = 0x48; // "H"
 static uint8_t PPZ_IMU_BYTE = 0x49; // "I"
 static uint8_t PPZ_GPS_BYTE = 0x47; // "G"
+static uint8_t PPZ_LIDAR_BYTE = 0x4C; // "L"
 // static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 static uint8_t PPZ_SONDA_UP_BYTE = 0x55; // "U"
 static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
@@ -78,7 +80,7 @@ static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint16_t counter = 0;				 // for counting the number of messages sent
 // uint8_t counter = 0;				 // for counting the number of messages sent
 uint32_t msg_buffer = 0;
-#define SEND_INTERVAL 300 // time between sending messages
+#define SEND_INTERVAL 50 // time between sending messages (ms)
 
 // Sonar parse states
 #define SR_INIT 0
@@ -106,12 +108,14 @@ uint32_t msg_buffer = 0;
 #define HOME_RESPONSE 5
 #define IMU_MESSAGE 6
 #define GPS_MESSAGE 7
+#define LIDAR_MESSAGE 8
 
 // Delay of each message (0 for not periodic message, >= 1 for periodic)
-#define TIME_TELEMETRY 2
+#define TIME_TELEMETRY 8
 #define TIME_HOME 0
-#define TIME_IMU 1
-#define TIME_GPS 5
+#define TIME_IMU 4
+#define TIME_GPS 20
+#define TIME_LIDAR 1
 
 
 //Messages received
@@ -268,6 +272,15 @@ void itoh(int value, unsigned char* str, int nbytes){
 
     return;
 
+}
+
+
+void ftoh(float value, unsigned char* str, int nbytes){
+		
+		memcpy(str, &value, sizeof(float));
+		for (int i = sizeof(float); i < nbytes; i++) {
+        str[i] = 0;
+    }
 }
 
 
@@ -647,11 +660,10 @@ void serial_ping()
 	uint32_t now_s = get_sys_time_msec();
 
 	uint8_t msg_byte = 0;
-	// struct sonar_parse_t *sonar_data;	// No funciona en el rover
+	// struct sonar_parse_t *sonar_data;	// No funciona en el rover, solo en el barco
 	uint8_t msg_gps[5]={0,0,0,0,0};
 
 	// Aqui a lo mejor habria que comprobar que solo se active uno (depende de lo se necesite)
-	// Creo que aqui el nombre esta mal (es GAIN2 sin mas, o la mejor no ??)
 	serial_msg.depth = radio_control_get(RADIO_GAIN2);
 	if (radio_control_get(RADIO_GAIN2)>0){
 		RESET_BUFFER(msg_buffer);
@@ -724,6 +736,18 @@ void serial_ping()
 
 			}
 
+			else if(CHECK_BIT(msg_buffer, LIDAR_MESSAGE)){
+				serial_snd.msg_length=11;
+
+				msg_byte = set_header(PPZ_LIDAR_BYTE);
+
+				uint8_t lidar_hex[5]={0,0,0,0,0};
+				ftoh(tfmini.distance, lidar_hex, 5);
+				for(int i=0;i<5;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
+
+				send_full_message(serial_snd.msg_length);
+				CLEAR_BIT(msg_buffer, LIDAR_MESSAGE);
+			}
 
 			// ---- BEGIN UNUSED ---------
 			else if(CHECK_BIT(msg_buffer, SONDA_RQ)){
@@ -792,6 +816,7 @@ void serial_ping()
 		SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
 		SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
 		SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
+		SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);
 
 		counter = (counter >= 255) ? 0 : counter + 1;
 

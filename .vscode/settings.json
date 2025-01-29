@@ -22,7 +22,9 @@
         "ins_int.h": "c",
         "downlink.h": "c",
         "vf_float.h": "c",
-        "extended_kalman_filter.h": "c"
+        "extended_kalman_filter.h": "c",
+        "*.inc": "c",
+        "chrono": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

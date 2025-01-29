@@ -60,9 +60,18 @@ struct TFMini {
 
 extern struct TFMini tfmini;
 
+struct TFMiniServo {
+  int pos;
+  float ang;
+  bool dir;
+};
+
+extern struct TFMiniServo tf_servo;
+
 extern void tfmini_init(void);
 extern void tfmini_event(void);
 extern void tfmini_downlink(void);
+extern void tfmini_servo(void);
 
 #endif /* LIDAR_TFMINI_H */
 

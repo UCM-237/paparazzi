@@ -35,9 +35,17 @@
 #include "pprzlink/messages.h"
 #include "modules/datalink/downlink.h"
 
+#define SEND_INTERVAL 15
+static uint32_t last_time = 0;
+
 struct TFMini tfmini = {
   .parse_status = TFMINI_INITIALIZE
 };
+
+struct TFMiniServo tf_servo;
+// tf_servo.pos = 1500;
+// tf_servo.dir = 0;
+// int tfmini_servo_pos = 1500;
 
 static void tfmini_parse(uint8_t byte);
 
@@ -178,3 +186,20 @@ static void tfmini_parse(uint8_t byte)
       break;
   }
 }
+
+
+// ####################################
+// ############ LIDAR MOTOR ###########
+// ####################################
+
+void tfmini_servo(){
+  if (get_sys_time_msec() > last_time + SEND_INTERVAL) {
+    last_time = get_sys_time_msec();
+    tf_servo.pos += (tf_servo.dir == 0) ? 20 : -20;
+    if (tf_servo.pos >= 2500 || tf_servo.pos <= 500) {
+        tf_servo.dir ^= 1;
+    }
+  }
+}
+
+

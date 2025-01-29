@@ -107,6 +107,7 @@
     <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>
   </servos> 
   
   <!-- Low level commands (PWM signal) -->
@@ -125,6 +126,8 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
+    <!-- <set servo="MOTOR_LIDAR" value="tf_servo.pos"/> -->
+    <set servo="MOTOR_LIDAR" value="@STEERING"/>
   </command_laws>
 
 

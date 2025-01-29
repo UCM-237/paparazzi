@@ -103,7 +103,8 @@ struct serial_parse_t {
 void serial_read_message(void);
 void itoh(int value, unsigned char* str, int nbytes);
 unsigned int serial_byteToint(uint8_t * bytes,int length);
-void ito2h(int value, unsigned char* str) ;
+void ito2h(int value, unsigned char* str);
+void ftoh(float value, unsigned char* str, int nbytes) ;
 void serial_calculateChecksumMsg(uint8_t *msg, int msgLength);
 void send_full_message(uint8_t msgLength);
 extern struct serial_parse_t serial_msg;
