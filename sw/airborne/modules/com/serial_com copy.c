@@ -513,7 +513,7 @@ void serial_ping()
 	// else if (message_type != HOME_RESPONSE)	
 	// 	message_type=TELEMETRY_SN;
 
-	if (now_s > (last_s+ SEND_INTERVAL)) {
+	if (now_s > (last_s+ MOTOR_SPEED)) {
 		
 		last_s = now_s; 
 

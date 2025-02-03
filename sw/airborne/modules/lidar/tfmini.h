@@ -61,7 +61,7 @@ struct TFMini {
 extern struct TFMini tfmini;
 
 struct TFMiniServo {
-  int pos;
+  int32_t pos;
   float ang;
   bool dir;
 };

@@ -11,6 +11,9 @@
       <module name="radio_control" type="sbus">
         <configure name="SBUS_PORT" value="UART2"/>
       </module>
+      <module name="serial" type="com">
+    	  <configure name="SERIAL_UART" value="UART5"/>
+      </module>
     </target>
     
     <target name="nps" board="pc">
@@ -33,21 +36,16 @@
     <module name="gps_ubx_ucenter"/>
 
 
-    <module name="serial" type="com">
-    	<configure name="SERIAL_UART" value="UART5"/>
-    </module>
-    
+    <!-- Pos estimated with Kalman Filter -->
+    <!-- <module name="ins"/>  --> 
+    <!-- <module name="ins_kf"/> -->
+    <module name="ins" type="ekf"/>
 
-    <!-- Speed estimated from GPS -->
-    <!-- <module name="ins"/>  -->
 
-    <!-- Speed estimated with Kalman Filter -->
-    <module name="ins_kf"/>
-    <!-- <module name="ins_ekf"/> -->
-    
-
+    <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
+      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.5"/>
     </module>
     
    <module name="telemetry" type="xbee_api">
@@ -108,6 +106,7 @@
     <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>
   </servos> 
   
   <!-- Low level commands (PWM signal) -->
@@ -126,6 +125,7 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
+    <set servo="MOTOR_LIDAR" value="tf_servo.pos"/>
   </command_laws>
 
 

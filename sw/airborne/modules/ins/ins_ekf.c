@@ -363,6 +363,7 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   // -------------------------------------------------------------
 
   ins_ned_to_state();
+  ins_int.ltp_def.hmsl = tf_servo.pos;
 
   /* increment the propagation counter, while making sure it doesn't overflow */
   if (ins_int.propagation_cnt < 100 * INS_MAX_PROPAGATION_STEPS) {

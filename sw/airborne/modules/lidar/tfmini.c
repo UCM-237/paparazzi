@@ -35,16 +35,16 @@
 #include "pprzlink/messages.h"
 #include "modules/datalink/downlink.h"
 
-#define SEND_INTERVAL 15
+#define MOTOR_SPEED 10
 static uint32_t last_time = 0;
 
 struct TFMini tfmini = {
   .parse_status = TFMINI_INITIALIZE
 };
 
+#define PWM2ANGLE(pwm) (((pwm) + MAX_PPRZ) * 90 / MAX_PPRZ) - 90 
+
 struct TFMiniServo tf_servo;
-// tf_servo.pos = 1500;
-// tf_servo.dir = 0;
 // int tfmini_servo_pos = 1500;
 
 static void tfmini_parse(uint8_t byte);
@@ -60,6 +60,7 @@ static void tfmini_send_lidar(struct transport_tx *trans, struct link_device *de
   uint8_t status = (uint8_t) tfmini.parse_status;
   pprz_msg_send_LIDAR(trans, dev, AC_ID,
                       &tfmini.distance,
+                      &tf_servo.ang,
                       &tfmini.mode,
                       &status);
 }
@@ -80,9 +81,12 @@ void tfmini_init(void)
   tfmini.distance = 0;
   tfmini.parse_status = TFMINI_PARSE_HEAD;
 
-#if PERIODIC_TELEMETRY
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_LIDAR, tfmini_send_lidar);
-#endif
+  tf_servo.pos = 1500*0;
+  tf_servo.dir = 0;
+
+  #if PERIODIC_TELEMETRY
+   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_LIDAR, tfmini_send_lidar);
+  #endif
 }
 
 /**
@@ -193,12 +197,13 @@ static void tfmini_parse(uint8_t byte)
 // ####################################
 
 void tfmini_servo(){
-  if (get_sys_time_msec() > last_time + SEND_INTERVAL) {
+  if (get_sys_time_msec() > last_time + MOTOR_SPEED) {
     last_time = get_sys_time_msec();
-    tf_servo.pos += (tf_servo.dir == 0) ? 20 : -20;
-    if (tf_servo.pos >= 2500 || tf_servo.pos <= 500) {
+    tf_servo.pos += (tf_servo.dir == 0) ? 100 : -100;
+    if (tf_servo.pos >= MAX_PPRZ*0.8 || tf_servo.pos <= -MAX_PPRZ*0.8) {
         tf_servo.dir ^= 1;
     }
+    tf_servo.ang = PWM2ANGLE(tf_servo.pos);
   }
 }
 

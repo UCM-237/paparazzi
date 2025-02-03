@@ -623,7 +623,7 @@ void set_telemetry_message(uint8_t start_byte){
 	gps_coord = stateGetPositionLla_i();
 	serial_snd.lon=gps_coord->lon;
 	serial_snd.lat=gps_coord->lat;
-	int32_t alt = 650000;
+	int32_t alt = (int)(ahrs_dcm.ltp_to_body_euler.psi*1e7);
 	serial_snd.alt=alt;		// Changed to avoid issues with the rover
 	itoh(gps_coord->lon,msg_gps,5);
 	for(int i=0;i<5;i++) serial_snd.msgData[i+j]=msg_gps[i];
@@ -635,7 +635,7 @@ void set_telemetry_message(uint8_t start_byte){
 	an signed (using one extra byte) int but sign byte is discarded
 	*/
 	itoh(serial_snd.alt,msg_gps,5);
-	for(int i=0;i<4;i++) serial_snd.msgData[i+j+10]=msg_gps[i+1];
+	for(int i=0;i<5;i++) serial_snd.msgData[i+j+10]=msg_gps[i];
 	
 	// Get Sonar
 	serial_snd.distance=0;
@@ -645,10 +645,10 @@ void set_telemetry_message(uint8_t start_byte){
 	*/
 	
 	itoh(serial_snd.distance,msg_dist,5);
-	for(int i=0;i<4;i++) serial_snd.msgData[i+j+14]=msg_dist[i+1];
-	serial_snd.msgData[j+18]=serial_snd.confidence;
+	for(int i=0;i<4;i++) serial_snd.msgData[i+j+15]=msg_dist[i+1];
+	serial_snd.msgData[j+19]=serial_snd.confidence;
 
-	// return (j+18);
+	// return (j+19);
 
 }
 
@@ -682,7 +682,7 @@ void serial_ping()
 		while (!CHECK_BIT(msg_buffer, END_MESSAGE)){
 	
 			if(CHECK_BIT(msg_buffer, TELEMETRY_SN)){
-				serial_snd.msg_length=25;
+				serial_snd.msg_length=26;
 
 				msg_byte = set_header(PPZ_TELEMETRY_BYTE);
 				set_telemetry_message(msg_byte);
@@ -737,13 +737,18 @@ void serial_ping()
 			}
 
 			else if(CHECK_BIT(msg_buffer, LIDAR_MESSAGE)){
-				serial_snd.msg_length=11;
+				serial_snd.msg_length=14;
 
 				msg_byte = set_header(PPZ_LIDAR_BYTE);
 
-				uint8_t lidar_hex[5]={0,0,0,0,0};
-				ftoh(tfmini.distance, lidar_hex, 5);
-				for(int i=0;i<5;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
+				uint8_t lidar_hex[4]={0,0,0,0};
+				ftoh(tfmini.distance, lidar_hex, 4);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
+				msg_byte += 4;
+
+				memset(lidar_hex,0,4);
+				ftoh(tf_servo.ang, lidar_hex, 4);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
 
 				send_full_message(serial_snd.msg_length);
 				CLEAR_BIT(msg_buffer, LIDAR_MESSAGE);

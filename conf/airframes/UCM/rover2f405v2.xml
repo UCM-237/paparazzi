@@ -126,8 +126,8 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
-    <!-- <set servo="MOTOR_LIDAR" value="tf_servo.pos"/> -->
-    <set servo="MOTOR_LIDAR" value="@STEERING"/>
+    <set servo="MOTOR_LIDAR" value="tf_servo.pos"/>
+    <!-- <set servo="MOTOR_LIDAR" value="@STEERING"/> -->
   </command_laws>
 
 
