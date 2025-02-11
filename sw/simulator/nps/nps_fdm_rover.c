@@ -64,7 +64,7 @@ static float mu = 0.01;
 void nps_fdm_init(double dt)
 {
   fdm.init_dt = dt; // (1 / simulation freq)
-  fdm.curr_dt = 0.001; // ¿Configurable from GCS?
+  fdm.curr_dt = dt; // ¿Configurable from GCS?
   fdm.time = dt;
 
   fdm.on_ground = TRUE;

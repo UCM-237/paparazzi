@@ -38,8 +38,8 @@
 
 
 
-uint8_t num_pnts;    
-uint8_t num_wp_moved;  
+uint8_t num_pnts;
+
 
 // Control
 gvf_con gvf_control;
@@ -401,7 +401,17 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 {
 	// Create the points
 	gvf_trajectory.type = 2;
-	float x[GVF_N_LINES+1]; float y[GVF_N_LINES+1];
+	//num_wp_moved = 16;
+	
+	if (num_wp_moved != 0 ){
+	  num_pnts = num_wp_moved;
+	  //printf("num_wp_moved= %d\n", num_pnts);
+	}
+	else{
+	  num_pnts = GVF_N_LINES;
+	  //printf("GVF_N_LINES= %d\n", num_pnts);
+	}
+	float x[GVF_N_LINES+1]; float y[GVF_N_LINES+1]; //CAMBIAR PARA DEFINIRLO BIEN
 	x[0] = WaypointX(wp0); y[0] = WaypointY(wp0);
 	x[1] = WaypointX(wp1); y[1] = WaypointY(wp1);
 	x[2] = WaypointX(wp2); y[2] = WaypointY(wp2);
@@ -449,32 +459,27 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
   x[44] = WaypointX(wp44); y[44] = WaypointY(wp44);
   x[45] = WaypointX(wp45); y[45] = WaypointY(wp45);
   x[46] = WaypointX(wp46); y[46] = WaypointY(wp46);
-  x[47] = WaypointX(wp42); y[47] = WaypointY(wp42);
-  x[48] = WaypointX(wp43); y[48] = WaypointY(wp43);
-  x[49] = WaypointX(wp44); y[49] = WaypointY(wp44);
-  x[50] = WaypointX(wp45); y[50] = WaypointY(wp45);
+  x[47] = WaypointX(wp47); y[47] = WaypointY(wp47);
+  x[48] = WaypointX(wp48); y[48] = WaypointY(wp48);
+  x[49] = WaypointX(wp49); y[49] = WaypointY(wp49);
+  x[50] = WaypointX(wp50); y[50] = WaypointY(wp50);
 
-	if (num_wp_moved != 0 ){
-	  num_pnts = num_wp_moved;
-	  //printf("num_wp_moved= %d\n", num_pnts);
-	}
-	else{
-	  num_pnts = GVF_N_LINES;
-	  //printf("GVF_N_LINES= %d\n", num_pnts);
-	}
-	for(int k = 0; k < num_pnts-1; k++)
+  
+  int j = 0;
+	for(int k = 0; k < num_wp_moved-1; k++)
 	{
+	
 		gvf_lines_array[k].p1x = x[k];
 		gvf_lines_array[k].p1y = y[k];
 		gvf_lines_array[k].p2x = x[k+1];
 		gvf_lines_array[k].p2y = y[k+1];
-		
+		//printf("Valor de k = %d \n", k);
 	}
 	struct EnuCoor_f *p = stateGetPositionEnu_f();
  	float px = p->x;
 	float py = p->y;
 	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
-	if((dist <= gvf_c_stopwp.distance_stop)){
+	if((dist <= gvf_c_stopwp.distance_stop )){
 		if(!gvf_c_stopwp.stop_at_wp){
 			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
 			}		

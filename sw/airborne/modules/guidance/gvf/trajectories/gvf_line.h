@@ -30,7 +30,7 @@
 #define GVF_LINE_H
 
 #ifndef GVF_N_LINES
-#define GVF_N_LINES 6
+#define GVF_N_LINES 50
 #endif
 
 #include "modules/guidance/gvf/gvf.h"

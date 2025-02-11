@@ -34,6 +34,8 @@ struct Waypoint waypoints[NB_WAYPOINT];
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 
+uint8_t num_wp_moved;
+
 static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
   static uint8_t i;
@@ -46,7 +48,6 @@ static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
                              &(waypoints[i].enu_i.z));
 }
 
-uint8_t num_wp_moved;
 
 static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {

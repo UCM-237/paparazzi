@@ -1,0 +1,233 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+<flight_plan max_dist_from_home="1600" name="Rover Steering" lon0="-4.08694" alt="660" ground_alt="650" lat0="39.78917" security_height="0.3">
+  
+ 
+  <header/>
+  
+ 
+  <waypoints>
+    <waypoint x="-193.72737" y="-27.2" name="L0"/>
+    <waypoint x="-191.13748" y="-42.883476" name="L1"/>
+    <waypoint x="-173.4483" y="-51.897087" name="L2"/>
+    <waypoint x="-151.92813" y="-41.61046" name="L3"/>
+    <waypoint x="-145.88562" y="-14.398186" name="L4"/>
+    <waypoint x="-165.98105" y="10.392698" name="L5"/>
+    <waypoint x="-201.9404" y="10.192184" name="L6"/>
+    <waypoint x="-226.88689" y="-21.09354" name="L7"/>
+    <waypoint x="-217.41173" y="-64.136086" name="L8"/>
+    <waypoint x="-174.4083" y="-85.764" name="L9"/>
+    <waypoint x="-126.7615" y="-64.438576" name="L10"/>
+    <waypoint x="-112.07002" y="-10.121097" name="L11"/>
+    <waypoint x="-147.17035" y="38.9578" name="L12"/>
+    <waypoint x="78.44835" y="1007.7134" name="L13"/>
+    <waypoint x="22.961264" y="1007.7134" name="L14"/>
+    <waypoint x="-32.525826" y="1007.7134" name="L15"/>
+    <waypoint x="-88.01291" y="1007.7134" name="L16"/>
+    <waypoint x="78.44835" y="965.51" name="L17"/>
+    <waypoint x="22.961264" y="965.51" name="L18"/>
+    <waypoint x="-32.525826" y="965.51" name="L19"/>
+    <waypoint x="-88.01291" y="965.51" name="L20"/>
+    <waypoint x="78.44835" y="923.3067" name="L21"/>
+    <waypoint x="22.961264" y="923.3067" name="L22"/>
+    <waypoint x="-32.525826" y="923.3067" name="L23"/>
+    <waypoint x="-88.01291" y="923.3067" name="L24"/>
+    <waypoint x="23.2" y="213.1" name="L25"/>
+    <waypoint name="HOME" x="0.0" y="0.0"/>
+    <waypoint name="STDBY" x="333.9" y="620.6"/>
+    <waypoint name="ELLIPSE" x="296.3" y="624.4"/>
+    <waypoint name="_N1" x="796.4" y="1254.9"/>
+    <waypoint name="_N2" x="796.4" y="-865.4"/>
+    <waypoint name="_N3" x="-908.7" y="-865.4"/>
+    <waypoint name="_N4" x="-908.7" y="1254.9"/>
+    <waypoint name="_C1" x="-134.1" y="1013.4"/>
+    <waypoint name="_C2" x="103.8" y="1027.3"/>
+    <waypoint name="_C3" x="104.2" y="864.6"/>
+    <waypoint name="_C4" x="-143.5" y="838.9"/>
+    <waypoint name="_T1" x="-322.8" y="-84.6"/>
+    <waypoint name="_T2" x="-49.9" y="-93.3"/>
+    <waypoint name="_T3" x="-161.8" y="96.3"/>
+  </waypoints>
+  <sectors>
+    
+  
+    <sector name="Net" color="red">
+      
+   
+      <corner name="_N1"/>
+      
+   
+      <corner name="_N2"/>
+      
+   
+      <corner name="_N3"/>
+      
+   
+      <corner name="_N4"/>
+      
+  
+    </sector>
+    
+  
+    <sector name="ZigZag2_12" color="red">
+      
+   
+      <corner name="_C1"/>
+      
+   
+      <corner name="_C2"/>
+      
+   
+      <corner name="_C3"/>
+      
+   
+      <corner name="_C4"/>
+      
+  
+    </sector>
+    
+  
+    <sector name="Espiral3_14" color="red">
+      
+   
+      <corner name="_T1"/>
+      
+   
+      <corner name="_T2"/>
+      
+   
+      <corner name="_T3"/>
+      
+  
+    </sector>
+    
+ 
+  </sectors>
+  
+ 
+  <variables>
+    
+  
+    <variable var="aa" init="5.0" min="1.0" step="1.0" max="10.0"/>
+    
+  
+    <variable var="bb" init="5.0" min="1.0" step="1.0" max="10.0"/>
+    
+ 
+  </variables>
+  
+ 
+  <modules>
+    
+  
+    <module name="gvf_module"/>
+    
+  
+    <module name="gvf_parametric_bare"/>
+    
+ 
+  </modules>
+  
+ 
+  <blocks>
+    
+  
+    <block name="Wait GPS" strip_icon="gps.png">
+      
+   
+      <call_once fun="NavKillThrottle()"/>
+      
+   
+      <while cond="!GpsFixValid()"/>
+      
+  
+    </block>
+    
+  
+    <block name="Geo init" strip_icon="googleearth.png">
+      
+   
+      <while cond="LessThan(NavBlockTime(), 10)"/>
+      
+   
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      
+   
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+      
+  
+    </block>
+    
+  
+    <block name="Start Engine" strip_icon="on.png">
+      
+   
+      <while cond="LessThan(NavBlockTime(), 1)"/>
+      
+   
+      <call_once fun="autopilot_set_motors_on(TRUE)"/>
+      
+  
+    </block>
+    
+  
+    <block name="Standby" strip_icon="home.png" strip_button="Standby">
+      
+   
+      <call fun="gvf_ellipse_wp(WP_STDBY, 3, 3, 0)"/>
+      
+  
+    </block>
+    
+  
+    <block name="line_to_HOME" strip_icon="home_drop.png">
+      
+   
+      <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
+      
+   
+      <exception deroute="Standby" cond="! InsideNet(GetPosX(), GetPosY())"/>
+      
+  
+    </block>
+    
+  
+    <block name="ellipse_wp" strip_icon="oval.png">
+      
+   
+      <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
+      
+   
+      <exception deroute="Standby" cond="! InsideNet(GetPosX(), GetPosY())"/>
+      
+  
+    </block>
+    
+  
+    <block name="gvf_bezier_bare">
+      
+   
+      <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
+      
+   
+      <exception deroute="Standby" cond="! InsideNet(GetPosX(), GetPosY())"/>
+      
+  
+    </block>
+    
+  
+    <block name="gvf_quintic_bezier_bare">
+      
+   
+      <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      
+   
+      <exception deroute="Standby" cond="! InsideNet(GetPosX(), GetPosY())"/>
+      
+  
+    </block>
+    
+ 
+  </blocks>
+  
+
+</flight_plan>

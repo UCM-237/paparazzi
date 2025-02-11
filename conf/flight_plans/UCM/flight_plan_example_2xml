@@ -12,6 +12,21 @@
     <waypoint name="_N2" x="1002.4" y="-1245.0"/>
     <waypoint name="_N3" x="-1018.1" y="-1231.6"/>
     <waypoint name="_N4" x="-1019.3" y="1227.7"/>
+    <waypoint name="BZ0" x="-137.2" y="20.7"/>
+    <waypoint name="BZ1" x="-265.5" y="53.6"/>
+    <waypoint name="_C1" x="-472.3" y="6.0"/>
+    <waypoint name="_C2" x="-389.7" y="-0.2"/>
+    <waypoint name="_C3" x="-401.2" y="-87.6"/>
+    <waypoint name="_C4" x="-483.9" y="-83.5"/>
+    <waypoint name="BZ2" x="-489.2" y="-180.4"/>
+    <waypoint name="_T1" x="-582.0" y="-235.5"/>
+    <waypoint name="_T2" x="-586.2" y="-324.1"/>
+    <waypoint name="_T3" x="-474.6" y="-268.1"/>
+    <waypoint name="BZ3" x="-505.6" y="-412.7"/>
+    <waypoint name="_ZP1" x="-355.9" y="-407.7"/>
+    <waypoint name="_ZP2" x="-319.6" y="-262.7"/>
+    <waypoint name="_ZP3" x="-349.1" y="-107.5"/>
+    <waypoint name="_ZP4" x="-418.4" y="-256.8"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">

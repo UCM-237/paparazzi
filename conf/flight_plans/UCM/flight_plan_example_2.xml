@@ -1,0 +1,138 @@
+<!DOCTYPE flight_plan SYSTEM '../flight_plan.dtd'>
+<flight_plan lat0="39.7947346" max_dist_from_home="1600" ground_alt="650" security_height="0.3" alt="660" lon0="-4.0836999" name="GSA 1 - Rotorcraft Multiflight (Portland)">
+ <header>
+#include "autopilot.h"
+</header>
+ <waypoints>
+  <waypoint y="0" x="0" name="HOME"/>
+  <waypoint y="161.3" x="-100.3" name="STDBY"/>
+  <waypoint y="82.6" x="-69.5" name="ELLIPSE"/>
+  <waypoint y="1242.1" x="1002.3" name="_N1"/>
+  <waypoint y="-1245.0" x="1002.4" name="_N2"/>
+  <waypoint y="-1231.6" x="-1018.1" name="_N3"/>
+  <waypoint y="1227.7" x="-1019.3" name="_N4"/>
+  <waypoint y="-452.1" x="-450.9" name="BZ0"/>
+  <waypoint y="76.5" x="-407.1" name="_C1"/>
+  <waypoint y="72.7" x="-225.7" name="_C2"/>
+  <waypoint y="-50.0" x="-224.0" name="_C3"/>
+  <waypoint y="-42.8" x="-415.4" name="_C4"/>
+  <waypoint y="-235.5" x="-582.0" name="_T1"/>
+  <waypoint y="-324.1" x="-586.2" name="_T2"/>
+  <waypoint y="-268.1" x="-474.6" name="_T3"/>
+  <waypoint y="-508.2" x="-281.5" name="BZ3"/>
+  <waypoint y="-407.7" x="-355.9" name="_ZP1"/>
+  <waypoint y="-262.7" x="-319.6" name="_ZP2"/>
+  <waypoint y="-107.5" x="-349.1" name="_ZP3"/>
+  <waypoint y="-256.8" x="-418.4" name="_ZP4"/>
+ </waypoints>
+ <sectors>
+  <sector color="red" name="Net">
+   <corner name="_N1"/>
+   <corner name="_N2"/>
+   <corner name="_N3"/>
+   <corner name="_N4"/>
+  </sector>
+  <sector color="red" name="ZigZag4_5">
+   <corner name="_C1"/>
+   <corner name="_C2"/>
+   <corner name="_C3"/>
+   <corner name="_C4"/>
+  </sector>
+  <sector color="red" name="Espiral3_6">
+   <corner name="_T1"/>
+   <corner name="_T2"/>
+   <corner name="_T3"/>
+  </sector>
+  <sector color="red" name="Zona_prohibida4">
+   <corner name="_ZP1"/>
+   <corner name="_ZP2"/>
+   <corner name="_ZP3"/>
+   <corner name="_ZP4"/>
+  </sector>
+ </sectors>
+ <blocks>
+  <block name="Wait GPS">
+   <call_once fun="NavKillThrottle()"/>
+   <while cond="!GpsFixValid()"/>
+  </block>
+  <block name="Geo init">
+   <while cond="LessThan(NavBlockTime(), 10)"/>
+   <call_once fun="NavSetGroundReferenceHere()"/>
+  </block>
+  <block name="Holding point">
+   <call_once fun="NavKillThrottle()"/>
+   <attitude throttle="0" roll="0" until="FALSE" vmode="throttle" pitch="0"/>
+  </block>
+  <block strip_button="Start Motors" group="init_control" strip_icon="start_motors.png" name="Start Motors">
+   <call_once fun="NavResurrect()"/>
+   <attitude throttle="0" roll="0" until="FALSE" vmode="throttle" pitch="0"/>
+  </block>
+  <block strip_button="Takeoff" group="init_control" strip_icon="launch.png" name="Takeoff">
+   <exception cond="GetPosHeight() @GT 2.0" deroute="Standby"/>
+   <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
+   <stay wp="CLIMB" climb="nav.climb_vspeed" vmode="climb"/>
+  </block>
+  <block strip_button="Standby" group="waypoint_control_col1" strip_icon="standby.png" name="Standby">
+   <stay wp="STDBY"/>
+  </block>
+  <block strip_button="Waypoint 50" group="waypoint_control_col1" strip_icon="waypoint_one.png" name="stay_L50">
+   <stay wp="L50"/>
+  </block>
+  <block name="route_x">
+   <go wp="L1" approaching_time="0" hmode="route" from="L0"/>
+   <go wp="L2" approaching_time="0" hmode="route" from="L1"/>
+   <go wp="L3" approaching_time="0" hmode="route" from="L2"/>
+   <go wp="L4" approaching_time="0" hmode="route" from="L3"/>
+   <go wp="L5" approaching_time="0" hmode="route" from="L4"/>
+   <go wp="L6" approaching_time="0" hmode="route" from="L5"/>
+   <go wp="L7" approaching_time="0" hmode="route" from="L6"/>
+   <go wp="L8" approaching_time="0" hmode="route" from="L7"/>
+   <go wp="L9" approaching_time="0" hmode="route" from="L8"/>
+   <go wp="L10" approaching_time="0" hmode="route" from="L9"/>
+   <go wp="L11" approaching_time="0" hmode="route" from="L10"/>
+   <go wp="L12" approaching_time="0" hmode="route" from="L11"/>
+   <go wp="L13" approaching_time="0" hmode="route" from="L12"/>
+   <go wp="L14" approaching_time="0" hmode="route" from="L13"/>
+   <go wp="L15" approaching_time="0" hmode="route" from="L14"/>
+   <go wp="L16" approaching_time="0" hmode="route" from="L15"/>
+   <go wp="L17" approaching_time="0" hmode="route" from="L16"/>
+   <go wp="L18" approaching_time="0" hmode="route" from="L17"/>
+   <go wp="L19" approaching_time="0" hmode="route" from="L18"/>
+   <go wp="L20" approaching_time="0" hmode="route" from="L19"/>
+   <go wp="L21" approaching_time="0" hmode="route" from="L20"/>
+   <go wp="L22" approaching_time="0" hmode="route" from="L21"/>
+   <go wp="L23" approaching_time="0" hmode="route" from="L22"/>
+   <go wp="L24" approaching_time="0" hmode="route" from="L23"/>
+   <go wp="L25" approaching_time="0" hmode="route" from="L24"/>
+   <go wp="L26" approaching_time="0" hmode="route" from="L25"/>
+   <go wp="L27" approaching_time="0" hmode="route" from="L26"/>
+   <go wp="L28" approaching_time="0" hmode="route" from="L27"/>
+   <go wp="L29" approaching_time="0" hmode="route" from="L28"/>
+   <go wp="L30" approaching_time="0" hmode="route" from="L29"/>
+   <go wp="L31" approaching_time="0" hmode="route" from="L30"/>
+   <go wp="L32" approaching_time="0" hmode="route" from="L31"/>
+   <go wp="L33" approaching_time="0" hmode="route" from="L32"/>
+   <go wp="L34" approaching_time="0" hmode="route" from="L33"/>
+   <go wp="L35" approaching_time="0" hmode="route" from="L34"/>
+   <go wp="L36" approaching_time="0" hmode="route" from="L35"/>
+   <go wp="L37" approaching_time="0" hmode="route" from="L36"/>
+   <go wp="L38" approaching_time="0" hmode="route" from="L37"/>
+   <go wp="L39" approaching_time="0" hmode="route" from="L38"/>
+   <go wp="L40" approaching_time="0" hmode="route" from="L39"/>
+   <go wp="L41" approaching_time="0" hmode="route" from="L40"/>
+   <go wp="L42" approaching_time="0" hmode="route" from="L41"/>
+   <go wp="L43" approaching_time="0" hmode="route" from="L42"/>
+   <go wp="L44" approaching_time="0" hmode="route" from="L43"/>
+   <go wp="L45" approaching_time="0" hmode="route" from="L44"/>
+   <go wp="L46" approaching_time="0" hmode="route" from="L45"/>
+   <go wp="L47" approaching_time="0" hmode="route" from="L46"/>
+   <go wp="L48" approaching_time="0" hmode="route" from="L47"/>
+   <go wp="L49" approaching_time="0" hmode="route" from="L48"/>
+   <go wp="L50" approaching_time="0" hmode="route" from="L49"/>
+   <deroute block="stay_L50"/>
+  </block>
+  <block name="landed">
+   <attitude throttle="0" roll="0" until="FALSE" vmode="throttle" pitch="0"/>
+  </block>
+ </blocks>
+</flight_plan>

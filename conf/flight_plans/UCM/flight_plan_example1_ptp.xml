@@ -12,6 +12,10 @@
     <waypoint name="_N2" x="1002.4" y="-1245.0"/>
     <waypoint name="_N3" x="-1018.1" y="-1231.6"/>
     <waypoint name="_N4" x="-1019.3" y="1227.7"/>
+    <waypoint name="BZ0" x="-21.5" y="22.7"/>
+    <waypoint name="BZ1" x="-57.5" y="40.3"/>
+    <waypoint name="BZ2" x="-91.8" y="27.3"/>
+    <waypoint name="BZ3" x="-84.0" y="-12.4"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">

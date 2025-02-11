@@ -154,5 +154,5 @@ extern void waypoints_localize_all(void);
 #ifdef __cplusplus
 }
 #endif
-
+extern uint8_t num_wp_moved;
 #endif /* WAYPOINTS_H */

@@ -1,17 +1,17 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="39.78917" lon0="-4.08694" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="39.7947346" lon0="-4.0836999" max_dist_from_home="1600" name="GSA 1 - Rotorcraft Multiflight (Portland)" security_height="0.3">
   <header>
-
+#include "autopilot.h"
 </header>
   <waypoints>
     <waypoint name="HOME" x="0" y="0"/>
-    <waypoint name="STDBY" x="333.9" y="620.6"/>
-    <waypoint name="ELLIPSE" x="296.3" y="624.4"/>
-    <waypoint name="_N1" x="796.4" y="1254.9"/>
-    <waypoint name="_N2" x="796.4" y="-865.4"/>
-    <waypoint name="_N3" x="-908.7" y="-865.4"/>
-    <waypoint name="_N4" x="-908.7" y="1254.9"/>
+    <waypoint name="STDBY" x="-100.3" y="161.3"/>
+    <waypoint name="ELLIPSE" x="-69.5" y="82.6"/>
+    <waypoint name="_N1" x="1002.3" y="1242.1"/>
+    <waypoint name="_N2" x="1002.4" y="-1245.0"/>
+    <waypoint name="_N3" x="-1018.1" y="-1231.6"/>
+    <waypoint name="_N4" x="-1019.3" y="1227.7"/>
     <waypoint name="L0" x="952.2" y="768.4"/>
     <waypoint name="L1" x="956.2" y="770.4"/>
     <waypoint name="L2" x="956.2" y="770.4"/>
@@ -63,7 +63,6 @@
     <waypoint name="L48" x="956.2" y="770.4"/>
     <waypoint name="L49" x="956.2" y="770.4"/>
     <waypoint name="L50" x="956.2" y="770.4"/>
-    
   </waypoints>
   <sectors>
     <sector color="red" name="Net">

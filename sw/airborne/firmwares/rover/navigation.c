@@ -75,7 +75,6 @@ static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
                              &(waypoints[i].enu_i.z));
 }
 
-uint8_t num_wp_moved;
 
 static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
@@ -134,8 +133,6 @@ void nav_parse_BLOCK(uint8_t *buf)
   if (DL_BLOCK_ac_id(buf) != AC_ID) { return; }
   nav_goto_block(DL_BLOCK_block_id(buf));
 }
-
-uint8_t num_wp_moved;
 
 void nav_parse_MOVE_WP(uint8_t *buf)
 {
