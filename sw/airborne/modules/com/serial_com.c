@@ -664,15 +664,15 @@ void serial_ping()
 	uint8_t msg_gps[5]={0,0,0,0,0};
 
 	// Aqui a lo mejor habria que comprobar que solo se active uno (depende de lo se necesite)
-	serial_msg.depth = radio_control_get(RADIO_GAIN2);
-	if (radio_control_get(RADIO_GAIN2)>0){
-		RESET_BUFFER(msg_buffer);
-		SET_BIT(msg_buffer, SONDA_UP);
-	}
-	else if (radio_control_get(RADIO_GAIN2)<0){
-		RESET_BUFFER(msg_buffer);
-		SET_BIT(msg_buffer, SONDA_DOWN);
-	}
+	// Comentado para que no moleste con los rovers
+	// if (radio_control_get(RADIO_GAIN2)>0){
+	// 	RESET_BUFFER(msg_buffer);
+	// 	SET_BIT(msg_buffer, SONDA_UP);
+	// }
+	// else if (radio_control_get(RADIO_GAIN2)<0){
+	// 	RESET_BUFFER(msg_buffer);
+	// 	SET_BIT(msg_buffer, SONDA_DOWN);
+	// }
 
 
 	if (now_s > (last_s + SEND_INTERVAL)) {

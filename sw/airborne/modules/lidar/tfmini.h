@@ -66,6 +66,7 @@ struct TFMiniServo {
   bool dir;
 };
 
+extern bool enable_servo;
 extern struct TFMiniServo tf_servo;
 
 extern void tfmini_init(void);
