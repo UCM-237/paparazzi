@@ -42,15 +42,20 @@
 * @param ke Gain defining how agressive is the vector field
 * @param kn Gain for making converge the vehile to the vector field
 * @param error Error signal. It does not have any specific units. It depends on how the trajectory has been implemented. Check the specific wiki entry for each trajectory.
+* @param omega Angular velocity of the vehicle
+* @param speed Speed of the vehicle. It is only used in rotorcrafts for now.
 * @param s Defines the direction to be tracked. Its meaning depends on the trajectory and its implementation. Check the wiki entry of the GVF. It takes the values -1 or 1.
+* @param align Align the vehicle with the direction of the vector field. Can only used in rotorcrafts.
 */
 typedef struct {
   float ke;
   float kn;
   float error;
   float omega;
+  float speed;
   int8_t s;
   int8_t which_line;
+  bool align;
 } gvf_con;
 
 extern gvf_con gvf_control;
@@ -130,9 +135,11 @@ struct gvf_Hess {
 extern void gvf_init(void);
 void gvf_control_2D(float ke, float kn, float e,
                     struct gvf_grad *, struct gvf_Hess *);
+extern void gvf_set_speed(float speed); // Rotorcraft only (for now)
+extern void gvf_set_align(bool align); // Rotorcraft only
 extern void gvf_set_direction(int8_t s);
 
-// Straigh line
+// Straight line
 extern bool gvf_line_XY_heading(float x, float y, float heading);
 extern bool gvf_line_XY1_XY2(float x1, float y1, float x2, float y2);
 extern bool gvf_line_wp1_wp2(uint8_t wp1, uint8_t wp2);
@@ -142,10 +149,9 @@ extern bool gvf_segment_XY1_XY2(float x1, float y1, float x2, float y2);
 extern bool gvf_segment_wp1_wp2(uint8_t wp1, uint8_t wp2);
 extern bool gvf_line_wp_heading(uint8_t wp, float heading);
 
-// Array of straight lines
+// Array of straight
 extern bool gvf_lines_array_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6);
 extern bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2);
-
 // Ellipse
 extern bool gvf_ellipse_wp(uint8_t wp, float a, float b, float alpha);
 extern bool gvf_ellipse_XY(float x, float y, float a, float b, float alpha);
@@ -162,3 +168,4 @@ extern float dist(float x_, float y_, uint8_t wp0);
 extern bool increase_bz_pointer(void);
 
 #endif // GVF_H
+

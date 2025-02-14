@@ -27,6 +27,9 @@
 .cache.xml
 .directory
 
+# python venv
+pprzEnv/
+
 # Eclipse IDE project files
 *.cproject
 *.project
@@ -48,6 +51,10 @@ paparazzi.sublime-workspace
 *.config
 *.files
 *.includes
+
+# VSCode IDE
+.vscode/ipch/
+.vscode
 
 # Vagrant VM files
 /.vagrant
@@ -137,13 +144,16 @@ Cargo.lock
 /sw/logalizer/gtk_export.ml
 /sw/logalizer/sd2log
 /sw/logalizer/plotprofile
-/sw/logalizer/ctrlstick
 /sw/logalizer/ffjoystick
 /sw/logalizer/tmclient
 /sw/logalizer/openlog2tlm
 /sw/logalizer/ahrs2fg
 /sw/logalizer/disp3d
 /sw/logalizer/sdlogger_download
+
+# /sw/misc
+/sw/misc/link/pprzlink_router
+/sw/misc/link/pprzlink_router_cc
 
 # /sw/simulator/
 /sw/simulator/gaia

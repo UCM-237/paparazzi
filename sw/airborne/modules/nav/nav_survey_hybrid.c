@@ -29,6 +29,7 @@
 #include "modules/nav/nav_survey_hybrid.h"
 
 #include "firmwares/rotorcraft/navigation.h"
+#include "modules/nav/nav_rotorcraft_base.h"
 #include "math/pprz_algebra_float.h"
 #include "state.h"
 #include "autopilot.h"
@@ -68,6 +69,11 @@
 #define SURVEY_HYBRID_ENTRY_DISTANCE (survey_private.sweep_distance / 2.f)
 #endif
 
+// make a circle at entry point if radius is not 0
+#ifndef SURVEY_HYBRID_ENTRY_CIRCLE
+#define SURVEY_HYBRID_ENTRY_CIRCLE TRUE
+#endif
+
 struct Line {float m; float b; float x;};
 enum SurveyStatus { Init, Entry, Sweep, Turn };
 
@@ -97,7 +103,7 @@ struct SurveyHybridPrivate {
 struct SurveyHybrid survey_hybrid;
 static struct SurveyHybridPrivate survey_private;
 
-static void nav_survey_hybrid_setup(float orientation, float sweep, float radius);
+static void nav_survey_hybrid_setup(float orientation, float sweep, float radius, float height);
 
 static void TranslateAndRotateFromWorld(struct EnuCoor_f *p, float Zrot, struct EnuCoor_f *trans);
 static void RotateAndTranslateToWorld(struct EnuCoor_f *p, float Zrot, struct EnuCoor_f *trans);
@@ -133,7 +139,7 @@ static bool nav_survey_hybrid_mission_local(uint8_t nb, float *params, enum Miss
         survey_private.corners[i].y = params[5+2*i+1];
         survey_private.corners[i].z = height;
       }
-      nav_survey_hybrid_setup(orientation, sweep, radius);
+      nav_survey_hybrid_setup(orientation, sweep, radius, height);
       return nav_survey_hybrid_run();
     }
   }
@@ -157,13 +163,13 @@ static bool nav_survey_hybrid_mission_global(uint8_t nb, float *params, enum Mis
         struct LlaCoor_f lla = {
           .lat = RadOfDeg(params[4+2*i]),
           .lon = RadOfDeg(params[4+2*i+1]),
-          .alt = state.ned_origin_f.lla.alt + height
+          .alt = stateGetLlaOrigin_f().alt + height
         };
         struct EnuCoor_f corner;
-        enu_of_lla_point_f(&corner, &state.ned_origin_f, &lla);
+        enu_of_lla_point_f(&corner, stateGetNedOrigin_f(), &lla);
         survey_private.corners[i] = corner;
       }
-      nav_survey_hybrid_setup(orientation, sweep, radius);
+      nav_survey_hybrid_setup(orientation, sweep, radius, height);
       return nav_survey_hybrid_run();
     }
   }
@@ -193,7 +199,7 @@ void nav_survey_hybrid_init(void)
 
 /** finish preparation of survey based on private structure
  */
-static void nav_survey_hybrid_setup(float orientation, float sweep, float radius)
+static void nav_survey_hybrid_setup(float orientation, float sweep, float radius, float height)
 {
   FLOAT_VECT2_ZERO(survey_private.smallest_corner);
   int i = 0;
@@ -346,7 +352,7 @@ static void nav_survey_hybrid_setup(float orientation, float sweep, float radius
   // Find the entry point
   survey_private.entry.x = survey_private.from_wp.x;
   survey_private.entry.y = survey_private.corners[0].y + entry_distance;
-  survey_private.entry.z = survey_private.corners[0].z;
+  survey_private.entry.z = height;
 
   // Go into entry state
   survey_private.status = Entry;
@@ -356,7 +362,7 @@ static void nav_survey_hybrid_setup(float orientation, float sweep, float radius
   survey_private.valid = true;
 }
 
-void nav_survey_hybrid_setup_orientation(uint8_t start_wp, float orientation, uint8_t size, float sweep, float radius)
+void nav_survey_hybrid_setup_orientation(uint8_t start_wp, float orientation, uint8_t size, float sweep, float radius, float height)
 {
   survey_private.valid = false;
   if (size < 3 || size > SURVEY_HYBRID_MAX_POLYGON_SIZE) {
@@ -371,10 +377,10 @@ void nav_survey_hybrid_setup_orientation(uint8_t start_wp, float orientation, ui
   }
   survey_private.size = size;
 
-  nav_survey_hybrid_setup(orientation, sweep, radius);
+  nav_survey_hybrid_setup(orientation, sweep, radius, height);
 }
 
-void nav_survey_hybrid_setup_towards(uint8_t start_wp, uint8_t second_wp, uint8_t size, float sweep, float radius)
+void nav_survey_hybrid_setup_towards(uint8_t start_wp, uint8_t second_wp, uint8_t size, float sweep, float radius, float height)
 {
   survey_private.valid = false;
   struct EnuCoor_f *start = waypoint_get_enu_f(start_wp);
@@ -386,7 +392,7 @@ void nav_survey_hybrid_setup_towards(uint8_t start_wp, uint8_t second_wp, uint8_
   float dx = second->x - start->x;
   float dy = second->y - start->y;
   float angle = DegOfRad(atan2f(dy, dx));
-  nav_survey_hybrid_setup_orientation(start_wp, angle, size, sweep, radius);
+  nav_survey_hybrid_setup_orientation(start_wp, angle, size, sweep, radius, height);
 }
 
 //=========================================================================================================================
@@ -416,7 +422,7 @@ bool nav_survey_hybrid_run(void)
       RotateAndTranslateToWorld(&C, 0.f, &survey_private.smallest_corner);
       RotateAndTranslateToWorld(&C, survey_private.orientation, &zero);
 
-      if (survey_private.circle_turns) {
+      if (survey_private.circle_turns && SURVEY_HYBRID_ENTRY_CIRCLE) {
         // align segment at entry point with a circle
         survey_private.circle.x = C.x - (cosf(survey_private.orientation + M_PI_2) * survey_private.radius);
         survey_private.circle.y = C.y - (sinf(survey_private.orientation + M_PI_2) * survey_private.radius);

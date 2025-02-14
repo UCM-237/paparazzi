@@ -135,7 +135,7 @@ extern void nav_register_oval(nav_rover_oval_init nav_oval_init, nav_rover_oval 
 /// Get current y (north) position in local coordinates
 #define GetPosY() (stateGetPositionEnu_f()->y)
 /// Get current altitude above MSL
-#define GetPosAlt() (stateGetPositionEnu_f()->z+state.ned_origin_f.hmsl)
+#define GetPosAlt() (stateGetPositionEnu_f()->z+stateGetHmslOrigin_f())
 /// Get current height above reference
 #define GetPosHeight() (stateGetPositionEnu_f()->z)
 /**
@@ -144,7 +144,7 @@ extern void nav_register_oval(nav_rover_oval_init nav_oval_init, nav_rover_oval 
  * but might be updated later through a call to NavSetGroundReferenceHere() or
  * NavSetAltitudeReferenceHere(), e.g. in the GeoInit flight plan block.
  */
-#define GetAltRef() (state.ned_origin_f.hmsl)
+#define GetAltRef() (stateGetHmslOrigin_f())
 
 
 /** Normalize a degree angle between 0 and 359 */
@@ -190,15 +190,13 @@ extern void nav_set_failsafe(void);
 /* switching motors on/off */
 static inline void NavKillThrottle(void)
 {
-  if (autopilot_get_mode() == AP_MODE_NAV) { autopilot_set_motors_on(FALSE); }
+  if (autopilot_get_mode() == AP_MODE_NAV) { autopilot_set_motors_on(false); }
 }
 static inline void NavResurrect(void)
 {
-  if (autopilot_get_mode() == AP_MODE_NAV) { autopilot_set_motors_on(TRUE); }
+  if (autopilot_get_mode() == AP_MODE_NAV) { autopilot_set_motors_on(true); }
 }
 
-
-#define NavSetManual(_roll, _pitch, _yaw) _Pragma("GCC error \"Manual mode in flight plan for fixedwing is not available\"")
 #define NavSetFailsafe nav_set_failsafe
 
 #define NavSetGroundReferenceHere nav_reset_reference
@@ -234,6 +232,7 @@ bool nav_check_wp_time(struct EnuCoor_f *wp, float stay_time);
 /** Set the heading of the rover, nothing else */
 #define NavHeading nav_set_heading_rad
 
+#define NavSetMaxSpeed(_speed) {} // not used
 
 
 /***********************************************************

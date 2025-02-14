@@ -101,6 +101,7 @@ static inline float get_p_action(struct PID_f *pid, float error)
 
 static inline float get_d_action(struct PID_f *pid, float error, float dt)
 {
+  error = error;  // Avoid warning
 	return (pid->g[1] * (pid->e[0] - pid->e[1]) / dt);
 }
 /** Get current value of the PID command.
