@@ -350,7 +350,7 @@ void ins_reset_local_origin(void)
     ins_int.ltp_def.lla.alt = lla_pos.alt;
     ins_int.ltp_def.hmsl = gps.hmsl;
     ins_int.ltp_initialized = true;
-    stateSetLocalOrigin_i(&ins_int.ltp_def);
+    stateSetLocalOrigin_i(MODULE_INS_KF_ID, &ins_int.ltp_def);
   } else {
     ins_int.ltp_initialized = false;
   }
@@ -376,7 +376,7 @@ void ins_reset_altitude_ref(void)
     };
     ltp_def_from_lla_i(&ins_int.ltp_def, &lla);
     ins_int.ltp_def.hmsl = gps.hmsl;
-    stateSetLocalOrigin_i(&ins_int.ltp_def);
+    stateSetLocalOrigin_i(MODULE_INS_KF_ID, &ins_int.ltp_def);
   }
 #endif
   ins_int.vf_reset = true;
@@ -390,7 +390,7 @@ void ins_reset_vertical_pos(void)
 void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 {
   // Set body acceleration in the state (ejes cuerpo)
-  stateSetAccelBody_i(accel);
+  stateSetAccelBody_i(MODULE_INS_KF_ID, accel);
 
   struct FloatEulers *att = stateGetNedToBodyEulers_f();
   float theta = att->psi;   // Este es el angulo
@@ -619,9 +619,9 @@ static void agl_cb(uint8_t __attribute__((unused)) sender_id, __attribute__((unu
 /** copy position and speed to state interface */
 static void ins_ned_to_state(void)
 {
-  stateSetPositionNed_i(&ins_int.ltp_pos);
-  stateSetSpeedNed_i(&ins_int.ltp_speed);
-  stateSetAccelNed_i(&ins_int.ltp_accel);
+  stateSetPositionNed_i(MODULE_INS_KF_ID, &ins_int.ltp_pos);
+  stateSetSpeedNed_i(MODULE_INS_KF_ID, &ins_int.ltp_speed);
+  stateSetAccelNed_i(MODULE_INS_KF_ID, &ins_int.ltp_accel);
 
 #if defined SITL && USE_NPS
   if (nps_bypass_ins) {
