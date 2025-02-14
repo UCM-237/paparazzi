@@ -14,7 +14,7 @@
   </doc>
   <dep>
     <!-- <depends>spi_master,baro_bmp280_i2c,imu_mpu6000</depends> -->
-    <depends>spi_master,baro_bmp280_i2c,imu_icm42688</depends>
+    <depends>spi_master,imu_icm42688</depends>
   </dep>
 
   <makefile target="!sim|nps|fbw">

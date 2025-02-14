@@ -29,13 +29,9 @@
 #include "modules/core/abi.h"
 #include "state.h"
 
-#ifndef AHRS_DCM_OUTPUT_ENABLED
-#define AHRS_DCM_OUTPUT_ENABLED TRUE
-#endif
-PRINT_CONFIG_VAR(AHRS_DCM_OUTPUT_ENABLED)
+PRINT_CONFIG_VAR(AHRS_DCM_TYPE)
 
-/** if TRUE with push the estimation results to the state interface */
-static bool ahrs_dcm_output_enabled;
+uint8_t ahrs_dcm_enable;
 static uint32_t ahrs_dcm_last_stamp;
 static uint8_t ahrs_dcm_id = AHRS_COMP_ID_DCM;
 
@@ -168,20 +164,13 @@ static void gps_cb(uint8_t sender_id __attribute__((unused)),
   ahrs_dcm_update_gps(gps_s);
 }
 
-static bool ahrs_dcm_enable_output(bool enable)
-{
-  ahrs_dcm_output_enabled = enable;
-  return ahrs_dcm_output_enabled;
-}
-
 /*
  * Compute body orientation and rates from imu orientation and rates
  */
 static void set_body_orientation_and_rates(void)
 {
-  if (ahrs_dcm_output_enabled) {
     /* Set the state */
-    stateSetBodyRates_f(&ahrs_dcm.body_rate);
+    stateSetBodyRates_f(MODULE_AHRS_FLOAT_DCM_ID, &ahrs_dcm.body_rate);
 
     #ifdef USE_EKF_FILTER
       struct FloatEulers attitude;
@@ -191,18 +180,20 @@ static void set_body_orientation_and_rates(void)
         attitude.psi = ahrs_dcm.ltp_to_body_euler.psi;
       else
         attitude.psi = kalman_filter.X[4];
-      stateSetNedToBodyEulers_f(&attitude);
+      stateSetNedToBodyEulers_f(MODULE_AHRS_FLOAT_DCM_ID, &attitude);
     #else
-      stateSetNedToBodyEulers_f(&ahrs_dcm.ltp_to_body_euler);
+      stateSetNedToBodyEulers_f(MODULE_AHRS_FLOAT_DCM_ID, &ahrs_dcm.ltp_to_body_euler);
     #endif
-  }
 }
 
-void ahrs_dcm_register(void)
+void ahrs_dcm_wrapper_init(void)
 {
-  ahrs_dcm_output_enabled = AHRS_DCM_OUTPUT_ENABLED;
   ahrs_dcm_init();
-  ahrs_register_impl(ahrs_dcm_enable_output);
+  if (AHRS_DCM_TYPE == AHRS_PRIMARY) {
+    ahrs_float_dcm_wrapper_enable(1);
+  } else {
+    ahrs_float_dcm_wrapper_enable(0);
+  }
 
   /*
    * Subscribe to scaled IMU measurements and attach callbacks
@@ -217,3 +208,13 @@ void ahrs_dcm_register(void)
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATE_FILTER_STATUS, send_filter_status);
 #endif
 }
+
+void ahrs_float_dcm_wrapper_enable(uint8_t enable)
+{
+  if (enable) {
+    stateSetInputFilter(STATE_INPUT_ATTITUDE, MODULE_AHRS_FLOAT_DCM_ID);
+    stateSetInputFilter(STATE_INPUT_RATES, MODULE_AHRS_FLOAT_DCM_ID);
+  }
+  ahrs_dcm_enable = enable;
+}
+

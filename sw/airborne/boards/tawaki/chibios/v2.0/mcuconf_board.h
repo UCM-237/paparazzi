@@ -123,7 +123,7 @@
 #define STM32_SW                            STM32_SW_PLL1_P_CK
 
 #if HAL_USE_RTC
-#define STM32_RTCSEL                        STM32_RTCSEL_HSE_1M_CK
+#define STM32_RTCSEL                        STM32_RTCSEL_LSI_CK
 #else
 #define STM32_RTCSEL                        STM32_RTCSEL_NOCLK
 #endif
@@ -425,7 +425,11 @@
 #else
 #define STM32_SERIAL_USE_USART3             FALSE
 #endif
-#define STM32_SERIAL_USE_UART4              FALSE
+#if USE_UART4
+#define STM32_SERIAL_USE_USART4             TRUE
+#else
+#define STM32_SERIAL_USE_USART4             FALSE
+#endif
 #define STM32_SERIAL_USE_UART5              FALSE
 #define STM32_SERIAL_USE_USART6             FALSE
 #if USE_UART7
@@ -582,5 +586,6 @@
 // #define CH_HEAP_USE_TLSF 0 // if 0 or undef, chAlloc will be used
 // #define CONSOLE_DEV_SD SD3
 
+#define HAL_USE_RTC     TRUE
 
 #endif /* MCUCONF_H */
