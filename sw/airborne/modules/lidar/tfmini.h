@@ -66,6 +66,8 @@ struct TFMiniServo {
   bool dir;
 };
 
+#define PWM2ANGLE(pwm) (((pwm) + MAX_PPRZ) * 90 / MAX_PPRZ) - 90 
+
 extern bool enable_servo;
 extern struct TFMiniServo tf_servo;
 

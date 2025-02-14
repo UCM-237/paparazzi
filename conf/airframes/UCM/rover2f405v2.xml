@@ -38,8 +38,7 @@
 
     <!-- Pos estimated with Kalman Filter -->
     <!-- <module name="ins"/>  --> 
-    <!-- <module name="ins_kf"/> -->
-    <!-- <module name="ins_ekf"/> -->
+    <!-- <module name="ins" type="kf"/> -->
     <module name="ins" type="ekf"/>
     
     <!-- Este modulo le hago un bypass cuando uso el ekf -->

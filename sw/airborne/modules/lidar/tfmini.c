@@ -42,9 +42,8 @@ struct TFMini tfmini = {
   .parse_status = TFMINI_INITIALIZE
 };
 
-bool enable_servo = false;
-#define PWM2ANGLE(pwm) (((pwm) + MAX_PPRZ) * 90 / MAX_PPRZ) - 90 
 
+bool enable_servo = false;
 struct TFMiniServo tf_servo;
 // int tfmini_servo_pos = 1500;
 
