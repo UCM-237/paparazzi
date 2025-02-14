@@ -37,7 +37,7 @@
 
 
     <!-- Pos estimated with Kalman Filter -->
-    <!-- <module name="ins"/>  --> 
+    <!--module name="ins"/--> 
     <!-- <module name="ins_kf"/> -->
     <module name="ins" type="ekf"/>
 

@@ -297,6 +297,7 @@ void sum_g1_g2(void);
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
+#if !STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE
 static void send_wls_v_stab(struct transport_tx *trans, struct link_device *dev)
 {
   send_wls_v("stab", &wls_stab_p, trans, dev); 
@@ -305,14 +306,10 @@ static void send_wls_u_stab(struct transport_tx *trans, struct link_device *dev)
 {
   send_wls_u("stab", &wls_stab_p, trans, dev); 
 }
-
+#endif
 static void send_eff_mat_g_indi(struct transport_tx *trans, struct link_device *dev)
 {
-  float zero = 0.0;
-  pprz_msg_send_EFF_MAT_G(trans, dev, AC_ID,
-                                   1, &zero,
-                                   1, &zero,
-                                   1, &zero,
+  pprz_msg_send_EFF_MAT_STAB(trans, dev, AC_ID,
                       INDI_NUM_ACT, g1g2[0],
                       INDI_NUM_ACT, g1g2[1],
                       INDI_NUM_ACT, g1g2[2],
@@ -348,23 +345,21 @@ static void send_att_full_indi(struct transport_tx *trans, struct link_device *d
   att = *stateGetNedToBodyEulers_f();
   EULERS_FLOAT_OF_BFP(att_sp, stab_att_sp_euler);
 #endif
+  float temp_att[3] = {att.phi, att.theta, att.psi};
+  float temp_att_ref[3] = {att_sp.phi, att_sp.theta, att_sp.psi};
+  float temp_rate[3] = {body_rates->p, body_rates->q, body_rates->r};
+  float temp_rate_ref[3] = {angular_rate_ref.p, angular_rate_ref.q, angular_rate_ref.r};
+  float temp_ang_acc_ref[3] = {angular_accel_ref.p, angular_accel_ref.q, angular_accel_ref.r};
   pprz_msg_send_STAB_ATTITUDE(trans, dev, AC_ID,
-                                      &att.phi, &att.theta, &att.psi,           // att
-                                      &att_sp.phi, &att_sp.theta, &att_sp.psi,  // att.ref
-                                      &body_rates->p,           // rate
-                                      &body_rates->q,
-                                      &body_rates->r,
-                                      &angular_rate_ref.p,      // rate.ref
-                                      &angular_rate_ref.q,
-                                      &angular_rate_ref.r,
-                                      &angular_acceleration[0], // ang.acc
-                                      &angular_acceleration[1],
-                                      &angular_acceleration[2],
-                                      &angular_accel_ref.p,     // ang.acc.ref
-                                      &angular_accel_ref.q,
-                                      &angular_accel_ref.r,
-                                      1, &zero,                 // inputs
-                                      INDI_NUM_ACT, indi_u);    // out
+                                      1, &zero,                    // att des
+                                      3, temp_att,                 // att
+                                      3, temp_att_ref,             // att ref
+                                      3, temp_rate,                // rate
+                                      3, temp_rate_ref,            // rate ref
+                                      3, angular_acceleration,     // ang.acc = rate.diff
+                                      3, temp_ang_acc_ref,         // ang.acc.ref
+                                      1, &zero,                    // jerk ref
+                                      1, &zero);                   // u
 }
 #endif
 
@@ -429,11 +424,13 @@ void stabilization_indi_init(void)
   }
 
 #if PERIODIC_TELEMETRY
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_EFF_MAT_G, send_eff_mat_g_indi);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_EFF_MAT_STAB, send_eff_mat_g_indi);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_AHRS_REF_QUAT, send_ahrs_ref_quat);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STAB_ATTITUDE, send_att_full_indi);
+  #if !STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_WLS_V, send_wls_v_stab);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_WLS_U, send_wls_u_stab);
+  #endif
 #endif
 }
 
@@ -731,6 +728,7 @@ void stabilization_indi_rate_run(bool in_flight, struct StabilizationSetpoint *s
 /**
  * Function that sets the u_min, u_max and u_pref if function not elsewhere defined
  */
+#if !STABILIZATION_INDI_ALLOCATION_PSEUDO_INVERSE
 void WEAK stabilization_indi_set_wls_settings(void)
 {
   // Calculate the min and max increments
@@ -754,6 +752,7 @@ void WEAK stabilization_indi_set_wls_settings(void)
 #endif
   }
 }
+#endif
 
 /**
  * @param in_flight enable integrator only in flight
