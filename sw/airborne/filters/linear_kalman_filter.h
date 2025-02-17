@@ -30,7 +30,7 @@
 
 // maximum size for the state vector
 #ifndef KF_MAX_STATE_SIZE
-#define KF_MAX_STATE_SIZE 6
+#define KF_MAX_STATE_SIZE 4
 #endif
 
 // maximum size for the command vector
@@ -40,7 +40,7 @@
 
 // maximum size for the measurement vector
 #ifndef KF_MAX_MEAS_SIZE
-#define KF_MAX_MEAS_SIZE 6
+#define KF_MAX_MEAS_SIZE 4
 #endif
 
 struct linear_kalman_filter {
@@ -53,6 +53,10 @@ struct linear_kalman_filter {
   float R[KF_MAX_MEAS_SIZE][KF_MAX_MEAS_SIZE];    ///< measurement covariance noise
 
   float X[KF_MAX_STATE_SIZE];                     ///< estimated state X
+
+  // Esto mas adelante estaria bien borrarlo para evitar gastar memoria a lo tonto
+  // Ahora esta para depurar
+  float K2[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  // Esta es para probar
 
   uint8_t n;  ///< state vector size (<= KF_MAX_STATE_SIZE)
   uint8_t c;  ///< command vector size (<= KF_MAX_CMD_SIZE)

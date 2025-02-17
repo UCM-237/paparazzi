@@ -114,12 +114,13 @@
     </message>
 
     <message name="ENERGY" id="12">
-      <field name="throttle" type="uint8" unit="%">Throttle setting</field>
-      <field name="voltage"  type="float" unit="V">Input battery voltage</field>
-      <field name="current"  type="float" unit="A">Current consumption</field>
-      <field name="power"    type="float" unit="W">Electrical power</field>
-      <field name="charge"   type="float" unit="Ah">Accumulated consumed charge</field>
-      <field name="energy"   type="float" unit="Wh">Accumulated consumed energy</field>
+      <field name="throttle"  type="uint8" unit="%">Throttle setting</field>
+      <field name="voltage"   type="float" unit="V">Input battery voltage</field>
+      <field name="current"   type="float" unit="A">Current consumption</field>
+      <field name="power"     type="float" unit="W">Electrical power</field>
+      <field name="avg_power" type="float" unit="W">Average electrical power</field>
+      <field name="charge"    type="float" unit="Ah">Accumulated consumed charge</field>
+      <field name="energy"    type="float" unit="Wh">Accumulated consumed energy</field>
     </message>
 
     <message name="DEBUG_MCU_LINK" id="13">
@@ -267,7 +268,7 @@
       <field name="downlink_ovrn" type="uint8"/>
     </message>
 
-<!-- Current value of one variable from the dl_settings (airframe.xml) -->
+    <!-- Current value of one variable from the dl_settings (airframe.xml) -->
     <message name="DL_VALUE" id="31">
       <field name="index" type="uint8"/>
       <field name="value" type="float"/>
@@ -434,7 +435,7 @@
       <field name="cycle_time" type="uint32" unit="ms"/>
     </message>
 
-  <!-- Duplicate of RC_3CH defined in datalink section? -->
+    <!-- Duplicate of RC_3CH defined in datalink section? -->
     <message name="RC_3CH_" id="51">
       <field name="throttle_mode" type="uint8" unit="byte_mask"/>
       <field name="roll"  type="int8"/>
@@ -936,22 +937,22 @@
       <field name="current" type="float" unit="A"/>
     </message>
 
-  <!-- Only used in airborne/test/mcu_periph/test_adc.c -->
+    <!-- Only used in airborne/test/mcu_periph/test_adc.c -->
     <message name="ADC" id="104">
       <field name="mcu" type="uint8" values="FBW|AP"/>
       <field name="values" type="uint16[]" unit="none"/>
     </message>
 
-    <message name="ACTUATORS" id="105">
+    <message name="ACTUATORS_RAW" id="105">
       <field name="values" type="int16[]" unit="none"/>
     </message>
-
+ 
     <message name="BLUEGIGA" id="106">
       <field name="data_rate" type="uint32" unit="bytes/s"/>
       <field name="A2A_msg_rate" type="uint32"/>
     </message>
 
-  <!-- Not used yet? -->
+    <!-- Not used yet? -->
     <message name="THROTTLE_CURVE" id="107">
       <field name="curve" type="uint8"/>
       <field name="throttle" type="uint16"/>
@@ -1485,7 +1486,21 @@
       <field name="comp_id" type="uint8" values="NONE|GENERIC|IR|ICQ|ICE|FC|DCM|FINV|MLKF|GX3|CHIMU|VN"/>
     </message>
 
-    <!-- 158 is free -->
+    <message name="STATIC_CONTROL" id="158">
+      <field name="active"  type="uint8" values="INACTIVE|ACTIVE"/>
+      <field name="dist_WP" type="float" />
+      <field name="pt_bz"  type="uint8"/>
+      <field name="pxd" type="float"/>
+      <field name="pyd" type="float"/>
+      <field name="bz0x"  type="float"/>
+      <field name="bz0y"  type="float"/>
+      <field name="bz4x"  type="float"/>
+      <field name="bz4y"  type="float"/>
+      <field name="bz7x"  type="float"/>
+      <field name="bz7y"  type="float"/>
+      <field name="bz11x"  type="float"/>
+      <field name="bz11y"  type="float"/> 	      
+    </message>
 
     <message name="ROTORCRAFT_NAV_STATUS" id="159">
       <field name="block_time" type="uint16" unit="s"/>
@@ -1629,7 +1644,11 @@
       <field name="mag_y" type="float" unit="mGauss">Magnetometer y-bias in mGauss</field>
       <field name="mag_z" type="float" unit="mGauss">Magnetometer z-bias in mGauss</field>
     </message>
-    <!-- 172 is free -->
+
+    <message name="ACTUATORS" id="172">
+      <field name="values" type="int16[]" unit="none"/>
+    </message>
+
 
     <message name="AHRS_EULER" id="173">
       <field name="phi"   type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578" />
@@ -1638,25 +1657,25 @@
       <field name="comp_id" type="uint8" values="NONE|GENERIC|IR|ICQ|ICE|FC|DCM|FINV|MLKF|GX3|CHIMU|VN"/>
     </message>
 
-  <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
+    <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
     <message name="AHRS_MEASUREMENT_EULER" id="174">
       <field name="phi"   type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578" />
       <field name="theta" type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578" />
       <field name="psi"   type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578" />
     </message>
 
-  <!-- Do we need this? Only in airborne/firmwares/wind_tunnel/main_mb.c-->
+    <!-- Do we need this? Only in airborne/firmwares/wind_tunnel/main_mb.c-->
     <message name="WT" id="175">
       <field name="rpm"      type="float"/>
     </message>
 
-  <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
+    <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
     <message name="CSC_CAN_DEBUG" id="176">
       <field name="err_nb"      type="uint32"/>
       <field name="err_code"    type="uint32"/>
     </message>
 
-  <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log and airborne/test/test_math_trig_compressed.c-->
+    <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log and airborne/test/test_math_trig_compressed.c-->
     <message name="CSC_CAN_MSG" id="177">
       <field name="frame"   type="uint32"/>
       <field name="id"      type="uint32"/>
@@ -1685,14 +1704,14 @@
       <field name="checksum"   type="uint8"/>
     </message>
 
-  <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
+    <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
     <message name="FMS_TIME" id="180">
       <field name="tv_sec"   type="uint32"/>
       <field name="tv_nsec"  type="uint32"/>
       <field name="delay_ns" type="uint32"/>
     </message>
 
-  <!-- Rover telemetry -->
+    <!-- Rover telemetry -->
     <message name="ROVER_CTRL" id="181">
     	<description>
     		Setpoints of the rover, speed error,  throttle_command, PI action and speed measured
@@ -1758,7 +1777,15 @@
       <field name="mz"    type="float" />
     </message>
 
-    <!-- 194 is free -->
+    <message name="KALMAN_FILTER_STATUS" id="194">
+      <!-- <field name="X"       type="float[5]" format="%.2f"/> -->
+      <field name="P_0"     type="float[5]" format="%.2f"/>
+      <field name="P_1"     type="float[5]" format="%.2f"/>
+      <field name="P_2"     type="float[5]" format="%.2f"/>
+      <field name="P_3"     type="float[5]" format="%.2f"/>
+      <field name="P_4"     type="float[5]" format="%.2f"/>
+    </message>
+
     <!-- 195 is free -->
     <!-- 196 is free -->
 
@@ -1866,14 +1893,14 @@
       <field name="bus_number" type="uint8"/>
     </message>
 
-  <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
+    <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
     <message name="IMU_GYRO_LP" id="209">
       <field name="gp" type="float" unit="rad/s"/>
       <field name="gq" type="float" unit="rad/s"/>
       <field name="gr" type="float" unit="rad/s"/>
     </message>
 
-  <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
+    <!-- Do we need this? Used only in misc/log_parser/09_05_13__14_38_13.log -->
     <message name="IMU_PRESSURE" id="210">
       <field name="p" type="float" unit="pascal"/>
     </message>
@@ -2106,6 +2133,7 @@
 
     <message name="LIDAR" id="234">
       <field name="distance" type="float" unit="m"/>
+      <field name="angle" type="float" unit="º"/>
       <field name="status" type="uint8" values="INIT|REQ|READ|PARSE"/>
       <field name="trans_status" type="uint8" values="Pending|Running|Success|Failed|Done"/>
     </message>
@@ -2265,22 +2293,19 @@
       <field name="G2" type="float[]" unit="none"/>
     </message>
 
-    <message name="GPS_RTK" id="251">
-      <field name="iTOW"          type="uint32" unit="ms"/>
-      <field name="refStationId"  type="uint16"/>
-      <field name="relPosN"       type="int32" unit="cm"/>
-      <field name="relPosE"       type="int32" unit="cm"/>
-      <field name="relPosD"       type="int32" unit="cm"/>
-      <field name="relPosHPN"     type="int8"  unit="mm"/>
-      <field name="relPosHPE"     type="int8"  unit="mm"/>
-      <field name="relPosHPD"     type="int8"  unit="mm"/>
-      <field name="accN"          type="uint32" unit="mm"/>
-      <field name="accE"          type="uint32" unit="mm"/>
-      <field name="accD"          type="uint32" unit="mm"/>
-      <field name="carrSoln"      type="uint8"  values="NONE|RTK FLOAT|RTK FIX"/>
-      <field name="relPosValid"   type="uint8"  values="FALSE|TRUE"/>
-      <field name="diffSoln"      type="uint8"  values="NONE|DGPS"/>
-      <field name="gnssFixOK"           type="uint8" values="NONE|3D"/>
+    <message name="GPS_RELPOS" id="251">
+      <field name="reference_id"  type="uint16">Reference station identification</field>
+      <field name="tow"           type="uint32" unit="ms">Time of week (GPS)</field>
+      <field name="posN"          type="double" unit="m">Relative position North to the reference station</field>
+      <field name="posE"          type="double" unit="m">Relative position East to the reference station</field>
+      <field name="posD"          type="double" unit="m">Relative position Down to the reference station</field>
+      <field name="distance"      type="double" unit="m">Relative distance to the reference station</field>
+      <field name="heading"       type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578">Relative heading to the reference station</field>
+      <field name="posAccN"       type="float" unit="m">Position accuracy North</field>
+      <field name="posAccE"       type="float" unit="m">Position accuracy East</field>
+      <field name="posAccD"       type="float" unit="m">Position accuracy Down</field>
+      <field name="distanceAcc"   type="float" unit="m">Distance accuracy</field>
+      <field name="headingAcc"    type="float" unit="rad" alt_unit="deg" alt_unit_coef="57.29578">Heading accuracy</field>
     </message>
 
     <message name="GPS_SMALL" id="252">

@@ -33,6 +33,7 @@
 
 // include mavlink headers, but ignore some warnings
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #include "mavlink/paparazzi/mavlink.h"
 #pragma GCC diagnostic pop
@@ -92,9 +93,9 @@ void mavlink_mission_message_handler(const mavlink_message_t *msg)
 void mavlink_mission_periodic(void)
 {
   // FIXME: really use the SCRIPT_ITEM message to indicate current block?
-  if (mission_mgr.current_block != nav_block) {
-    mission_mgr.current_block = nav_block;
-    mavlink_msg_script_current_send(MAVLINK_COMM_0, nav_block);
+  if (mission_mgr.current_block != get_nav_block()) {
+    mission_mgr.current_block = get_nav_block();
+    mavlink_msg_script_current_send(MAVLINK_COMM_0, get_nav_block());
     MAVLinkSendMessage();
   }
   // check if we had a timeout on a transaction
@@ -109,7 +110,7 @@ void mavlink_mission_periodic(void)
 void mavlink_send_mission_ack(void)
 {
   mavlink_msg_mission_ack_send(MAVLINK_COMM_0,  mission_mgr.rem_sysid, mission_mgr.rem_compid,
-                               MAV_MISSION_ACCEPTED);
+                               MAV_MISSION_ACCEPTED, MAV_MISSION_TYPE_MISSION);
   MAVLinkSendMessage();
   MAVLINK_DEBUG("Sent MISSION_ACK message\n");
 }

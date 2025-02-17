@@ -28,8 +28,10 @@
 
 // include mavlink headers, but ignore some warnings
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 #pragma GCC diagnostic ignored "-Wswitch-default"
-#include "mavlink/paparazzi/mavlink.h"
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#include "mavlink/ardupilotmega/mavlink.h"
 #pragma GCC diagnostic pop
 
 #if PERIODIC_TELEMETRY
@@ -44,6 +46,7 @@
 #include "generated/airframe.h"
 #include "generated/modules.h"
 #include "generated/settings.h"
+#include "generated/flight_plan.h"
 
 #include "mcu_periph/sys_time.h"
 #include "modules/energy/electrical.h"
@@ -54,6 +57,11 @@
 
 #if defined RADIO_CONTROL
 #include "modules/radio_control/radio_control.h"
+#endif
+
+// Change the autopilot identification code: by default identify as PPZ autopilot: alternatively as MAV_AUTOPILOT_ARDUPILOTMEGA
+#ifndef MAV_AUTOPILOT_ID
+#define MAV_AUTOPILOT_ID MAV_AUTOPILOT_PPZ
 #endif
 
 #include "modules/datalink/missionlib/mission_manager.h"
@@ -74,6 +82,7 @@ mavlink_mission_mgr mission_mgr;
 
 void mavlink_common_message_handler(const mavlink_message_t *msg);
 
+static void mavlink_send_extended_sys_state(struct transport_tx *trans, struct link_device *dev);
 static void mavlink_send_heartbeat(struct transport_tx *trans, struct link_device *dev);
 static void mavlink_send_sys_status(struct transport_tx *trans, struct link_device *dev);
 static void mavlink_send_system_time(struct transport_tx *trans, struct link_device *dev);
@@ -107,7 +116,7 @@ struct periodic_telemetry mavlink_telemetry = { TELEMETRY_MAVLINK_NB_MSG, mavlin
 void mavlink_init(void)
 {
   mavlink_system.sysid = MAVLINK_SYSID; // System ID, 1-255
-  mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER; // Component/Subsystem ID, 1-255
+  mavlink_system.compid = MAV_COMP_ID_AUTOPILOT1; // Component/Subsystem ID, 1-255
 
   get_pprz_git_version(custom_version);
 
@@ -116,6 +125,7 @@ void mavlink_init(void)
 #if PERIODIC_TELEMETRY && defined TELEMETRY_MAVLINK_NB_MSG
   register_periodic_telemetry(&mavlink_telemetry, MAVLINK_MSG_ID_HEARTBEAT, mavlink_send_heartbeat);
   register_periodic_telemetry(&mavlink_telemetry, MAVLINK_MSG_ID_SYS_STATUS, mavlink_send_sys_status);
+  register_periodic_telemetry(&mavlink_telemetry, MAVLINK_MSG_ID_EXTENDED_SYS_STATE, mavlink_send_extended_sys_state);
   register_periodic_telemetry(&mavlink_telemetry, MAVLINK_MSG_ID_SYSTEM_TIME, mavlink_send_system_time);
   register_periodic_telemetry(&mavlink_telemetry, MAVLINK_MSG_ID_ATTITUDE, mavlink_send_attitude);
   register_periodic_telemetry(&mavlink_telemetry, MAVLINK_MSG_ID_ATTITUDE_QUATERNION, mavlink_send_attitude_quaternion);
@@ -222,6 +232,11 @@ void mavlink_event(void)
 void mavlink_common_message_handler(const mavlink_message_t *msg)
 {
   switch (msg->msgid) {
+    case MAVLINK_MSG_ID_PLAY_TUNE:
+    case MAVLINK_MSG_ID_PLAY_TUNE_V2:
+        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("PLAY TUNE"), "PLAY TUNE");
+      break;
+
     case MAVLINK_MSG_ID_HEARTBEAT:
       break;
 
@@ -244,7 +259,8 @@ void mavlink_common_message_handler(const mavlink_message_t *msg)
       int8_t roll = -(cmd.chan1_raw - 1500) * 255 / 1100 / 2;
       int8_t pitch = -(cmd.chan2_raw - 1500) * 255 / 1100 / 2;
       int8_t yaw = -(cmd.chan4_raw - 1500) * 255 / 1100;
-      parse_rc_4ch_datalink(0, thrust, roll, pitch, yaw);
+      int8_t temp_rc[4] = {roll, pitch, yaw, thrust};
+      parse_rc_up_datalink(4, temp_rc);
       //printf("RECEIVED: RC Channel Override for: %d/%d: throttle: %d; roll: %d; pitch: %d; yaw: %d;\r\n",
       // cmd.target_system, cmd.target_component, thrust, roll, pitch, yaw);
 #endif
@@ -318,6 +334,18 @@ void mavlink_common_message_handler(const mavlink_message_t *msg)
       if ((uint8_t) cmd.target_system == AC_ID) {
         uint8_t result = MAV_RESULT_UNSUPPORTED;
         switch (cmd.command) {
+
+          case MAV_CMD_SET_MESSAGE_INTERVAL:
+          case MAV_CMD_DO_SET_MODE: {
+            char error_msg[200];
+            int rc = snprintf(error_msg, 200, "Do set %d: %0.0f %0.0f (%d)", cmd.command, cmd.param1, cmd.param2, cmd.target_system);
+            if (rc > 0) {
+              DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, rc, error_msg);
+            }
+            result = MAV_RESULT_ACCEPTED;
+            break;
+          }
+
           case MAV_CMD_NAV_GUIDED_ENABLE:
             MAVLINK_DEBUG("got cmd NAV_GUIDED_ENABLE: %f\n", cmd.param1);
             result = MAV_RESULT_FAILED;
@@ -352,11 +380,45 @@ void mavlink_common_message_handler(const mavlink_message_t *msg)
             break;
         }
         // confirm command with result
-        mavlink_msg_command_ack_send(MAVLINK_COMM_0, cmd.command, result);
+        mavlink_msg_command_ack_send(MAVLINK_COMM_0, cmd.command, result, 0, UINT8_MAX, msg->sysid, msg->compid);
         MAVLinkSendMessage();
       }
       break;
     }
+
+#ifdef WP_ML_global_target
+    case MAVLINK_MSG_ID_SET_POSITION_TARGET_GLOBAL_INT: {
+      mavlink_set_position_target_global_int_t target;
+      mavlink_msg_set_position_target_global_int_decode(msg, &target);
+
+      // Check if this message is for this system
+      //if (target.target_system == AC_ID) {
+        MAVLINK_DEBUG("SET_POSITION_TARGET_GLOBAL_INT, type_mask: %d, frame: %d\n", target.type_mask, target.coordinate_frame);
+        /* if position and yaw bits are not set to ignored, use only position for now */
+        if (target.coordinate_frame == MAV_FRAME_GLOBAL || target.coordinate_frame == MAV_FRAME_GLOBAL_INT) {
+          MAVLINK_DEBUG("set position target, frame MAV_FRAME_GLOBAL %f \n", target.alt);
+          struct NedCoor_i ned;
+          //struct NedCoor_f ned_f;
+          struct LlaCoor_i lla;
+          lla.lat = target.lat_int;
+          lla.lon = target.lon_int;
+          lla.alt = MM_OF_M(target.alt);
+          ned_of_lla_point_i(&ned, stateGetNedOrigin_i(), &lla);
+          //NED_FLOAT_OF_BFP(ned_f, ned);
+          //autopilot_guided_goto_ned(ned_f.x, ned_f.y, ned_f.z, target.yaw);
+          waypoint_set_latlon(WP_ML_global_target, &lla);
+          waypoint_set_alt(WP_ML_global_target, target.alt);
+
+          // Downlink the new waypoint
+          uint8_t wp_id = WP_ML_global_target;
+          int32_t hmsl = lla.alt - stateGetNedOrigin_i()->alt + stateGetHmslOrigin_i();
+          DOWNLINK_SEND_WP_MOVED_LLA(DefaultChannel, DefaultDevice, &wp_id,
+                                    &lla.lat, &lla.lon, &hmsl);
+
+        }
+      break;
+    }
+#endif
 
     case MAVLINK_MSG_ID_SET_MODE: {
       mavlink_set_mode_t mode;
@@ -437,7 +499,8 @@ void mavlink_common_message_handler(const mavlink_message_t *msg)
 static void mavlink_send_heartbeat(struct transport_tx *trans, struct link_device *dev)
 {
   uint8_t mav_state = MAV_STATE_CALIBRATING;
-  uint8_t mav_mode = 0;
+  uint8_t mav_mode = MAV_MODE_FLAG_CUSTOM_MODE_ENABLED; // Ardupilot custom mode enabled
+  uint32_t custom_mode = 0;
 #if defined(FIXEDWING_FIRMWARE)
   uint8_t mav_type = MAV_TYPE_FIXED_WING;
   switch (autopilot_get_mode()) {
@@ -480,9 +543,11 @@ static void mavlink_send_heartbeat(struct transport_tx *trans, struct link_devic
       break;
     case AP_MODE_NAV:
       mav_mode |= MAV_MODE_FLAG_AUTO_ENABLED;
+      custom_mode = PLANE_MODE_GUIDED;
       break;
     case AP_MODE_GUIDED:
       mav_mode = MAV_MODE_FLAG_GUIDED_ENABLED;
+      custom_mode = PLANE_MODE_GUIDED;
     default:
       break;
   }
@@ -499,10 +564,19 @@ static void mavlink_send_heartbeat(struct transport_tx *trans, struct link_devic
   }
   mavlink_msg_heartbeat_send(MAVLINK_COMM_0,
                              mav_type,
-                             MAV_AUTOPILOT_PPZ,
+                             MAV_AUTOPILOT_ID,
                              mav_mode,
-                             0, // custom_mode
+                             custom_mode,
                              mav_state);
+  MAVLinkSendMessage();
+}
+
+/*
+ * Send extended system state
+*/
+static void mavlink_send_extended_sys_state(struct transport_tx *trans, struct link_device *dev) {
+  uint8_t landed_state = autopilot_in_flight()? MAV_LANDED_STATE_IN_AIR : MAV_LANDED_STATE_ON_GROUND;
+  mavlink_msg_extended_sys_state_send(MAVLINK_COMM_0, MAV_VTOL_STATE_UNDEFINED, landed_state);
   MAVLinkSendMessage();
 }
 
@@ -527,7 +601,10 @@ static void mavlink_send_sys_status(struct transport_tx *trans, struct link_devi
                               0,      // Autopilot specific error 1
                               0,      // Autopilot specific error 2
                               0,      // Autopilot specific error 3
-                              0);     // Autopilot specific error 4
+                              0,      // Autopilot specific error 4
+                              0,
+                              0,
+                              0);     
   MAVLinkSendMessage();
 }
 
@@ -578,13 +655,14 @@ static void mavlink_send_global_position_int(struct transport_tx *trans, struct 
     heading += 360;
   }
   uint16_t compass_heading = heading * 100;
-  int32_t relative_alt = stateGetPositionLla_i()->alt - state.ned_origin_f.hmsl;
+  int32_t relative_alt = stateGetPositionLla_i()->alt - stateGetLlaOrigin_i().alt;
+  int32_t hmsl_alt = stateGetHmslOrigin_i() - stateGetNedOrigin_i()->alt;
   /// TODO: check/ask what coordinate system vel is supposed to be in, not clear from docs
   mavlink_msg_global_position_int_send(MAVLINK_COMM_0,
                                        get_sys_time_msec(),
                                        stateGetPositionLla_i()->lat,
                                        stateGetPositionLla_i()->lon,
-                                       stateGetPositionLla_i()->alt,
+                                       stateGetPositionLla_i()->alt + hmsl_alt,
                                        relative_alt,
                                        stateGetSpeedNed_f()->x * 100,
                                        stateGetSpeedNed_f()->y * 100,
@@ -597,9 +675,10 @@ static void mavlink_send_gps_global_origin(struct transport_tx *trans, struct li
 {
   if (state.ned_initialized_i) {
     mavlink_msg_gps_global_origin_send(MAVLINK_COMM_0,
-                                       state.ned_origin_i.lla.lat,
-                                       state.ned_origin_i.lla.lon,
-                                       state.ned_origin_i.hmsl);
+                                       stateGetLlaOrigin_i().lat,
+                                       stateGetLlaOrigin_i().lon,
+                                       stateGetHmslOrigin_i(),
+                                       get_sys_time_usec());
     MAVLinkSendMessage();
   }
 }
@@ -631,7 +710,7 @@ static void mavlink_send_autopilot_version(struct transport_tx *trans, struct li
   static uint64_t sha;
   get_pprz_git_version((uint8_t *)&sha);
   mavlink_msg_autopilot_version_send(MAVLINK_COMM_0,
-                                     0, //uint64_t capabilities,
+                                     18446744073709551615U, //uint64_t capabilities,
                                      ver, //uint32_t flight_sw_version,
                                      0, //uint32_t middleware_sw_version,
                                      0, //uint32_t os_sw_version,
@@ -641,13 +720,14 @@ static void mavlink_send_autopilot_version(struct transport_tx *trans, struct li
                                      0, //const uint8_t *os_custom_version,
                                      0, //uint16_t vendor_id,
                                      0, //uint16_t product_id,
-                                     sha //uint64_t uid
-                                    );
+                                     sha, //uint64_t uid
+                                     0);
   MAVLinkSendMessage();
 }
 
 static void mavlink_send_attitude_quaternion(struct transport_tx *trans, struct link_device *dev)
 {
+  float repr_offset_q[4] = {0, 0, 0, 0};
   mavlink_msg_attitude_quaternion_send(MAVLINK_COMM_0,
                                        get_sys_time_msec(),
                                        stateGetNedToBodyQuat_f()->qi,
@@ -656,7 +736,8 @@ static void mavlink_send_attitude_quaternion(struct transport_tx *trans, struct 
                                        stateGetNedToBodyQuat_f()->qz,
                                        stateGetBodyRates_f()->p,
                                        stateGetBodyRates_f()->q,
-                                       stateGetBodyRates_f()->r);
+                                       stateGetBodyRates_f()->r,
+                                       repr_offset_q);
   MAVLinkSendMessage();
 }
 
@@ -676,12 +757,18 @@ static void mavlink_send_gps_raw_int(struct transport_tx *trans, struct link_dev
                                gps.fix,
                                gps.lla_pos.lat,
                                gps.lla_pos.lon,
-                               gps.lla_pos.alt,
+                               gps.hmsl,
                                gps.pdop,
                                UINT16_MAX, // VDOP
                                gps.gspeed,
                                course,
-                               gps.num_sv);
+                               gps.num_sv,
+                               gps.lla_pos.alt,
+                               gps.hacc,
+                               gps.vacc,
+                               gps.sacc,
+                               0,
+                               0);
   MAVLinkSendMessage();
 #endif
 }
@@ -771,7 +858,7 @@ static void mavlink_send_rc_channels(struct transport_tx *trans, struct link_dev
 #include "modules/energy/electrical.h"
 static void mavlink_send_battery_status(struct transport_tx *trans, struct link_device *dev)
 {
-  static uint16_t voltages[10];
+  static uint16_t voltages[14] = {0};
   // we simply only set one cell for now
   voltages[0] = electrical.vsupply * 1000.f;  // convert to mV
   /// TODO: check what all these fields are supposed to represent
@@ -784,7 +871,12 @@ static void mavlink_send_battery_status(struct transport_tx *trans, struct link_
                                   electrical.current * 100.f, // convert to deciA
                                   electrical.charge * 1000.f, // convert to mAh
                                   electrical.energy * 36, // convert to hecto Joule
-                                  -1); // remaining percentage not estimated
+                                  -1, // remaining percentage not estimated
+                                  0,
+                                  MAV_BATTERY_CHARGE_STATE_UNDEFINED,
+                                  &voltages[10],
+                                  MAV_BATTERY_MODE_UNKNOWN,
+                                  0);
   MAVLinkSendMessage();
 }
 
@@ -804,12 +896,13 @@ static void mavlink_send_vfr_hud(struct transport_tx *trans, struct link_device 
 #elif defined COMMAND_THROTTLE
   throttle = commands[COMMAND_THROTTLE] / (MAX_PPRZ / 100);
 #endif
+  float hmsl_alt = stateGetHmslOrigin_f() - stateGetLlaOrigin_f().alt;
   mavlink_msg_vfr_hud_send(MAVLINK_COMM_0,
-                           stateGetAirspeed_f(),
+                           Max(0,stateGetAirspeed_f()),
                            stateGetHorizontalSpeedNorm_f(), // groundspeed
                            heading,
                            throttle,
-                           stateGetPositionLla_f()->alt, // altitude, FIXME: should be MSL
+                           stateGetPositionLla_f()->alt + hmsl_alt,
                            stateGetSpeedNed_f()->z); // climb rate
   MAVLinkSendMessage();
 }

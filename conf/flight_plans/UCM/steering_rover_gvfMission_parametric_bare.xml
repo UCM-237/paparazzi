@@ -19,7 +19,7 @@
     <waypoint lat="40.4509759" lon="-3.7272660" name="BZ6"/>
     <waypoint lat="40.4509199" lon="-3.7272750" name="BZ7"/>
     <waypoint lat="40.4508780" lon="-3.7272390" name="BZ8"/>
-    <waypoint lat="40.450783" lon="-3.727179" name="BZ9"/>
+    <waypoint lat="40.4507830" lon="-3.7271790" name="BZ9"/>
     <waypoint lat="40.4507759" lon="-3.7271630" name="BZ10"/>
     <waypoint lat="40.4507369" lon="-3.7271539" name="BZ11"/>
     <waypoint lat="40.4507289" lon="-3.7271550" name="BZ12"/>
@@ -31,6 +31,13 @@
     <waypoint name="_N2" x="60" y="-60"/>
     <waypoint name="_N3" x="-60" y="-60"/>
     <waypoint name="_N4" x="-60" y="60"/>
+    <waypoint name="L0" x="0" y="10"/>
+    <waypoint name="L1" x="0" y="15"/>
+    <waypoint name="L2" x="0" y="20"/>
+    <waypoint name="L3" x="-5" y="20"/>
+    <waypoint name="L4" x="-5" y="15"/>
+    <waypoint name="L5" x="-5" y="10"/>
+    <waypoint name="L6" x="-5" y="5"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">
@@ -93,8 +100,17 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_quintic_bezier_bare">
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_control">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun=" increase_bz_pointer()"/>
+      <call fun="rover_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)"deroute="gvf_quintic_bezier_bare"/>
     </block>
   </blocks>
 </flight_plan>

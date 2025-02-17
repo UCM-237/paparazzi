@@ -1,0 +1,45 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="ins_ekf" dir="ins" task="estimation">
+  <doc>
+    <description>
+      INS with Extended Kalman Filter
+    </description>
+    <define name="USE_INS_NAV_INIT" value="TRUE|FALSE" description="Initialize the origin of the local coordinate system from flight plan. (Default: TRUE)"/>
+    <define name="INS_INT_BARO_ID" value="BARO_BOARD_SENDER_ID" description="The ABI sender id of the baro to use"/>
+    <define name="INS_INT_GPS_ID" value="GPS_MULTI_ID" description="The ABI sender id of the GPS to use"/>
+    <define name="INS_INT_IMU_ID" value="ABI_BROADCAST" description="The ABI sender id of the IMU to use"/>
+    <define name="INS_INT_VEL_ID" value="ABI_BROADCAST" description="The ABI sender id of the VELOCITY_ESTIMATE (e.g. from opticflow"/>
+    <define name="USE_EKF_FILTER" value="TRUE|FALSE" description="Bypass the AHRS module and send the info to the EKF Filter"/>
+  </doc>
+
+  <settings name="KALMAN_FILTER">
+    <dl_settings>
+      <dl_settings NAME="KALMAN_FILTER">
+        <dl_setting var="enable_ekf_filter" min="0" step="1" max="1" values="FALSE|TRUE"/>
+        <dl_setting MAX="100" MIN="0.01" STEP="0.01" VAR="kalman_variance.imu" shortname="R_IMU*1E-5" param="R2_IMU"/>
+        <dl_setting MAX="100" MIN="0.1" STEP="1" VAR="kalman_variance.pos" shortname="RP_GPS*1E-3" param="RP_GPS"/>
+        <dl_setting MAX="100" MIN="0.1" STEP="1" VAR="kalman_variance.vel" shortname="RV_GPS*1E-3" param="RV_GPS"/>
+        <dl_setting MAX="100" MIN="0.1" STEP="1" VAR="kalman_variance.att" shortname="RT*1E-3" param="RT"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+
+  <dep>
+    <depends>@imu,@gps|@position|@velocity</depends>
+    <provides>ins</provides>
+  </dep>
+  <header>
+    <file name="ins_int.h" dir="modules/ins"/>
+  </header>
+  <init fun="ins_int_init()"/>
+  <makefile target="ap|nps">
+    <define name="INS_TYPE_H" value="modules/ins/ins_int.h" type="string"/>
+    <define name="USE_EKF_FILTER" value="TRUE"/>
+    <file name="ins.c"/>
+    <file name="ins_ekf.c"/>
+    <file name="extended_kalman_filter.c" dir="filters"/>
+    <!-- <file name="vf_float.c"/> -->
+    <test firmware="rotorcraft"/>
+  </makefile>
+</module>

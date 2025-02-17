@@ -655,6 +655,22 @@ static inline void float_mat_zero(float **a, int m, int n)
   }
 }
 
+/** a = 1 */
+static inline void float_mat_identity(float **a, int m, int n)
+{
+  int i, j;
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) {
+      if (i == j){
+        a[i][j] = 1.;
+      } 
+      else{ 
+        a[i][j] = 0.;
+      }
+    }  
+  }
+}
+
 /** a = b */
 static inline void float_mat_copy(float **a, float **b, int m, int n)
 {
@@ -881,9 +897,73 @@ static inline void float_mat_diagonal_scal(float **o, float v, int n)
   }
 }
 
+
+/** Divide a matrix by a scalar */
+static inline void float_mat_div_scalar(float **o, float **a, float scalar, int m, int n)
+{
+   int i, j;
+   for (i = 0; i < m; i++) {
+     for (j = 0; j < n; j++) {
+         o[i][j] = a[i][j] / scalar;
+     }
+   }
+}
+
+/** Multiply a matrix by a scalar */
+static inline void float_mat_mul_scalar(float **o, float **a, float scalar, int m, int n)
+{
+   int i, j;
+   for (i = 0; i < m; i++) {
+     for (j = 0; j < n; j++) {
+         o[i][j] = a[i][j] * scalar;
+     }
+   }
+}
+
+/* Matrix determinant. Be careful, can be very slow and is not tested */
+// static inline float float_mat_det(float **mat, int n) {
+//     int i, j, k;
+//     float det = 0.0;
+
+//     if (n == 1) {
+//         return mat[0][0];
+//     }
+//     if (n == 2) {
+//         return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+//     }
+//     for (i = 0; i < n; i++) {
+//         float **submat = (float **)malloc((n - 1) * sizeof(float *));
+//         for (j = 0; j < n - 1; j++) {
+//             submat[j] = (float *)malloc((n - 1) * sizeof(float));
+//         }
+
+//         for (j = 1; j < n; j++) {
+//             int submat_col = 0;
+//             for (k = 0; k < n; k++) {
+//                 if (k == i) continue;
+//                 submat[j - 1][submat_col++] = mat[j][k];
+//             }
+//         }
+
+//         float sub_det = float_mat_det(submat, n - 1);
+//         det += (i % 2 == 0 ? 1 : -1) * mat[0][i] * sub_det;
+
+//         for (j = 0; j < n - 1; j++) {
+//             free(submat[j]);
+//         }
+//         free(submat);
+//     }
+//     return det;
+// }
+
+
+
+
 extern bool float_mat_inv_2d(float inv_out[4], float mat_in[4]);
 extern void float_mat2_mult(struct FloatVect2 *vect_out, float mat[4], struct FloatVect2 vect_in);
-extern bool float_mat_inv_4d(float invOut[16], float mat_in[16]);
+extern bool float_mat_inv_3d(float inv_out[3][3], float mat_in[3][3]);
+extern void float_mat3_mult(struct FloatVect3 *vect_out, float mat[3][3], struct FloatVect3 vect_in);
+extern bool float_mat_inv_4d(float invOut[4][4], float mat_in[4][4]);
 
 extern void float_vect3_bound_in_2d(struct FloatVect3 *vect3, float bound);
 extern void float_vect3_bound_in_3d(struct FloatVect3 *vect3, float bound);
