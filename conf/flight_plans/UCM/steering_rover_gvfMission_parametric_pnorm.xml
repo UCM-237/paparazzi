@@ -16,10 +16,10 @@
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
     <waypoint name="_S4" x="-3" y="4"/>
-    <waypoint name="_N1" x="60" y="60"/>
-    <waypoint name="_N2" x="60" y="-60"/>
-    <waypoint name="_N3" x="-60" y="-60"/>
-    <waypoint name="_N4" x="-60" y="60"/>
+    <waypoint name="_N1" x="600" y="600"/>
+    <waypoint name="_N2" x="600" y="-600"/>
+    <waypoint name="_N3" x="-600" y="-600"/>
+    <waypoint name="_N4" x="-600" y="600"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">
@@ -35,7 +35,6 @@
   </variables>
   <modules>
     <module name="gvf_module"/>
-    <module name="gvf_parametric"/>
   </modules>
   <blocks>
     <block name="Wait GPS" strip_icon="gps.png">
