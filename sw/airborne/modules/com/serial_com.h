@@ -106,8 +106,9 @@ unsigned int serial_byteToint(uint8_t * bytes,int length);
 void ito2h(int value, unsigned char* str);
 void ftoh(float value, unsigned char* str, int nbytes) ;
 void serial_calculateChecksumMsg(uint8_t *msg, int msgLength);
-void send_full_message(uint8_t msgLength);
+void send_full_message(uint8_t msgLength, uint8_t message_type);
 extern struct serial_parse_t serial_msg;
+extern uint32_t msg_buffer;
 
 // Message functions
 uint8_t set_header(uint8_t type);

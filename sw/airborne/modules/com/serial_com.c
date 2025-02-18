@@ -78,7 +78,6 @@ static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
 
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint16_t counter = 0;				 // for counting the number of messages sent
-// uint8_t counter = 0;				 // for counting the number of messages sent
 uint32_t msg_buffer = 0;
 #define SEND_INTERVAL 50 // time between sending messages (ms)
 
@@ -118,7 +117,7 @@ uint32_t msg_buffer = 0;
 #define TIME_LIDAR 1
 
 
-//Messages received
+//Messages received (REVISAR)
 #define SR_OK 79
 #define SR_MEASURE 77
 #define SR_FIN 70
@@ -139,7 +138,6 @@ int cont = 0;
 #include "modules/datalink/telemetry.h"
 
 /* Telemetry functions (TESTING TELEMETRY) */
-
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
   pprz_msg_send_SERIAL_COM(trans, dev, AC_ID,	&serial_snd.time,
   						&serial_snd.lat,
@@ -235,11 +233,11 @@ void serial_calculateChecksumMsg(uint8_t *msg, int msgLength){
 
 };
 
-void send_full_message(uint8_t msgLength) {
+void send_full_message(uint8_t msgLength, uint8_t message_type) {
     serial_calculateChecksumMsg(serial_snd.msgData, (int)msgLength);
     serial_send_msg(msgLength, serial_snd.msgData);
+		CLEAR_BIT(msg_buffer, message_type);
 }
-
 
 unsigned int serial_byteToint(uint8_t * bytes,int length){
     unsigned int num=0 ;
@@ -274,7 +272,6 @@ void itoh(int value, unsigned char* str, int nbytes){
 
 }
 
-
 void ftoh(float value, unsigned char* str, int nbytes){
 		
 		memcpy(str, &value, sizeof(float));
@@ -302,9 +299,7 @@ static void parse_MOVE_WP(void)
 
   struct LlaCoor_i lla;
 	lla.lat=(int32_t)(msg[3] | msg[4] << 8 | msg[5] << 16 | msg[6] << 24);
-  // lla.lat = 40.4498915 * 1E+7;
 	lla.lon=(int32_t)(msg[7] | msg[8] << 8 | msg[9] << 16 | msg[10] << 24);
-  // lla.lon = -3.7250035 * 1E+7;
 	lla.alt=(int32_t)(msg[11] | msg[12] << 8 | msg[13] << 16 | msg[14] << 24);
   lla.alt = lla.alt - state.ned_origin_i.hmsl + state.ned_origin_i.lla.alt;
   waypoint_move_lla(wp_id, &lla);
@@ -332,7 +327,7 @@ static void message_OK_parse(void){
   
   
 /* Serial message parser */
-// Aqui lee el mensaje
+// Aqui procesa el mensaje leido
 void serial_read_message(void){
 
 // Checksum
@@ -411,6 +406,7 @@ void serial_read_message(void){
 }
 
 
+// Aqui lee del puerto serie
 static void serial_parse(uint8_t byte){
 	bool error=false;
 	bool restart = false;
@@ -586,7 +582,6 @@ void set_imu_message(uint8_t start_byte){
 
 	uint8_t j = start_byte;
 	uint8_t msg_imu[5]={0,0,0,0,0};
-	// struct Int32Vect3 *accel_state;
 	struct NedCoor_i *accel_state;
 	
 
@@ -687,8 +682,7 @@ void serial_ping()
 				msg_byte = set_header(PPZ_TELEMETRY_BYTE);
 				set_telemetry_message(msg_byte);
 
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, TELEMETRY_SN);
+				send_full_message(serial_snd.msg_length, TELEMETRY_SN);
 			}
 
 			else if(CHECK_BIT(msg_buffer, GPS_MESSAGE)){
@@ -697,8 +691,7 @@ void serial_ping()
 				msg_byte = set_header(PPZ_GPS_BYTE);
 				set_gps_message(msg_byte);
 
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, GPS_MESSAGE); 
+				send_full_message(serial_snd.msg_length, GPS_MESSAGE);
 			}
 
 			else if(CHECK_BIT(msg_buffer, IMU_MESSAGE)){
@@ -707,9 +700,7 @@ void serial_ping()
 				msg_byte = set_header(PPZ_IMU_BYTE);				
 				set_imu_message(msg_byte);
 
-				send_full_message(serial_snd.msg_length);
-
-				CLEAR_BIT(msg_buffer, IMU_MESSAGE); 
+				send_full_message(serial_snd.msg_length, IMU_MESSAGE);
 			}
 
 			else if(CHECK_BIT(msg_buffer, HOME_RESPONSE)){
@@ -717,9 +708,14 @@ void serial_ping()
 
 				msg_byte = set_header(PPZ_HOME_BYTE);
 
-				// Coordenates from HOME
-				serial_snd.lat=(int)(waypoint_get_lat_deg(1)*1E+07);
-				serial_snd.lon=(int)(waypoint_get_lon_deg(1)*1E+07);
+				// Coordenates from HOME (changed to the NED origin)
+				struct LtpDef_i *ned_origin;
+				struct LlaCoor_i *origin;
+
+				ned_origin = stateGetNedOrigin_i();
+				origin = &(ned_origin->lla);
+				serial_snd.lat=origin->lat;
+				serial_snd.lon=origin->lon;
 				serial_snd.alt=(int)(650*1E+03);
 
 				itoh(serial_snd.lon, msg_gps, 5);
@@ -731,9 +727,7 @@ void serial_ping()
 				itoh(serial_snd.alt,msg_gps,5);
 				for(int i=0;i<4;i++) serial_snd.msgData[i+14]=msg_gps[i+1];
 				
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, HOME_RESPONSE); 
-
+				send_full_message(serial_snd.msg_length, HOME_RESPONSE);
 			}
 
 			else if(CHECK_BIT(msg_buffer, LIDAR_MESSAGE)){
@@ -750,8 +744,7 @@ void serial_ping()
 				ftoh(tf_servo.ang, lidar_hex, 4);
 				for(int i=0;i<4;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
 
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, LIDAR_MESSAGE);
+				send_full_message(serial_snd.msg_length, LIDAR_MESSAGE);
 			}
 
 			// ---- BEGIN UNUSED ---------
@@ -759,8 +752,7 @@ void serial_ping()
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONAR_BYTE);
 
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, SONDA_RQ); 
+				send_full_message(serial_snd.msg_length, SONDA_RQ);
 			}
 
 			else if(CHECK_BIT(msg_buffer, SONDA_UP)){
@@ -770,8 +762,7 @@ void serial_ping()
 				msg_byte = set_header(PPZ_SONDA_UP_BYTE);
 				
 				serial_snd.confidence = 10;	// TEST
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, SONDA_UP); 
+				send_full_message(serial_snd.msg_length, SONDA_UP);
 			}
 
 			else if(CHECK_BIT(msg_buffer, SONDA_DOWN)){
@@ -780,8 +771,7 @@ void serial_ping()
 				msg_byte = set_header(PPZ_SONDA_DOWN_BYTE);
 
 				serial_snd.confidence = 20;
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, SONDA_DOWN); 
+				send_full_message(serial_snd.msg_length, SONDA_DOWN);
 			}
 			
 			// else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
@@ -801,8 +791,7 @@ void serial_ping()
 			// 	for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
 			// 	serial_snd.msgData[22]=sonar_data->confidence;
 			// 	serial_snd.msgData[23]=modo_medida;
-			// 	send_full_message(serial_snd.msg_length);
-			// 	CLEAR_BIT(msg_buffer, MEASURE_SN); 
+			// 	send_full_message(serial_snd.msg_length, MEASURE_SN);
 			// }
 
 			// ---- END UNUSED ---------

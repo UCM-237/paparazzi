@@ -31,13 +31,14 @@
 #ifndef SWEEP_LIDAR_H
 #define SWEEP_LIDAR_H
 
+// #include "std.h"
+// #include "mcu_periph/uart.h"
+
 struct SweepLidar {
-    struct uart_periph *device;
-    uint8_t parse_status;
-    float distance;
-    float angle;
-    uint8_t signal_strength;
-};
+    float azimuth;       // Ángulo en grados
+    uint16_t distance;   // Distancia en cm
+    uint8_t signal_strength; // Intensidad de la señal
+  };
 
 extern struct SweepLidar sweep_lidar;
 
@@ -45,4 +46,4 @@ extern void sweep_init(void);
 extern void sweep_event(void);
 extern void sweep_parse(uint8_t byte);
 
-#endif
+#endif // SWEEP_LIDAR_H

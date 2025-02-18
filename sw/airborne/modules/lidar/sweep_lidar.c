@@ -25,13 +25,15 @@
  *
  */
 
+// SIN PROBAR, LO MAS SEGURO ES QUE NO FUNCIONE
+
 #include "mcu_periph/uart.h"
 #include "modules/core/abi.h"
 #include "state.h"
 #include "pprzlink/messages.h"
 #include "modules/datalink/downlink.h"
 
-static uint32_t last_time = 0;
+// static uint32_t last_time = 0;
 
 struct SweepLidar sweep_lidar;
 static void sweep_parse(uint8_t byte);
