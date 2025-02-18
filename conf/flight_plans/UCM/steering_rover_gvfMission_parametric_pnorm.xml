@@ -9,6 +9,7 @@
     <waypoint name="STDBY" x="-1.2" y="-14.4"/>
     <waypoint name="ELLIPSE" x="-2.7" y="-10.6"/>
     <waypoint name="RHOMBOID" x="-4.7" y="-10.6"/>
+    <waypoint name="pNorm" x="5.7" y="-10.6"/>
     <waypoint name="SQUARE" x="-6" y="10"/>
     <waypoint name="P1" x="-4.4" y="-12.8"/>
     <waypoint name="P2" x="1.6" y="-13.1"/>
@@ -76,7 +77,7 @@
       <call fun="gvf_square_wp(WP_SQUARE, gvf_square_par.r)"/>
     </block>
     <block name="gvf_pnorm" strip_icon="oval.png">
-      <call fun="gvf_pnorm_wp(WP_SQUARE, gvf_pnorm_par.r, gvf_pnorm_par.p)"/>
+      <call fun="gvf_pnorm_wp(WP_pNorm, gvf_pnorm_par.r, gvf_pnorm_par.p)"/>
     </block>
   </blocks>
 </flight_plan>
