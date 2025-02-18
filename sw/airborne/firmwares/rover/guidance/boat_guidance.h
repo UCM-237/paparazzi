@@ -34,11 +34,11 @@
 #include "generated/airframe.h"
 
 // Check critical global definitiones
-#ifndef SERVO_MOTOR_LEFT
+#ifndef SERVO_MOTOR_LEFT_DRIVER_NO
 #error "Boat guidance requires the servo MOTOR_LEFT"
 #endif
 
-#ifndef SERVO_MOTOR_RIGHT
+#ifndef SERVO_MOTOR_RIGHT_DRIVER_NO
 #error "Boat guidance requires the servo MOTOR_RIGHT"
 #endif
 
@@ -89,6 +89,10 @@ typedef struct {
   float kf_bearing;
   float kf_speed;
 
+	float kf_speed_static;
+	float kf_bearing_static;
+	
+	int use_dynamic_pos;
   float speed_error;
   float kp;
   float ki;
@@ -100,14 +104,14 @@ extern ctrl_t guidance_control;
 extern void boat_guidance_init(void);
 extern void boat_guidance_read_rc(void);
 extern void boat_guidance_bearing_GVF_ctrl(void);
-extern void boat_guidance_bearing_static_ctrl(void);
+extern bool boat_guidance_bearing_static_ctrl(void);
 extern void boat_guidance_speed_ctrl(void);
 
 extern void boat_guidance_read_NAV(void); //JJC
 
+extern void boat_guidance_steering_obtain_setpoint(void);
 extern void boat_guidance_pid_reset(void);
 extern void boat_guidance_kill(void);
-
 
 /** MACROS **/
 // Bound commands

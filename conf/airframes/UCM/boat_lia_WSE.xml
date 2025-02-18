@@ -25,73 +25,68 @@
     <module name="actuators" type="pwm"/>
 
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART4"/>
+    	<configure name="GPS_PORT"  value="UART3"/>
     </module>
     <module name="gps_ubx_ucenter"/>
     <module name="ins"/>
+    
     <module name="ahrs" type="float_dcm">
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
+    	<!-- Do not use gps for course in the boat -->
+      <!--define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/-->
+      <!-- Beware, if using other filters, the name AHRS_.. is different, the value is the same -->
+      <define name ="AHRS_DCM_MAG_ID" value="MAG_QMC5883L_SENDER_ID"/>
     </module>
-
-    <module name="telemetry" type="xbee_api">
+    
+    <!-- Use magnetometers on ground, on fly and do not use gps for heading-->
+    <configure name="USE_MAGNETOMETER" value="TRUE"/>
+    <configure name="USE_MAGNETOMETER_ON_GROUND" value="TRUE"/>
+    <configure name="AHRS_USE_GPS_HEADING" value="FALSE"/>
+    
+    <!-- Compass from our gps modules -->
+    <module name="mag_qmc5883l">
+    	<configure name="MAG_QMC5883L_I2C_DEV" value="I2C1"/>
+    	<define name="MODULE_QMC5883L_SYNC_SEND" value="TRUE"/>
+    	<define name="MODULE_QMC5883L_UPDATE_AHRS" value="TRUE"/>
+     	<define name="QMC5883L_CHAN_X_SIGN" value="+"/>
+     	<define name="QMC5883L_CHAN_Y_SIGN" value="+"/>
+    	<define name="QMC5883L_CHAN_Z_SIGN" value="+"/>
+    </module>
+    
+    <!-- Needed. Know local mag field from GPS -->
+    <module name="geo_mag"/>
+    
+   <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>
     	<define name="BOAT_DEBUG"     value="TRUE"/>
     </module>
 
-    <!-- <module name="telemetry" type="transparent">
-    	<configure name="MODEM_PORT"  value="UART5"/>
-    	<define name="BOAT_DEBUG"     value="TRUE"/>
-    </module> -->
-
-    <module name="serial" type="com">
-    	<configure name="SERIAL_UART" value="UART5"/>
-    </module>
-
-    <!-- <module name="telemetry" type="serial">
-      <configure name="SERIAL_UART" value="UART5"/>
-    	<define name="BOAT_DEBUG"     value="TRUE"/>
-    </module> -->
-
-
-    <!-- LIA: pruebas para incluir la brujula. No estoy segura ni de que sea este módulo-->
-
-    <module name="mag_hmc58xx">
-    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
-    	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
-    	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
-    	
-    </module>
-    
-    <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco 
-    No lo puedo quitar sin mas porque hay otras funciones que dependen de esto-->
+    <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
     <module name="sonar" type="bluerobotics">
     	<configure name="SONAR_UART" value="UART6"/>
     </module>
 
 
-    
-
-    <!-- <module name="datalink" type="common">
-    	<configure name="SERIAL_UART" value="UART5"/>
-    </module> -->
-
-
     <!--LIDAR-->
-    <!-- <module name="lidar" type="tfmini">
-    	<configure name="TFMINI_PORT" value="UART3"/>
+    
+    <module name="lidar" type="tfmini">
+    	<configure name="TFMINI_PORT" value="UART4"/>
     	<configure name="TFMINI_BAUD" value="B115200"/>
-    </module> -->
+    </module>
 
     <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
       <define name="ROVER_BASE_SEND_TRAJECTORY" value="FALSE"/>
     </module>
 	    
     <module name="gvf"  type="module"/>
+    <module name="gvf_parametric_bare">
+      <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
+    </module>
     <module name="guidance" type="boat">
     	<define name="BOAT_SPEED_KF" value="1000"/>
       <define name="BOAT_BEARING_KF" value="1000"/>
     </module>
 
+		
   </firmware>
 
 
@@ -112,6 +107,9 @@
 
   <!-- When SetCommandsFromRC -->
   <!-- Positive Throttle when motors mounted properly-->
+  <!-- Adjusted in radio.xml file to obtain 1100 -> 1500
+   https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster-r2-rp/
+  -->
   <rc_commands>
     <set command="MLEFT"  value="@THROTTLE + @ROLL"/>
     <set command="MRIGHT" value="@THROTTLE - @ROLL"/>
@@ -126,33 +124,30 @@
 
 
   <!-- SECTIONS: General config ............................................................. -->
+  <!-- Lia 30/05/2024 Lab-->
   <section name="IMU" prefix="IMU_">
     <define name="BODY_TO_IMU_PHI"   value="0." unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
-    <define name="BODY_TO_IMU_PSI"   value="0." unit="deg"/>
-    <!-- ....CALIBRACION 2022/06/07 .................................................... -->
-    <define name="ACCEL_X_NEUTRAL" value="88"/>
-    <define name="ACCEL_Y_NEUTRAL" value="-12"/>
-    <define name="ACCEL_Z_NEUTRAL" value="-293"/>
-    <define name="ACCEL_X_SENS" value="4.899015375528249" integer="16"/>
-    <define name="ACCEL_Y_SENS" value="4.87923406429433" integer="16"/>
-    <define name="ACCEL_Z_SENS" value="4.778923416058284" integer="16"/>
-    <!-- ......CALIBRACION 2022/07/30..................................................... -->
-    <define name="MAG_X_NEUTRAL" value="256"/>
-    <define name="MAG_Y_NEUTRAL" value="-412"/>
-    <define name="MAG_Z_NEUTRAL" value="71"/>
-    <define name="MAG_X_SENS" value="3.707420822119781" integer="16"/>
-    <define name="MAG_Y_SENS" value="4.148937385955166" integer="16"/>
-    <define name="MAG_Z_SENS" value="3.242411432686237" integer="16"/>
+    <define name="BODY_TO_IMU_THETA" value="0" unit="deg"/>
+    <define name="BODY_TO_IMU_PSI"   value="0.0" unit="deg"/>
+    <define name="MPU_CHAN_X"					 value="1"/>
+    <define name="MPU_CHAN_Y"					 value="0"/>
+    <define name="MPU_CHAN_Z"					 value="2"/>
+    <define name="ACCEL_X_SIGN" 		 value="-1"/>
+    <define name="ACCEL_Y_SIGN"      value="-1"/>
+    <define name="ACCEL_Z_SIGN"      value="-1"/>
+    <define name="GYRO_P_SIGN"       value="-1"/>
+    <define name="GYRO_Q_SIGN"       value="-	1"/>
+    <define name="GYRO_R_SIGN"       value="-1"/>
 
-<!-- CALIBRACION ANTERIOR
-    <define name="MAG_X_NEUTRAL" value="263"/>
-    <define name="MAG_Y_NEUTRAL" value="-429"/>
-    <define name="MAG_Z_NEUTRAL" value="606"/>
-    <define name="MAG_X_SENS" value="7.593931788741687" integer="16"/>
-    <define name="MAG_Y_SENS" value="7.526016920835691" integer="16"/>
-    <define name="MAG_Z_SENS" value="10.776584762252018" integer="16"/>
--->
+<!--Calibracion 02/06/2024 GUAJARAZ-->
+<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1452,1425,2257}, .scale={{22139,37531,41508},{15286,20819,25019}}}}"/>
+
+<define name="MAG_X_NEUTRAL" value="1452"/>
+<define name="MAG_Y_NEUTRAL" value="1425"/>
+<define name="MAG_Z_NEUTRAL" value="2257"/>
+<define name="MAG_X_SENS" value="1.448318722837593" integer="16"/>
+<define name="MAG_Y_SENS" value="1.802728276186034" integer="16"/>
+<define name="MAG_Z_SENS" value="1.6590591156972092" integer="16"/>
 
   </section>
 
@@ -162,7 +157,6 @@
     <define name="H_X" value="0.513081"/>
     <define name="H_Y" value="-0.00242783"/>
     <define name="H_Z" value="0.858336"/>
-    <define name="USE_GPS" value="TRUE"/>
   </section>
 
   <section name="AUTOPILOT">
@@ -190,4 +184,3 @@
   </section>
 
 </airframe>
-
