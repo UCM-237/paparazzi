@@ -735,23 +735,24 @@ void serial_ping()
 
 			}
 
-			else if(CHECK_BIT(msg_buffer, LIDAR_MESSAGE)){
-				serial_snd.msg_length=14;
+      // TODO: Comprobar si existe el Lidar
+			// else if(CHECK_BIT(msg_buffer, LIDAR_MESSAGE)){
+			// 	serial_snd.msg_length=14;
 
-				msg_byte = set_header(PPZ_LIDAR_BYTE);
+			// 	msg_byte = set_header(PPZ_LIDAR_BYTE);
 
-				uint8_t lidar_hex[4]={0,0,0,0};
-				ftoh(tfmini.distance, lidar_hex, 4);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
-				msg_byte += 4;
+			// 	uint8_t lidar_hex[4]={0,0,0,0};
+			// 	ftoh(tfmini.distance, lidar_hex, 4);
+			// 	for(int i=0;i<4;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
+			// 	msg_byte += 4;
 
-				memset(lidar_hex,0,4);
-				ftoh(tf_servo.ang, lidar_hex, 4);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
+			// 	memset(lidar_hex,0,4);
+			// 	ftoh(tf_servo.ang, lidar_hex, 4);
+			// 	for(int i=0;i<4;i++) serial_snd.msgData[i+msg_byte]=lidar_hex[i];
 
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, LIDAR_MESSAGE);
-			}
+			// 	send_full_message(serial_snd.msg_length);
+			// 	CLEAR_BIT(msg_buffer, LIDAR_MESSAGE);
+			// }
 
 			// ---- BEGIN UNUSED ---------
 			else if(CHECK_BIT(msg_buffer, SONDA_RQ)){

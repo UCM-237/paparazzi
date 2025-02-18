@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="board_matek_f405_boat" dir="boards">
+<module name="board_matek_f405_boat_v2" dir="boards">
   <doc>
     <description>
       Autoload several onboard sensors and modules

@@ -24,7 +24,7 @@
     </target>    
     
     <!-- Same board module as matek_f405_wind but without OSD -->
-    <module name="board" type="matek_f405_boat"/> <!-- IMU included -->
+    <module name="board" type="matek_f405_boat_v2"/> <!-- IMU included -->
     
     <module name="actuators" type="pwm"/>
 
