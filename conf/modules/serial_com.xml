@@ -8,7 +8,7 @@
       Data are extracted and sent from a serial link 
     </description>
     <configure name="SERIAL_UART" value="UARTX" description="SERIAL on which other device is connected"/>
-    <configure name="SERIAL_BAUD" value="B9600" description="UART Baudrate, default to 9600"/>
+    <configure name="SERIAL_BAUD" value="B115200" description="UART Baudrate, default to 115200"/>
   </doc>
   <settings>
     <dl_settings>
@@ -30,7 +30,7 @@
 
   <makefile>
     <configure name="SERIAL_UART" default = "UART5" case="upper|lower"/> <!-- Revisar estos configure | Mirar gps_ublox.xml -->
-    <configure name="SERIAL_BAUD" default="B9600"/>
+    <configure name="SERIAL_BAUD" default="B115200"/>
     <file name="serial_com.c"/>
     <define name="USE_$(SERIAL_UART_UPPER)"/> <!-- for uart_arch-->
     <define name="SERIAL_DEV" value="$(SERIAL_UART_LOWER)"/>
