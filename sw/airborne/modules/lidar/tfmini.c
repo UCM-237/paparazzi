@@ -35,6 +35,12 @@
 #include "pprzlink/messages.h"
 #include "modules/datalink/downlink.h"
 
+// Test
+#include "firmwares/rotorcraft/autopilot_static.h"
+
+#define LIDAR_MIN_RANGE 0.1
+#define LIDAR_MAX_RANGE 12.0
+
 #define MOTOR_SPEED 5
 static uint32_t last_time = 0;
 
@@ -209,9 +215,13 @@ void tfmini_servo(){
       tf_servo.pos = 0;
     }
     tf_servo.ang = PWM2ANGLE(tf_servo.pos);
-    // if(tfmini.distance <= 0.15){
-    //   nav_set_failsafe(); // Con esto en teoria para (no hace nada, algo hace porque se queda pillado)
-    // }
+  }
+
+  // TEST DE EVASION BASICA DE OBSTACULOS. Si hay obstaculo, se pone en modo manual
+  if((tfmini.distance < LIDAR_MAX_RANGE) && (tfmini.distance > LIDAR_MIN_RANGE)){
+    if (tfmini.distance < 0.2){
+      autopilot.mode = 0;   // Este es manual (no estoy seguro de donde los define, creo que en el xml)
+    } 
   }
 }
 
