@@ -50,9 +50,10 @@
  #define CHECK_BIT(buffer, N)   (((buffer) & (1 << (N))) != 0)
  #define RESET_BUFFER(buffer)   ((buffer) = 0)
  #define SET_BIT_IF(counter, interval, buffer, message) \
-     if ((counter) % (interval) == 0) { \
-         SET_BIT(buffer, message); \
-     }
+    if ((interval) > 0 && (counter) % (interval) == 0) { \
+        SET_BIT(buffer, message); \
+    }
+
  
  
  

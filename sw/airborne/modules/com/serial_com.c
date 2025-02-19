@@ -111,11 +111,11 @@ uint32_t msg_buffer = 0;
 #define LIDAR_MESSAGE 8
 
 // Delay of each message (0 for not periodic message, >= 1 for periodic)
-#define TIME_TELEMETRY 8
+#define TIME_TELEMETRY 12
 #define TIME_HOME 0
-#define TIME_IMU 4
+#define TIME_IMU 10
 #define TIME_GPS 20
-#define TIME_LIDAR 1
+#define TIME_LIDAR 0
 
 
 //Messages received
@@ -821,7 +821,7 @@ void serial_ping()
 		SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
 		SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
 		SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
-		SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);
+		SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);	// Disable on the boat
 
 		counter = (counter >= 255) ? 0 : counter + 1;
 
