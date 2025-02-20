@@ -98,8 +98,8 @@
   <servos> 
     <!-- "no" 0 and 1 0, our f405 don't have power pin for these pwm outputs... -->
     <!-- "changed limits following manufacturer instructions-->
-    <servo name="MOTOR_LEFT"  no="2" min="1100" neutral="1500" max="1900"/>
-    <servo name="MOTOR_RIGHT" no="3" min="1100" neutral="1500" max="1900"/>
+    <servo name="MOTOR_LEFT"  no="1" min="1100" neutral="1500" max="1900"/>
+    <servo name="MOTOR_RIGHT" no="2" min="1100" neutral="1500" max="1900"/>
   </servos> 
   
   <!-- Low level commands -->
