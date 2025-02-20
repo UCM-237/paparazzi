@@ -1,14 +1,14 @@
 <!-- Same as Pradolongo, but with the origin in Campillo -->
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.320170" lon0="-3.503907" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.3202741" lon0="-3.5027159" max_dist_from_home="1600" name="Campillo Test" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
     <waypoint name="HOME" x="0" y="0"/>
-    <waypoint name="STDBY" x="333.9" y="620.6"/>
-    <waypoint name="ELLIPSE" x="296.3" y="624.4"/>
+    <waypoint name="STDBY" x="296.9" y="24.6"/>
+    <waypoint name="ELLIPSE" x="132.5" y="28.7"/>
     <waypoint name="P1" x="-2" y="-4"/>
     <waypoint name="P2" x="2" y="-4"/>
     <waypoint name="BZ0" x="0" y="0"/>
