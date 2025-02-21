@@ -1,0 +1,190 @@
+<!-- Firmware para los barcos nuevos con el Matek F405 v2 -->
+<!DOCTYPE airframe SYSTEM "../airframe.dtd">
+
+<airframe name="boat">
+
+  <firmware name="rover"> <!-- Firmware propio del barco?? -->
+    <autopilot name="boat_autopilot.xml"/>
+
+    <target name="ap" board="matek_f405_wing_v1">
+      <configure name="PERIODIC_FREQUENCY" value="100"/>
+      <module name="radio_control" type="sbus">
+        <configure name="SBUS_PORT" value="UART2"/>
+      </module>
+      <module name="serial" type="com">
+    	  <configure name="SERIAL_UART" value="UART5"/>
+      </module>
+    </target>
+    
+    <target name="nps" board="pc">
+      <module name="radio_control" type="ppm"/>
+      <module name="fdm"           type="rover"/>
+      <define name="NPS_BYPASS_AHRS" value="TRUE"/>
+      <define name="NPS_BYPASS_INS"  value="TRUE"/>
+    </target>    
+    
+    <!-- Same board module as matek_f405_wind but without OSD -->
+    <module name="board" type="matek_f405_boat_v2"/> <!-- IMU included -->
+    
+    <module name="actuators" type="pwm"/>
+
+    <module name="gps" type="ublox">
+    	<configure name="GPS_PORT"  value="UART4"/>
+    </module>
+    <module name="gps_ubx_ucenter"/>
+    <module name="ins"/>
+    
+    <module name="ahrs" type="float_dcm">
+    	<!-- Do not use gps for course in the boat -->
+      <!--define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/-->
+      <!-- Beware, if using other filters, the name AHRS_.. is different, the value is the same -->
+      <define name ="AHRS_DCM_MAG_ID" value="MAG_QMC5883L_SENDER_ID"/>
+    </module>
+    
+    <!-- Use magnetometers on ground, on fly and do not use gps for heading-->
+    <configure name="USE_MAGNETOMETER" value="TRUE"/>
+    <configure name="USE_MAGNETOMETER_ON_GROUND" value="TRUE"/>
+    <configure name="AHRS_USE_GPS_HEADING" value="FALSE"/>
+    
+    <!-- Compass from our gps modules -->
+    <module name="mag_qmc5883l">
+    	<configure name="MAG_QMC5883L_I2C_DEV" value="I2C1"/>
+    	<define name="MODULE_QMC5883L_SYNC_SEND" value="TRUE"/>
+    	<define name="MODULE_QMC5883L_UPDATE_AHRS" value="TRUE"/>
+     	<define name="QMC5883L_CHAN_X_SIGN" value="+"/>
+     	<define name="QMC5883L_CHAN_Y_SIGN" value="+"/>
+    	<define name="QMC5883L_CHAN_Z_SIGN" value="+"/>
+    </module>
+    
+    <!-- Needed. Know local mag field from GPS -->
+    <module name="geo_mag"/>
+    
+   <module name="telemetry" type="xbee_api">
+    	<configure name="MODEM_PORT"  value="UART1"/>
+    	<define name="BOAT_DEBUG"     value="TRUE"/>
+    </module>
+
+    <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
+    <module name="sonar" type="bluerobotics">
+    	<configure name="SONAR_UART" value="UART3"/>
+    </module>
+
+
+    <!--LIDAR-->
+    
+    <module name="lidar" type="tfmini">
+    	<configure name="TFMINI_PORT" value="UART6"/>
+    	<configure name="TFMINI_BAUD" value="B115200"/>
+    </module>
+
+    <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
+      <define name="ROVER_BASE_SEND_TRAJECTORY" value="FALSE"/>
+    </module>
+	    
+    <module name="gvf"  type="module"/>
+    <module name="gvf_parametric_bare">
+      <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
+    </module>
+    <module name="guidance" type="boat">
+    	<define name="BOAT_SPEED_KF" value="1000"/>
+      <define name="BOAT_BEARING_KF" value="1000"/>
+    </module>
+
+		
+  </firmware>
+
+
+  <!-- COMMANDS SECTION ..................................................................... -->
+  <servos> 
+    <!-- "no" 0 and 1 0, our f405 don't have power pin for these pwm outputs... -->
+    <!-- "changed limits following manufacturer instructions-->
+    <servo name="MOTOR_LEFT"  no="1" min="1100" neutral="1500" max="1900"/>
+    <servo name="MOTOR_RIGHT" no="2" min="1100" neutral="1500" max="1900"/>
+  </servos> 
+  
+  <!-- Low level commands -->
+  <commands> 
+    <axis name="MLEFT"  failsafe_value="0"/>
+    <axis name="MRIGHT" failsafe_value="0"/>
+    <axis name="GAIN2" failsafe_value="0"/>
+  </commands>
+
+  <!-- When SetCommandsFromRC -->
+  <!-- Positive Throttle when motors mounted properly-->
+  <!-- Adjusted in radio.xml file to obtain 1100 -> 1500
+   https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster-r2-rp/
+  -->
+  <rc_commands>
+    <set command="MLEFT"  value="@THROTTLE + @ROLL"/>
+    <set command="MRIGHT" value="@THROTTLE - @ROLL"/>
+    <set command="GAIN2" value="@GAIN2"/>
+  </rc_commands>
+
+  <!-- When SetActuatorsFromCommands-->
+  <command_laws>
+    <set servo="MOTOR_LEFT"  value="@MLEFT" />
+    <set servo="MOTOR_RIGHT" value="@MRIGHT"/>
+  </command_laws>
+
+
+  <!-- SECTIONS: General config ............................................................. -->
+  <!-- Lia 30/05/2024 Lab-->
+  <section name="IMU" prefix="IMU_">
+    <define name="BODY_TO_IMU_PHI"   value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="0" unit="deg"/>
+    <define name="BODY_TO_IMU_PSI"   value="0.0" unit="deg"/>
+    <define name="MPU_CHAN_X"					 value="1"/>
+    <define name="MPU_CHAN_Y"					 value="0"/>
+    <define name="MPU_CHAN_Z"					 value="2"/>
+    <define name="ACCEL_X_SIGN" 		 value="-1"/>
+    <define name="ACCEL_Y_SIGN"      value="-1"/>
+    <define name="ACCEL_Z_SIGN"      value="-1"/>
+    <define name="GYRO_P_SIGN"       value="-1"/>
+    <define name="GYRO_Q_SIGN"       value="-	1"/>
+    <define name="GYRO_R_SIGN"       value="-1"/>
+
+<!--Calibracion 02/06/2024 GUAJARAZ-->
+<define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1452,1425,2257}, .scale={{22139,37531,41508},{15286,20819,25019}}}}"/>
+
+<define name="MAG_X_NEUTRAL" value="1452"/>
+<define name="MAG_Y_NEUTRAL" value="1425"/>
+<define name="MAG_Z_NEUTRAL" value="2257"/>
+<define name="MAG_X_SENS" value="1.448318722837593" integer="16"/>
+<define name="MAG_Y_SENS" value="1.802728276186034" integer="16"/>
+<define name="MAG_Z_SENS" value="1.6590591156972092" integer="16"/>
+
+  </section>
+
+  <section name="AHRS" prefix="AHRS_">
+    <!-- values used if no GPS fix (i.e NPS), on 3D fix is update by geo_mag module if loaded -->
+    <!-- Toulouse -->
+    <define name="H_X" value="0.513081"/>
+    <define name="H_Y" value="-0.00242783"/>
+    <define name="H_Z" value="0.858336"/>
+  </section>
+
+  <section name="AUTOPILOT">
+    <define name="MODE_MANUAL" value="AP_MODE_DIRECT"/> 
+    <define name="MODE_AUTO1"  value="AP_MODE_ASSISTED"/> 
+    <define name="MODE_AUTO2"  value="AP_MODE_NAV"/>
+  </section>
+
+  <section name="SIMULATOR" prefix="NPS_">
+    <define name="SENSORS_PARAMS" value="nps_sensors_params_default.h" type="string"/>
+  </section>
+  
+  <section name="BAT">
+    <define name="CATASTROPHIC_BAT_LEVEL"    value="7.35" unit="V"/>
+    <define name="CRITIC_BAT_LEVEL"          value="7.40" unit="V"/>
+    <define name="LOW_BAT_LEVEL"             value="7.45" unit="V"/>
+    <define name="MAX_BAT_LEVEL"             value="8.44" unit="V"/>
+    <define name="MILLIAMP_AT_FULL_THROTTLE" value="1800" unit="mA"/>
+    <define name="MILLIAMP_AT_IDLE_THROTTLE" value="1000" unit="mA"/>
+    <!--define name="CURRENT_ESTIMATION_NONLINEARITY" value="1.0"/-->
+  </section>
+
+  <section name="GCS">
+    <define name="AC_ICON" value="rover"/>
+  </section>
+
+</airframe>

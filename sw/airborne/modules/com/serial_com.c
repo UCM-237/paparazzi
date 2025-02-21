@@ -821,7 +821,7 @@ void serial_ping()
 		SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
 		SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
 		SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
-		SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);	// Disable on the boat
+		// SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);	// Disable on the boat
 
 		counter = (counter >= 255) ? 0 : counter + 1;
 
