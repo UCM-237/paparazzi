@@ -72,15 +72,16 @@ static uint8_t PPZ_HOME_BYTE = 0x48; // "H"
 static uint8_t PPZ_IMU_BYTE = 0x49; // "I"
 static uint8_t PPZ_GPS_BYTE = 0x47; // "G"
 static uint8_t PPZ_LIDAR_BYTE = 0x4C; // "L"
-// static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
+static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 static uint8_t PPZ_SONDA_UP_BYTE = 0x55; // "U"
 static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
+static uint8_t PPZ_SONDA_CENTER_BYTE = 0x43;	// "C"
 
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint16_t counter = 0;				 // for counting the number of messages sent
 // uint8_t counter = 0;				 // for counting the number of messages sent
 uint32_t msg_buffer = 0;
-#define SEND_INTERVAL 50 // time between sending messages (ms)
+#define SEND_INTERVAL 500 // time between sending messages (ms)
 
 // Sonar parse states
 #define SR_INIT 0
@@ -105,6 +106,7 @@ uint32_t msg_buffer = 0;
 #define MEASURE_SN 2
 #define SONDA_DOWN 3
 #define SONDA_UP 4
+#define SONDA_CENTER 9
 #define HOME_RESPONSE 5
 #define IMU_MESSAGE 6
 #define GPS_MESSAGE 7
@@ -662,6 +664,7 @@ void serial_ping()
 	uint8_t msg_byte = 0;
 	struct sonar_parse_t *sonar_data;	// No funciona en el rover, solo en el barco
 	uint8_t msg_gps[5]={0,0,0,0,0};
+	uint8_t msg_dist[5]={0,0,0,0,0};
 
 	// Aqui a lo mejor habria que comprobar que solo se active uno (depende de lo se necesite)
 	if (radio_control_get(RADIO_GAIN2)>0){
@@ -671,6 +674,10 @@ void serial_ping()
 	else if (radio_control_get(RADIO_GAIN2)<0){
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_DOWN);
+	}
+	else{
+		RESET_BUFFER(msg_buffer);
+		SET_BIT(msg_buffer, SONDA_CENTER);
 	}
 
 
@@ -764,12 +771,10 @@ void serial_ping()
 			}
 
 			else if(CHECK_BIT(msg_buffer, SONDA_UP)){
-				// Pendiente de copiar
 				// (tendria que implementar aqui algo de prueba para ver si funciona)
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONDA_UP_BYTE);
 				
-				serial_snd.confidence = 10;	// TEST
 				send_full_message(serial_snd.msg_length);
 				CLEAR_BIT(msg_buffer, SONDA_UP); 
 			}
@@ -779,31 +784,39 @@ void serial_ping()
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONDA_DOWN_BYTE);
 
-				serial_snd.confidence = 20;
 				send_full_message(serial_snd.msg_length);
 				CLEAR_BIT(msg_buffer, SONDA_DOWN); 
 			}
+
+			else if(CHECK_BIT(msg_buffer, SONDA_CENTER)){
+				// (tendria que implementar aqui algo de prueba para ver si funciona)
+				serial_snd.msg_length=6;
+				msg_byte = set_header(PPZ_SONDA_CENTER_BYTE);
+				
+				send_full_message(serial_snd.msg_length);
+				CLEAR_BIT(msg_buffer, SONDA_CENTER); 
+			}
 			
-			// else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
-			// No funciona en el rover
-			// 	serial_snd.msg_length=26;
-			// 	msg_byte = set_header(PPZ_MEASURE_BYTE);
-			// 	set_telemetry_message(msg_byte);
-			// 	// Reescribe esta parte
-			// 	// Get Sonar
-			// 	sonar_data= sonar_get();
-			// 	serial_snd.distance=sonar_data->distance;
-			// 	serial_snd.confidence=sonar_data->confidence;
-			// 	/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
-			// 	an signed (using one extra byte) int but sign byte is discarded
-			// 	*/
-			// 	itoh(sonar_data->distance,msg_dist,5);
-			// 	for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
-			// 	serial_snd.msgData[22]=sonar_data->confidence;
-			// 	serial_snd.msgData[23]=modo_medida;
-			// 	send_full_message(serial_snd.msg_length);
-			// 	CLEAR_BIT(msg_buffer, MEASURE_SN); 
-			// }
+			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
+			//No funciona en el rover
+				serial_snd.msg_length=26;
+				msg_byte = set_header(PPZ_MEASURE_BYTE);
+				set_telemetry_message(msg_byte);
+				// Reescribe esta parte
+				// Get Sonar
+				sonar_data= sonar_get();
+				serial_snd.distance=sonar_data->distance;
+				serial_snd.confidence=sonar_data->confidence;
+				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
+				an signed (using one extra byte) int but sign byte is discarded
+				*/
+				itoh(sonar_data->distance,msg_dist,5);
+				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
+				serial_snd.msgData[22]=sonar_data->confidence;
+				serial_snd.msgData[23]=modo_medida;
+				send_full_message(serial_snd.msg_length);
+				CLEAR_BIT(msg_buffer, MEASURE_SN); 
+			}
 
 			// ---- END UNUSED ---------
 
@@ -818,9 +831,9 @@ void serial_ping()
 		RESET_BUFFER(msg_buffer);
 
 			// Set the messages to sent in the next iteration
-		SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
-		SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
-		SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
+		// SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
+		// SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
+		// SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
 		// SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);	// Disable on the boat
 
 		counter = (counter >= 255) ? 0 : counter + 1;
