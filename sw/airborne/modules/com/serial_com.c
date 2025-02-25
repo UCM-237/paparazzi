@@ -76,6 +76,8 @@ static uint8_t PPZ_MEASURE_BYTE = 0x4D; // "M"
 static uint8_t PPZ_SONDA_UP_BYTE = 0x55; // "U"
 static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
 static uint8_t PPZ_SONDA_CENTER_BYTE = 0x43;	// "C"
+static uint8_t PPZ_SONDA_AUTO_BYTE = 0x41;	// "A"
+static uint8_t PPZ_SONDA_MANUAL_BYTE = 0x42;	// "B"
 
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint16_t counter = 0;				 // for counting the number of messages sent
@@ -107,6 +109,8 @@ uint32_t msg_buffer = 0;
 #define SONDA_DOWN 3
 #define SONDA_UP 4
 #define SONDA_CENTER 9
+#define SONDA_AUTO 10
+#define SONDA_MANUAL 11
 #define HOME_RESPONSE 5
 #define IMU_MESSAGE 6
 #define GPS_MESSAGE 7
@@ -667,18 +671,30 @@ void serial_ping()
 	uint8_t msg_dist[5]={0,0,0,0,0};
 
 	// Aqui a lo mejor habria que comprobar que solo se active uno (depende de lo se necesite)
+	// Comprueba un boton
 	if (radio_control_get(RADIO_GAIN2)>0){
-		RESET_BUFFER(msg_buffer);
+		// RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_UP);
 	}
 	else if (radio_control_get(RADIO_GAIN2)<0){
-		RESET_BUFFER(msg_buffer);
+		// RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_DOWN);
 	}
 	else{
-		RESET_BUFFER(msg_buffer);
+		// RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_CENTER);
 	}
+
+	// Y el otro boton (no hay más canales definidos, lo pongo a mano)
+	if (radio_control_get(7)>0){
+		// RESET_BUFFER(msg_buffer);
+		SET_BIT(msg_buffer, SONDA_MANUAL);
+	}
+	else if (radio_control_get(7)<=0){
+		// RESET_BUFFER(msg_buffer);
+		SET_BIT(msg_buffer, SONDA_AUTO);
+	}
+
 
 
 	if (now_s > (last_s + SEND_INTERVAL)) {
@@ -789,12 +805,27 @@ void serial_ping()
 			}
 
 			else if(CHECK_BIT(msg_buffer, SONDA_CENTER)){
-				// (tendria que implementar aqui algo de prueba para ver si funciona)
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONDA_CENTER_BYTE);
 				
 				send_full_message(serial_snd.msg_length);
 				CLEAR_BIT(msg_buffer, SONDA_CENTER); 
+			}
+
+			else if(CHECK_BIT(msg_buffer, SONDA_AUTO)){
+				serial_snd.msg_length=6;
+				msg_byte = set_header(PPZ_SONDA_AUTO_BYTE);
+				
+				send_full_message(serial_snd.msg_length);
+				CLEAR_BIT(msg_buffer, SONDA_AUTO); 
+			}
+
+			else if(CHECK_BIT(msg_buffer, SONDA_MANUAL)){
+				serial_snd.msg_length=6;
+				msg_byte = set_header(PPZ_SONDA_MANUAL_BYTE);
+				
+				send_full_message(serial_snd.msg_length);
+				CLEAR_BIT(msg_buffer, SONDA_MANUAL); 
 			}
 			
 			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
