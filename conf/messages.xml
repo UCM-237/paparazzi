@@ -1920,7 +1920,7 @@
     	 <field name="recv_status"				type="uint8"/>
     	 <field name="recv_payld_len"				type="uint8"/>
     	 <field name="recv_time"	alt_unit="s"		type="uint16"/>
-    	 <field name="recv_depth"	alt_unit="mm"		type="uint16"/>
+    	 <field name="recv_depth"	alt_unit="m"	alt_unit_coef="0.001"	type="uint16"/>
     	  <field name="msg_recv_error"			type="uint8"/> 
     	  <field name="msg_snd_chks"				type="uint16"/> 
     	  

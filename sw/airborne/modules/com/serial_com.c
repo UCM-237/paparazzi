@@ -326,7 +326,7 @@ static void message_parse(void){
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[5];
 	msgBytes[1]=serial_msg.msgData[4];
-	serial_msg.depth=serial_byteToint(msgBytes,2);
+	serial_msg.depth=serial_byteToint(msgBytes,2)*300;	// Es un int (en mm)
 }
   
 

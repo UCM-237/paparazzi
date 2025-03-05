@@ -43,6 +43,7 @@
       <!--message name="LIDAR"               period="1.0"/-->
       <message name="ROVER_CTRL"             period="0.50"/> 
       <message name="STATIC_CONTROL"         period="1.0"/> 
+      <message name="SERIAL_COM"	           period="0.5"/>
       
       
     </mode>
