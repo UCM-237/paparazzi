@@ -94,6 +94,7 @@ uint32_t msg_buffer = 0;
 #define SR_PAYLOAD4 5
 #define SR_CHECKSUM1 6
 #define SR_CHECKSUM2 7
+#define SR_PAYLOAD 10
 
 // Sonar errors
 /* last error type */
@@ -347,15 +348,15 @@ void serial_read_message(void){
 		chksBytes[0]=serial_msg.msgData[5];
 		chksBytes[1]=serial_msg.msgData[4];
 	}
-	else if (serial_msg.msg_id == SR_WAYPOINT){
+	else{
 		chksBytes[0]=serial_msg.msgData[2+serial_msg.payload_len+1];
 		chksBytes[1]=serial_msg.msgData[2+serial_msg.payload_len];
 	}
-	else {
-		chksBytes[0]=serial_msg.msgData[7];
-		chksBytes[1]=serial_msg.msgData[6];
+	// else {
+	// 	chksBytes[0]=serial_msg.msgData[7];
+	// 	chksBytes[1]=serial_msg.msgData[6];
 
-	}
+	// }
 	uint16_t chks;
 	chks=serial_byteToint(chksBytes,2);
 	serial_calculateChecksum();
@@ -378,6 +379,7 @@ void serial_read_message(void){
  			// message_type = 10;
  			break;
  		
+		// SIN USAR
 		case SR_FIN:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
@@ -391,16 +393,19 @@ void serial_read_message(void){
 			// message_type = 10;
  			break;
  		
+		// SIN USAR
 		case SR_POS:
  			message_parse();
  			serial_msg.error_last = SERIAL_BR_ERR_NONE;
  			// message_type = 10;
  			break;
  		
+		// SIN USAR
 		case SR_ERR_L:
  			serial_msg.error_last = SR_ERR_L;
  			break;
  		
+		// SIN USAR
 		case SR_ERR_D:
  			serial_msg.error_last = SR_ERR_D;
  			break;
@@ -439,18 +444,23 @@ static void serial_parse(uint8_t byte){
 			else if (byte == SR_WAYPOINT){
 				serial_msg.payload_len= 13;
 				serial_msg.count = 0;
-				serial_msg.status = SR_WAYPOINT;
+				serial_msg.status = SR_PAYLOAD;
 			}
 			else if (byte == SR_HOME){
 				serial_msg.payload_len= 1;
 				serial_msg.count = 0;
-				serial_msg.status = SR_WAYPOINT;
+				serial_msg.status = SR_PAYLOAD;
 			} 
+			else if (byte == SR_MEASURE){
+				serial_msg.payload_len=2;
+				serial_msg.count = 0;
+				serial_msg.status = SR_PAYLOAD;
+			}
 			else serial_msg.payload_len=4;			
 			serial_msg.msgData[1]=byte;
 			break;
 
-		case SR_WAYPOINT:	// 3th and the rest for the messages (cambiar algun momento el nombre)
+		case SR_PAYLOAD:	// 3th and the rest for the messages (cambiar algun momento el nombre)
 			serial_msg.msgData[serial_msg.count+2]=byte;
 			serial_msg.count++;
 
@@ -758,7 +768,7 @@ void serial_ping()
 
 			}
 
-      // TODO: Comprobar si existe el Lidar
+      // TODO: Comprobar si existe el Lidar (sino da fallo)
 			// else if(CHECK_BIT(msg_buffer, LIDAR_MESSAGE)){
 			// 	serial_snd.msg_length=14;
 
@@ -778,6 +788,7 @@ void serial_ping()
 			// }
 
 			// ---- BEGIN UNUSED ---------
+			// Todos los mensajes de la sonda son de momento iguales
 			else if(CHECK_BIT(msg_buffer, SONDA_RQ)){
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONAR_BYTE);
