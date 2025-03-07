@@ -854,25 +854,27 @@ void serial_ping()
 			}
 			
 			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
-        serial_snd.msg_length = 9;
+        serial_snd.msg_length = 11;
         
         uint8_t msg_byte = set_header(PPZ_MEASURE_BYTE);
         
         uint16_t depth = 5000; // En mm
-				uint16_t test_time = 3*60; // En s
+				uint16_t test_time = 180; // En s
         uint8_t flag = 1; 
         
-        itoh(depth, msg_data, 2);
-        serial_snd.msgData[4] = msg_data[0];
+        itoh(depth, msg_data, 3);
+				serial_snd.msgData[4] = msg_data[0];
         serial_snd.msgData[5] = msg_data[1];
-				memset(msg_data,0,2);
+        serial_snd.msgData[6] = msg_data[2];
+				memset(msg_data,0,3);
         
-        itoh(test_time, msg_data, 2);
-        serial_snd.msgData[6] = msg_data[0];
-        serial_snd.msgData[7] = msg_data[1];
-				memset(msg_data,0,2);
+        itoh(test_time, msg_data, 3);
+				serial_snd.msgData[7] = msg_data[0];
+        serial_snd.msgData[8] = msg_data[1];
+        serial_snd.msgData[9] = msg_data[2];
+				memset(msg_data,0,3);
         
-        serial_snd.msgData[8] = flag;
+        serial_snd.msgData[10] = flag;
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, MEASURE_SN);
