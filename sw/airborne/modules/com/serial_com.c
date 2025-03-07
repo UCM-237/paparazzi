@@ -332,7 +332,7 @@ static void message_parse(void){
 }
   
 
-// Aqui se procesaban los mensajes (no se esta usando ahora mismo)
+// AQUI HARIA FALTA HACERLE SABER AL PLAN DE VUELO QUE PUEDE CONTINUAR
 static void message_OK_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
@@ -457,6 +457,11 @@ static void serial_parse(uint8_t byte){
 				serial_msg.payload_len=2;
 				serial_msg.count = 0;
 				serial_msg.status = SR_PAYLOAD;
+			}
+			else if (byte == SR_OK){
+				serial_msg.payload_len=0;
+				serial_msg.msg_available = true;
+				serial_msg.status=SR_INIT;
 			}
 			else serial_msg.payload_len=4;			
 			serial_msg.msgData[1]=byte;
@@ -701,6 +706,7 @@ void serial_ping()
 		// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
 		if(serial_msg_test == true){
 			SET_BIT(msg_buffer, MEASURE_SN);
+			serial_msg_test = false;
 		}
 	}
 
