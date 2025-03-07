@@ -59,6 +59,7 @@ struct serial_parse_t serial_msg;
 struct serial_send_t serial_snd;
 
 bool serial_msg_setting;
+bool serial_msg_test;
 
 // Sonar msg header bytes (and checksum)
 static uint8_t headerLength = 2;
@@ -178,6 +179,7 @@ void serial_init(void)
   serial_msg.msg_available = true;
   serial_msg.error_last=0;
   serial_msg_setting = true;
+	serial_msg_test = false;
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -679,31 +681,37 @@ void serial_ping()
 	struct sonar_parse_t *sonar_data;	// No funciona en el rover, solo en el barco
 	uint8_t msg_gps[5]={0,0,0,0,0};
 	uint8_t msg_dist[5]={0,0,0,0,0};
+	uint8_t msg_data[2] = {0,0};
 
-	// Aqui a lo mejor habria que comprobar que solo se active uno (depende de lo se necesite)
-	// Comprueba un boton
-	if (radio_control_get(RADIO_GAIN2)>0){
-		// RESET_BUFFER(msg_buffer);
-		SET_BIT(msg_buffer, SONDA_UP);
-	}
-	else if (radio_control_get(RADIO_GAIN2)<0){
-		// RESET_BUFFER(msg_buffer);
-		SET_BIT(msg_buffer, SONDA_DOWN);
-	}
-	else{
-		// RESET_BUFFER(msg_buffer);
-		SET_BIT(msg_buffer, SONDA_CENTER);
-	}
 
-	// Y el otro boton (no hay más canales definidos, lo pongo a mano)
-	if (radio_control_get(7)>0){
-		// RESET_BUFFER(msg_buffer);
+	if (autopilot.mode == 0){
 		SET_BIT(msg_buffer, SONDA_MANUAL);
+		if (radio_control_get(RADIO_GAIN2)>0){
+			SET_BIT(msg_buffer, SONDA_UP);
+		}
+		else if (radio_control_get(RADIO_GAIN2)<0){
+			SET_BIT(msg_buffer, SONDA_DOWN);
+		}
+		else{
+			SET_BIT(msg_buffer, SONDA_CENTER);
+		}
 	}
-	else if (radio_control_get(7)<=0){
-		// RESET_BUFFER(msg_buffer);
+	else {
 		SET_BIT(msg_buffer, SONDA_AUTO);
+		// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
+		if(serial_msg_test == true){
+			SET_BIT(msg_buffer, MEASURE_SN);
+		}
 	}
+
+	// if (radio_control_get(7)>0){
+	// 	// RESET_BUFFER(msg_buffer);
+	// 	SET_BIT(msg_buffer, SONDA_MANUAL);
+	// }
+	// else if (radio_control_get(7)<=0){
+	// 	// RESET_BUFFER(msg_buffer);
+	// 	SET_BIT(msg_buffer, SONDA_AUTO);
+	// }
 
 
 
@@ -840,25 +848,50 @@ void serial_ping()
 			}
 			
 			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
-			//No funciona en el rover
-				serial_snd.msg_length=26;
-				msg_byte = set_header(PPZ_MEASURE_BYTE);
-				set_telemetry_message(msg_byte);
-				// Reescribe esta parte
-				// Get Sonar
-				sonar_data= sonar_get();
-				serial_snd.distance=sonar_data->distance;
-				serial_snd.confidence=sonar_data->confidence;
-				/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
-				an signed (using one extra byte) int but sign byte is discarded
-				*/
-				itoh(sonar_data->distance,msg_dist,5);
-				for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
-				serial_snd.msgData[22]=sonar_data->confidence;
-				serial_snd.msgData[23]=modo_medida;
-				send_full_message(serial_snd.msg_length);
-				CLEAR_BIT(msg_buffer, MEASURE_SN); 
-			}
+        serial_snd.msg_length = 9;
+        
+        uint8_t msg_byte = set_header(PPZ_MEASURE_BYTE);
+        
+        uint16_t depth = 5000; // En mm
+				uint16_t test_time = 3*60; // En s
+        uint8_t flag = 1; 
+        
+        itoh(depth, msg_data, 2);
+        serial_snd.msgData[4] = msg_data[0];
+        serial_snd.msgData[5] = msg_data[1];
+				memset(msg_data,0,2);
+        
+        itoh(test_time, msg_data, 2);
+        serial_snd.msgData[6] = msg_data[0];
+        serial_snd.msgData[7] = msg_data[1];
+				memset(msg_data,0,2);
+        
+        serial_snd.msgData[8] = flag;
+        
+        send_full_message(serial_snd.msg_length);
+        CLEAR_BIT(msg_buffer, MEASURE_SN);
+    }
+
+			// else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
+			// //No funciona en el rover
+			// 	serial_snd.msg_length=26;
+			// 	msg_byte = set_header(PPZ_MEASURE_BYTE);
+			// 	set_telemetry_message(msg_byte);
+			// 	// Reescribe esta parte
+			// 	// Get Sonar
+			// 	sonar_data= sonar_get();
+			// 	serial_snd.distance=sonar_data->distance;
+			// 	serial_snd.confidence=sonar_data->confidence;
+			// 	/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
+			// 	an signed (using one extra byte) int but sign byte is discarded
+			// 	*/
+			// 	itoh(sonar_data->distance,msg_dist,5);
+			// 	for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
+			// 	serial_snd.msgData[22]=sonar_data->confidence;
+			// 	serial_snd.msgData[23]=modo_medida;
+			// 	send_full_message(serial_snd.msg_length);
+			// 	CLEAR_BIT(msg_buffer, MEASURE_SN); 
+			// }
 
 			// ---- END UNUSED ---------
 

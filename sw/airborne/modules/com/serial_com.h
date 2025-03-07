@@ -36,7 +36,7 @@
  /* Parser variables */
  // Variable to start/stop requesting stream
  extern bool serial_msg_setting;
- 
+ extern bool serial_msg_test;
  
  
  /* Parser msg struct */
