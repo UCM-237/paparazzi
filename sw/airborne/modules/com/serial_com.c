@@ -686,7 +686,7 @@ void serial_ping()
 	struct sonar_parse_t *sonar_data;	// No funciona en el rover, solo en el barco
 	uint8_t msg_gps[5]={0,0,0,0,0};
 	uint8_t msg_dist[5]={0,0,0,0,0};
-	uint8_t msg_data[2] = {0,0};
+	
 
 
 	if (autopilot.mode == 0){
@@ -801,8 +801,7 @@ void serial_ping()
 			// 	CLEAR_BIT(msg_buffer, LIDAR_MESSAGE);
 			// }
 
-			// ---- BEGIN UNUSED ---------
-			// Todos los mensajes de la sonda son de momento iguales
+			// Mensajes de la sonda
 			else if(CHECK_BIT(msg_buffer, SONDA_RQ)){
 				serial_snd.msg_length=6;
 				msg_byte = set_header(PPZ_SONAR_BYTE);
@@ -854,54 +853,33 @@ void serial_ping()
 			}
 			
 			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
-        serial_snd.msg_length = 11;
+        serial_snd.msg_length = 13;
         
         uint8_t msg_byte = set_header(PPZ_MEASURE_BYTE);
         
-        uint16_t depth = 5000; // En mm
-				uint16_t test_time = 180; // En s
-        uint8_t flag = 1; 
+        int16_t depth = 5000; // En mm
+				int16_t test_time = 180; // En s
+        uint8_t flag = 1; 	// Este es por si acaso hace falta
         
+				uint8_t msg_data[3] = {0,0,0};
         itoh(depth, msg_data, 3);
-				serial_snd.msgData[4] = msg_data[0];
-        serial_snd.msgData[5] = msg_data[1];
-        serial_snd.msgData[6] = msg_data[2];
+				serial_snd.msgData[msg_byte+0] = msg_data[0];
+        serial_snd.msgData[msg_byte+1] = msg_data[1];
+        serial_snd.msgData[msg_byte+2] = msg_data[2];
 				memset(msg_data,0,3);
         
         itoh(test_time, msg_data, 3);
-				serial_snd.msgData[7] = msg_data[0];
-        serial_snd.msgData[8] = msg_data[1];
-        serial_snd.msgData[9] = msg_data[2];
+				serial_snd.msgData[msg_byte+3] = msg_data[0];
+        serial_snd.msgData[msg_byte+4] = msg_data[1];
+        serial_snd.msgData[msg_byte+5] = msg_data[2];
 				memset(msg_data,0,3);
         
-        serial_snd.msgData[10] = flag;
+        serial_snd.msgData[msg_byte+6] = flag;
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, MEASURE_SN);
-    }
+    	}
 
-			// else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
-			// //No funciona en el rover
-			// 	serial_snd.msg_length=26;
-			// 	msg_byte = set_header(PPZ_MEASURE_BYTE);
-			// 	set_telemetry_message(msg_byte);
-			// 	// Reescribe esta parte
-			// 	// Get Sonar
-			// 	sonar_data= sonar_get();
-			// 	serial_snd.distance=sonar_data->distance;
-			// 	serial_snd.confidence=sonar_data->confidence;
-			// 	/*NOTE: serial_snd.distance is an unsigned int. It is codified as 
-			// 	an signed (using one extra byte) int but sign byte is discarded
-			// 	*/
-			// 	itoh(sonar_data->distance,msg_dist,5);
-			// 	for(int i=0;i<4;i++) serial_snd.msgData[i+18]=msg_dist[i+1];
-			// 	serial_snd.msgData[22]=sonar_data->confidence;
-			// 	serial_snd.msgData[23]=modo_medida;
-			// 	send_full_message(serial_snd.msg_length);
-			// 	CLEAR_BIT(msg_buffer, MEASURE_SN); 
-			// }
-
-			// ---- END UNUSED ---------
 
 			else{	 
 				// Si llega a aqui es que no quedan mensajes que mandar
