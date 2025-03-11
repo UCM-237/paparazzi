@@ -128,20 +128,36 @@
 
 
   <!-- SECTIONS: General config ............................................................. -->
-  <!-- Lia 30/05/2024 Lab-->
+  <!-- 07/03/2025 Lab-->
   <section name="IMU" prefix="IMU_">
     <define name="BODY_TO_IMU_PHI"   value="0." unit="deg"/>
     <define name="BODY_TO_IMU_THETA" value="0" unit="deg"/>
-    <define name="BODY_TO_IMU_PSI"   value="0.0" unit="deg"/>
-    <define name="MPU_CHAN_X"					 value="1"/>
-    <define name="MPU_CHAN_Y"					 value="0"/>
-    <define name="MPU_CHAN_Z"					 value="2"/>
+    <define name="BODY_TO_IMU_PSI"   value="90.0" unit="deg"/>
     <define name="ACCEL_X_SIGN" 		 value="-1"/>
     <define name="ACCEL_Y_SIGN"      value="-1"/>
-    <define name="ACCEL_Z_SIGN"      value="-1"/>
+    <define name="ACCEL_Z_SIGN"      value="1"/>
     <define name="GYRO_P_SIGN"       value="-1"/>
-    <define name="GYRO_Q_SIGN"       value="-	1"/>
-    <define name="GYRO_R_SIGN"       value="-1"/>
+    <define name="GYRO_Q_SIGN"       value="-1"/>
+    <define name="GYRO_R_SIGN"       value="1"/>
+		
+		<define name="IMU_ACCEL_CALIB" type="array">
+			<field type="struct">
+				<field name="abi_id" value="24"/>
+				<field name="calibrated" type="struct">
+				  <field name="neutral" value="true"/>
+				  <field name="scale" value="true"/>
+				</field>
+				<field name="neutral" value="5,-5,-3" type="int[]"/>
+				<field name="scale" value="{{52481,16897,36999},{21445,6887,15073}}"/>
+			</field>
+		</define>
+
+		<define name="ACCEL_X_NEUTRAL" value="5"/>
+		<define name="ACCEL_Y_NEUTRAL" value="-5"/>
+		<define name="ACCEL_Z_NEUTRAL" value="-3"/>
+		<define name="ACCEL_X_SENS" value="2.4472371175399883" integer="16"/>
+		<define name="ACCEL_Y_SENS" value="2.453463047264724" integer="16"/>
+		<define name="ACCEL_Z_SENS" value="2.454654017945443" integer="16"/>
 
 <!--Calibracion 02/06/2024 GUAJARAZ-->
 <define name="IMU_MAG_CALIB" value="{{.abi_id=7, .calibrated={.neutral=true, .scale=true},.neutral={1452,1425,2257}, .scale={{22139,37531,41508},{15286,20819,25019}}}}"/>
