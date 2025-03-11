@@ -79,6 +79,7 @@ static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
 static uint8_t PPZ_SONDA_CENTER_BYTE = 0x43;	// "C"
 static uint8_t PPZ_SONDA_AUTO_BYTE = 0x41;	// "A"
 static uint8_t PPZ_SONDA_MANUAL_BYTE = 0x42;	// "B"
+static uint8_t PPZ_SONDA_TEST_BYTE = 0x45;	// "E"
 
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint16_t counter = 0;				 // for counting the number of messages sent
@@ -113,6 +114,7 @@ uint8_t probe_error = 0; // 0: OK
 #define SONDA_CENTER 9
 #define SONDA_AUTO 10
 #define SONDA_MANUAL 11
+#define SONDA_TEST 12
 #define HOME_RESPONSE 5
 #define IMU_MESSAGE 6
 #define GPS_MESSAGE 7
@@ -340,7 +342,6 @@ static void message_OK_parse(void){
 	serial_msg.error=serial_msg.msgData[4];
 
 	serial_response = 1;
-	serial_msg.depth = 10;	// TEST
 }
   
   
@@ -640,16 +641,26 @@ void serial_ping()
 	
 
 	if (autopilot.mode == 0){
-		SET_BIT(msg_buffer, SONDA_MANUAL);
-		if (radio_control_get(RADIO_GAIN2)>0){
-			SET_BIT(msg_buffer, SONDA_UP);
+		// Modo Automatico-Manual
+		if(radio_control_get(7)>0){
+			SET_BIT(msg_buffer, SONDA_TEST);
+			CLEAR_BIT(msg_buffer, SONDA_UP);
+			CLEAR_BIT(msg_buffer, SONDA_DOWN);
+			CLEAR_BIT(msg_buffer, SONDA_CENTER);
 		}
-		else if (radio_control_get(RADIO_GAIN2)<0){
-			SET_BIT(msg_buffer, SONDA_DOWN);
-		}
+		// Modo Manual
 		else{
-			SET_BIT(msg_buffer, SONDA_CENTER);
-		}
+			SET_BIT(msg_buffer, SONDA_MANUAL);
+			if (radio_control_get(RADIO_GAIN2)>0){
+				SET_BIT(msg_buffer, SONDA_UP);
+			}
+			else if (radio_control_get(RADIO_GAIN2)<0){
+				SET_BIT(msg_buffer, SONDA_DOWN);
+			}
+			else{
+				SET_BIT(msg_buffer, SONDA_CENTER);
+			}
+		}		
 	}
 	else {
 		SET_BIT(msg_buffer, SONDA_AUTO);
@@ -784,6 +795,16 @@ void serial_ping()
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_MANUAL); 
+			}
+
+			else if(CHECK_BIT(msg_buffer, SONDA_TEST)){
+        serial_snd.msg_length = PROBE_MSG_LENGTH;
+        
+        msg_byte = set_header(PPZ_SONDA_TEST_BYTE);
+        set_probe_message(msg_byte, 10, 10);
+        
+        send_full_message(serial_snd.msg_length);
+        CLEAR_BIT(msg_buffer, SONDA_TEST); 
 			}
 			
 			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
