@@ -31,7 +31,9 @@
         "extended_kalman_filter.h": "c",
         "*.inc": "c",
         "telemetry.h": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "std.h": "c",
+        "any": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

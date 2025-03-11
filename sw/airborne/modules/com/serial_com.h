@@ -37,6 +37,7 @@
  // Variable to start/stop requesting stream
  extern bool serial_msg_setting;
  extern bool serial_msg_test;
+ extern bool serial_response;
  
  
  /* Parser msg struct */
@@ -56,17 +57,15 @@
 
  
  
- 
+ // SEND
  struct serial_send_t {
  
    uint8_t msg_length;
+   uint8_t msg_id;
  
    uint8_t msgData[SERIAL_MAX_PAYLOAD];
    uint8_t error_cnt;
-   uint8_t error_last;
- 
-  
-   uint16_t time;
+   uint8_t error;
    
    int32_t lon;
    int32_t lat;
@@ -76,9 +75,12 @@
    uint8_t confidence;
    
    uint16_t ck;
+   uint16_t time;
+   uint16_t depth;
  
  };
  
+ // RECEIVE
  struct serial_parse_t {
   
    uint8_t msg_id;
@@ -88,14 +90,13 @@
    uint8_t count;
    
    uint8_t error_cnt;
-   uint8_t error_last;
+   uint8_t error;
    
    uint8_t payload_len;
    
    uint16_t ck;
    bool msg_available;
    
-  
    uint16_t time;
    uint16_t depth;
  
@@ -115,6 +116,8 @@
  void set_gps_message(uint8_t start_byte);
  void set_imu_message(uint8_t start_byte);
  void set_telemetry_message(uint8_t start_byte);
+ void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time);
+ void send_measure_msg(uint8_t wp);
  
    
  /* External functions (called by the autopilot)*/
