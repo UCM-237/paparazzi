@@ -608,7 +608,7 @@ void set_telemetry_message(uint8_t start_byte){
 void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
 
 	serial_snd.msgData[start_byte] = probe_error;
-	if(serial_snd.msg_id == PPZ_MEASURE_BYTE){
+	if((serial_snd.msg_id == PPZ_MEASURE_BYTE) || (serial_snd.msg_id == PPZ_SONDA_TEST_BYTE)){
 		serial_snd.depth = depth;
 		serial_snd.time = time;
 	}
@@ -800,8 +800,10 @@ void serial_ping()
 			else if(CHECK_BIT(msg_buffer, SONDA_TEST)){
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
+				uint16_t time = 3*60;
+				int16_t depth = 8;
         msg_byte = set_header(PPZ_SONDA_TEST_BYTE);
-        set_probe_message(msg_byte, 10, 10);
+        set_probe_message(msg_byte, depth, time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_TEST); 
