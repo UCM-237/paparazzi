@@ -92,6 +92,8 @@ int16_t probe_depth = 5000; // En mm
 uint16_t probe_time = 180; // En s
 uint8_t probe_error = 0; // 0: OK
 
+bool bloqued_probe = false;
+
 
 // Sonar parse states
 #define SR_INIT 0
@@ -342,6 +344,9 @@ static void message_OK_parse(void){
 	serial_msg.error=serial_msg.msgData[4];
 
 	serial_response = 1;
+	if (serial_msg.error == 1){
+		bloqued_probe = true;
+	}
 }
   
   
@@ -640,9 +645,9 @@ void serial_ping()
 	uint8_t msg_dist[5]={0,0,0,0,0};
 	
 
-	if (autopilot.mode == 0){
+	if ((autopilot.mode == 0) && (bloqued_probe == false)){
 		// Modo Automatico-Manual
-		if(radio_control_get(7)>0){
+		if(radio_control_get(7)<=0){
 			SET_BIT(msg_buffer, SONDA_TEST);
 			CLEAR_BIT(msg_buffer, SONDA_UP);
 			CLEAR_BIT(msg_buffer, SONDA_DOWN);
@@ -661,6 +666,13 @@ void serial_ping()
 				SET_BIT(msg_buffer, SONDA_CENTER);
 			}
 		}		
+	}
+	else if (bloqued_probe == true){
+		if(radio_control_get(7)>0){
+			SET_BIT(msg_buffer, SONDA_MANUAL);
+			bloqued_probe = false;
+			serial_msg.error = 0;
+		}
 	}
 	else {
 		SET_BIT(msg_buffer, SONDA_AUTO);
