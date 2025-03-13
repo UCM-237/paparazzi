@@ -59,7 +59,7 @@ struct serial_parse_t serial_msg;
 struct serial_send_t serial_snd;
 
 bool serial_msg_setting;
-bool serial_msg_test;
+bool serial_msg_test = false;
 bool serial_response;
 
 // Sonar msg header bytes (and checksum)
@@ -342,9 +342,16 @@ static void message_OK_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
 	serial_msg.error=serial_msg.msgData[4];
+	
+	memset(msgBytes,0,2);
+	msgBytes[0]=serial_msg.msgData[7];
+	msgBytes[1]=serial_msg.msgData[6];
+	serial_msg.depth=serial_byteToint(msgBytes,2)*300;	// Es un int (en mm)
 
 	serial_response = 1;
+	
 	if (serial_msg.error == 1){
+		serial_msg_test = false;
 		bloqued_probe = true;
 	}
 }
@@ -668,6 +675,7 @@ void serial_ping()
 		}		
 	}
 	else if (bloqued_probe == true){
+		SET_BIT(msg_buffer, SONDA_CENTER);
 		if(radio_control_get(7)>0){
 			SET_BIT(msg_buffer, SONDA_MANUAL);
 			bloqued_probe = false;
@@ -675,11 +683,12 @@ void serial_ping()
 		}
 	}
 	else {
-		SET_BIT(msg_buffer, SONDA_AUTO);
 		// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
 		if(serial_msg_test == true){
 			SET_BIT(msg_buffer, MEASURE_SN);
-			serial_msg_test = false;
+		}
+		else{
+			SET_BIT(msg_buffer, SONDA_AUTO);
 		}
 	}
 
@@ -864,6 +873,7 @@ void send_measure_msg(uint8_t wp){
 
 	SET_BIT(msg_buffer, MEASURE_SN);
 	serial_response = 0;
+	serial_msg_test = true;
 
 
 }
