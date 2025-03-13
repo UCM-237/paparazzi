@@ -61,6 +61,7 @@ struct serial_send_t serial_snd;
 bool serial_msg_setting;
 bool serial_msg_test = false;
 bool serial_response;
+bool serial_init;
 
 // Sonar msg header bytes (and checksum)
 static uint8_t headerLength = 2;
@@ -179,6 +180,7 @@ void serial_init(void)
   serial_msg.error=0;
   serial_msg_setting = true;
 	serial_msg_test = false;
+	serial_init = true;
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -689,6 +691,17 @@ void serial_ping()
 		}
 		else{
 			SET_BIT(msg_buffer, SONDA_AUTO);
+		}
+	}
+
+
+	// Comprobación inicial de los botones
+	if(serial_init == true){
+		RESET_BUFFER(msg_buffer);
+		SET_BIT(msg_buffer, SONDA_CENTER);
+		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
+			serial_init == false;
+			serial_snd.error = 1; // Esto ya se comprobara
 		}
 	}
 
