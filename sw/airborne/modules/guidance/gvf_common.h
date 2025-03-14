@@ -63,8 +63,26 @@ typedef struct{
 	uint8_t next_wp;
 } gvf_common_stop_at_wp;
  
+ /** @typedef gvf_common_field
+
+* @brief Struct to save the actual field value. Needed for the CBF
+* @param xi_x x field component
+* @param xi_y y field component
+*/
+
+
+ typedef struct{ 	
+ 	float xi_x;
+ 	float xi_y;
+ } gvf_common_field;
+ 
+extern gvf_common_omega gvf_c_omega;
+
 extern gvf_common_params gvf_c_info;
 extern gvf_common_stop_at_wp gvf_c_stopwp;
+
+extern gvf_common_field gvf_c_field;
+
 /* @ brief Variable to keep the current cpu time in gvf calls */
 extern uint32_t gvf_c_t0;
  

@@ -160,7 +160,11 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   
 	Xp[0] = X[0];
 	Xp[1] = X[1];
-	
+  // From gvf_common.h
+  
+  gvf_c_field.xi_x=Xp[0];
+  gvf_c_field.xi_y=Xp[1];
+  
 	chipnorm = sqrtf(Xp[0] * Xp[0] + Xp[1] * Xp[1]);
 	Xpn[0] = Xp[0]/chipnorm;
 	Xpn[1] = Xp[1]/chipnorm;
