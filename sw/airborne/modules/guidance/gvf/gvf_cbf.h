@@ -41,6 +41,7 @@
 // Default number of neighbors per robot
 #ifndef CBF_MAX_NEIGHBORS
 #define CBF_MAX_NEIGHBORS 4
+
 #endif
 
 //
@@ -48,12 +49,14 @@
 #error "You have to define CBF_NEI_AC_IDS in the ariframe file!"
 #endif // CBF_NEI_AC_IDS
 
+#define N CBF_MAX_NEIGHBORS
 
 // CBF parameters
 
 struct cbf_parameters {
   float r;
   float alpha;
+  float timeout;
 };
 // CBF control
 struct cbf_con {
@@ -89,6 +92,13 @@ typedef struct{
   float xicbf_y;
   float r;
   float alpha;
+  float x;
+  float y;
+  float speed;
+  float course;
+  float vx;
+  float vy;
+  float uref;
 } cbf_state_t;
 
 // CBF obstacle tables
@@ -110,5 +120,15 @@ extern cbf_state_t cbf_ac_state;
 extern cbf_tab_entrie_t cbf_obs_tables[CBF_MAX_NEIGHBORS];
 
 extern struct cbf_parameters cbf_param;
+void ldltDecomposition(double A[N][N], double L[N][N], double D[N]);
+void forwardSubstitution(double L[N][N], double b[N], double y[N]);
+void diagonalSolve(double D[N], double y[N], double z[N]);
+void backwardSubstitution(double L[N][N], double z[N], double x[N]);
+void inverseUsingLDLT(double L[N][N], double D[N], double invA[N][N]);
+
+/* External functions --------------------------- */
+extern void cbf_init(void);
+extern void gvf_cbf(void);
+
 #endif // GVF_CBF_H
 

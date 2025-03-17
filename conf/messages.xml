@@ -1746,8 +1746,22 @@
     	<field name="columns" type="uint8[]"/>
     </message>
     -->
+    <!--- CBF message -->
+     <message name="CBF" id="183">
+      <description>
+        CBF telemetry message.
+      </description>
+      <field name="Xi_x"    		type="float"/>
+      <field name="Xi_y"   		type="float"/>
+      <field name="Xi_CBF_x"    	type="float"/>
+      <field name="Xi_CBF_y"    	type="float"/>
+      <field name="Num_neig"         type="uint8"/>
+      <field name="Active_conds"  type="uint8"/>
+      <field name="R"         type="float"/>
+      <field name="alpha"     type="float"/>
+    </message>
     
-    <!-- 183 is free -->
+    
     <!-- 184 is free -->
     <!-- 185 is free -->
     <!-- 186 is free -->
