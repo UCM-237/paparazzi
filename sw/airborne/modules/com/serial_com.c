@@ -29,6 +29,8 @@
 
 
 #include "modules/com/serial_com.h"
+#include "modules/com/serial_aux.h"
+
 #include "modules/lidar/tfmini.h"
 #include "mcu_periph/sys_time.h"
 #include "generated/airframe.h"
@@ -61,11 +63,11 @@ struct serial_send_t serial_snd;
 bool serial_msg_setting;
 bool serial_msg_test = false;
 bool serial_response;
-bool serial_init;
+bool serial_button_check;
 
 // Sonar msg header bytes (and checksum)
-static uint8_t headerLength = 2;
-static uint8_t checksumLength = 2;
+const uint8_t headerLength = 2;
+const uint8_t checksumLength = 2;
 
 static uint8_t PPZ_START_BYTE = 0x50; // "P"
 static uint8_t COM_START_BYTE = 0x52; // "R"
@@ -180,7 +182,7 @@ void serial_init(void)
   serial_msg.error=0;
   serial_msg_setting = true;
 	serial_msg_test = false;
-	serial_init = true;
+	serial_button_check = false;
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -188,109 +190,6 @@ void serial_init(void)
   #endif
 
 }
-
-
-// ------------------------------------------------------
-// ------------------ FUNCIONES AUXILARES ---------------
-// ------------------------------------------------------
-
-
-/* Message parsing functions */
-static uint32_t msgLength(void){
-  return headerLength + serial_msg.payload_len + checksumLength;
-};
-
-/* Send message to serial port (byte by byte) */
-static void serial_send_msg(uint8_t len, uint8_t *bytes)
-{
-  struct link_device *dev = &((SERIAL_DEV).device);
-	
-  int i = 0;
-
-  for (i = 0; i < len; i++) {
-    dev->put_byte(dev->periph, 0, bytes[i]);
-
-  }
-	dev->put_byte(dev->periph, 0, '\n'); 
-}
-
-
-/* Calculate the checksum */
-static uint32_t serial_calculateChecksum(void){
-  uint32_t i = 0;
-  uint32_t non_ck_len = msgLength() - checksumLength;
-  serial_msg.ck = 0;
-
-  for(i = 0; i < non_ck_len; i++) {
-    serial_msg.ck += serial_msg.msgData[i];
-  }
-
-  return serial_msg.ck;
-}
-
-void serial_calculateChecksumMsg(uint8_t *msg, int msgLength){
-  int i = 0;
-  uint16_t suma=0;
-  int non_ck_len = msgLength - checksumLength;
-  
-  for(i = 0; i < non_ck_len; i++) {
-    suma += msg[i];
-  }
-  serial_snd.ck=suma;
-  uint8_t chksBytes[2];
-  ito2h(suma,chksBytes);
-  msg[msgLength-2]=chksBytes[1];
-  msg[msgLength-1]=chksBytes[0];
-
-
-};
-
-void send_full_message(uint8_t msgLength) {
-    serial_calculateChecksumMsg(serial_snd.msgData, (int)msgLength);
-    serial_send_msg(msgLength, serial_snd.msgData);
-}
-
-unsigned int serial_byteToint(uint8_t * bytes,int length){
-    unsigned int num=0 ;
-    for (int i=length-1;i>=0;i--){
-        num=num|bytes[i]<<(8*(i));
-   }
-    return num;
-}
-
-void ito2h(int value, unsigned char* str) {
-	
-    str[1]=(value & 0xff00)>>8;
-    str[0]= value & 0x0ff;	
-}
-
-void itoh(int value, unsigned char* str, int nbytes){
-    double nmax;
-    int nb;
-    nmax=pow(2,(nbytes-1)*8)-1;
-    nb=nbytes;
-    if (abs(value) > nmax ) return;
-    if (value <0) {
-       str[0]=1;
-       value=-value;
-       }
-    else str[0]=0;
-    for (int i=1; i<nb; i++){
-           str[i]=(value & (0xff << (nb-1-i)*8) ) >> (8*(nb-1-i));
-        }
-
-    return;
-
-}
-
-void ftoh(float value, unsigned char* str, int nbytes){
-		
-		memcpy(str, &value, sizeof(float));
-		for (int i = sizeof(float); i < nbytes; i++) {
-        str[i] = 0;
-    }
-}
-
 
 
 // ------------------------------------------------------
@@ -696,11 +595,11 @@ void serial_ping()
 
 
 	// Comprobación inicial de los botones
-	if(serial_init == true){
+	if(serial_button_check == false){
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_CENTER);
 		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
-			serial_init == false;
+			serial_button_check == true;
 			serial_snd.error = 1; // Esto ya se comprobara
 		}
 	}

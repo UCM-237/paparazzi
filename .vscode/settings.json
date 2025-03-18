@@ -33,7 +33,13 @@
         "telemetry.h": "c",
         "uart.h": "c",
         "std.h": "c",
-        "any": "c"
+        "any": "c",
+        "serial_aux.h": "c",
+        "tfmini.h": "c",
+        "pprz_geodetic_int.h": "c",
+        "navigation.h": "c",
+        "stdint.h": "c",
+        "modules.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

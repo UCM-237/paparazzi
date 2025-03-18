@@ -24,6 +24,7 @@
   </dep>
   <header>
     <file name="serial_com.h"/>
+    <file name="serial_aux.h"/>
   </header>
   <init fun="serial_init()"/>
   <periodic fun="serial_ping()" freq="10" autorun="TRUE"/>    <!-- Esto es para mandar la telemetria -->
@@ -33,6 +34,7 @@
     <configure name="SERIAL_UART" default = "UART5" case="upper|lower"/> <!-- Revisar estos configure | Mirar gps_ublox.xml -->
     <configure name="SERIAL_BAUD" default="B115200"/>
     <file name="serial_com.c"/>
+    <file name="serial_aux.c"/>
     <define name="USE_$(SERIAL_UART_UPPER)"/> <!-- for uart_arch-->
     <define name="SERIAL_DEV" value="$(SERIAL_UART_LOWER)"/>
     <define name="$(SERIAL_UART_UPPER)_BAUD" value="$(SERIAL_BAUD)"/>

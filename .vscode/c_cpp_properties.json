@@ -19,7 +19,8 @@
                 "${workspaceFolder}/sw/airborne/firmwares/rotorcraft",
                 "${workspaceFolder}/tests/modules",
                 "${workspaceFolder}/sw/airborne/modules",
-                "${workspaceFolder}/sw/ext/chibios/os/nil/include"
+                "${workspaceFolder}/sw/ext/chibios/os/nil/include",
+                "${workspaceFolder}/tests/modules/generated"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",

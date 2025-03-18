@@ -41,8 +41,8 @@ struct sonar_parse_t br_sonar;
 bool sonar_stream_setting;
 
 // Sonar msg header bytes (and checksum)
-static uint8_t headerLength = 8;
-static uint8_t checksumLength = 2;
+static uint8_t sonar_headerLength = 8;
+static uint8_t sonar_checksumLength = 2;
 
 static uint8_t SONAR_START1_BYTE = 0x42; // "B"
 static uint8_t SONAR_START2_BYTE = 0x52; // "R"
@@ -233,15 +233,15 @@ static void sonar_send_msg(uint8_t len, uint8_t *bytes)
 
 
 /* Message parsing functions */
-static uint32_t msgLength(void)
+static uint32_t sonar_msgLength(void)
 {
-  return headerLength + br_sonar.payload_len + checksumLength;
+  return sonar_headerLength + br_sonar.payload_len + sonar_checksumLength;
 };
 
 static uint32_t calculateChecksum(void)
 {
   uint32_t i = 0;
-  uint32_t non_ck_len = msgLength() - checksumLength;
+  uint32_t non_ck_len = sonar_msgLength() - sonar_checksumLength;
   br_sonar.ck = 0;
 
   for (i = 0; i < non_ck_len; i++) {
