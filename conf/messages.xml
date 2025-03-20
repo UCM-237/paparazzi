@@ -1487,7 +1487,7 @@
     </message>
 
     <message name="STATIC_CONTROL" id="158">
-      <field name="active"  type="uint8" values="INACTIVE|ACTIVE"/>
+      <field name="active"  type="int16" values="INACTIVE|ACTIVE"/>
       <field name="dist_WP" type="float" />
       <field name="pt_bz"  type="uint8"/>
       <field name="pxd" type="float"/>
@@ -1747,6 +1747,19 @@
     </message>
     -->
     <!--- CBF message -->
+    <message name="CBF_STATE" id="182">
+      <description>
+        CBF air-to-air message.
+      </description>
+      <field name="x_enu"  type="float"/>
+      <field name="y_enu"  type="float"/>
+      <field name="vx_enu" type="float"/>
+      <field name="vy_enu" type="float"/>
+      <field name="speed"  type="float"/>
+      <field name="course" type="float"/>
+      <field name="uref"   type="float"/>
+    </message>
+    
      <message name="CBF" id="183">
       <description>
         CBF telemetry message.

@@ -86,8 +86,8 @@ struct cbf_tel {
 typedef struct{
   float xi_x;
   float xi_y;
-  float nei;
-  float active_conds;
+  uint8_t nei;
+  uint8_t active_conds;
   float xicbf_x;
   float xicbf_y;
   float r;
@@ -127,8 +127,9 @@ void backwardSubstitution(double L[N][N], double z[N], double x[N]);
 void inverseUsingLDLT(double L[N][N], double D[N], double invA[N][N]);
 
 /* External functions --------------------------- */
-extern void cbf_init(void);
+extern void gvf_cbf_init(void);
+extern void cbf_init(void) ;
 extern void gvf_cbf(void);
-
+extern void parse_CBF_STATE(uint8_t *buf);
 #endif // GVF_CBF_H
 

@@ -26,7 +26,7 @@
 
 #include <math.h>
 #include "std.h"
-
+#include "../gvf/gvf_cbf.h"
 #include "gvf_parametric_bare.h"
 #include "./trajectories/gvf_parametric_bare_2d_bezier_splines.h"
 
@@ -214,6 +214,9 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
 	// Virtual coordinate update, even if the vehicle is not in autonomous mode, the parameter w will get "closer" to
   // the vehicle. So it is not only okei but advisable to update it.
 	gvf_parametric_bare_control.w += w_dot * gvf_parametric_bare_control.delta_T * 1e-3;
+	
+	// CBF
+	gvf_cbf();
 }
 
 
