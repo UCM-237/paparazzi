@@ -41,6 +41,9 @@
 #define LIDAR_MIN_RANGE 0.1
 #define LIDAR_MAX_RANGE 12.0
 
+#define LIDAR_OFFSET 0.20   // Distancia horizontal de la IMU al LiDAR (en metros)
+#define LIDAR_HEIGHT 0.24   // Altura del LiDAR respecto al suelo (en metros)
+
 #define MOTOR_SPEED 5
 static uint32_t last_time = 0;
 
@@ -174,10 +177,25 @@ static void tfmini_parse(uint8_t byte)
         if (tfmini.distance != 0xFFFF) {
           // compensate AGL measurement for body rotation
           if (tfmini.compensate_rotation) {
-            float phi = stateGetNedToBodyEulers_f()->phi;
             float theta = stateGetNedToBodyEulers_f()->theta;
-            float gain = (float)fabs((double)(cosf(phi) * cosf(theta)));
-            tfmini.distance = tfmini.distance * gain;
+            float ground_distance;
+            if(fabs(theta) < 0.01){
+              ground_distance = 100;  // Si es 0 esta recto
+            }
+            else{
+              ground_distance = LIDAR_HEIGHT/sinf(-theta) - LIDAR_OFFSET;
+            }
+            
+            // tf_servo.ang = ground_distance; // DELETE
+            if ((tfmini.distance >= ground_distance) && (ground_distance > 0)) {
+              tfmini.distance = 0;
+            }
+
+            // AQUI HACIA LA CUENTA PENSANDO EN UN DRON, NO NOS SIRVE
+            // float phi = stateGetNedToBodyEulers_f()->phi;
+            // float theta = stateGetNedToBodyEulers_f()->theta;
+            // float gain = (float)fabs((double)(cosf(phi) * cosf(theta)));
+            // tfmini.distance = tfmini.distance * gain;
           }
 
           // send message (if requested)
