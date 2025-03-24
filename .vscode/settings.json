@@ -26,7 +26,9 @@
         "*.inc": "c",
         "chrono": "c",
         "telemetry.h": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "autopilot.h": "c",
+        "tensor": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",
