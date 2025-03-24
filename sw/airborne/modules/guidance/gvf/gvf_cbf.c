@@ -62,7 +62,7 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
   for (int i = 0; i < n; i++) {
     cbf_telemetry.acs_available[i] = cbf_obs_tables[i].available;
   }
-
+  
   pprz_msg_send_CBF(trans, dev, AC_ID, &cbf_ac_state.xi_x,&cbf_ac_state.xi_y,
   				&cbf_ac_state.xicbf_x,&cbf_ac_state.xicbf_y,
   				&cbf_ac_state.nei,&cbf_ac_state.active_conds,
@@ -75,8 +75,16 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
 void gvf_cbf_init(void)
 {
 
-  cbf_param.r = 2;
-  cbf_param.alpha = 1;
+  cbf_param.r = 2.0;
+  cbf_param.alpha = 1.0;
+  cbf_ac_state.r=2.0;
+  cbf_ac_state.alpha=1.0;
+  cbf_ac_state.nei=1;
+  cbf_ac_state.active_conds=0;
+  cbf_ac_state.xicbf_y=0;
+  cbf_ac_state.xicbf_x=0;
+  cbf_ac_state.xi_y=0;
+  cbf_ac_state.xi_x=0;
   
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF, send_cbf);
@@ -127,7 +135,6 @@ static void send_cbf_state_to_nei(void)
       msg.sender_id = AC_ID;
       msg.receiver_id = cbf_obs_tables[i].ac_id;
       msg.component_id = 0;
-      
       // The information sended is redundant
       pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
                                         &cbf_ac_state.vx, &cbf_ac_state.vy, 
@@ -141,6 +148,10 @@ static void send_cbf_state_to_nei(void)
 
 void cbf_init(void) 
 { 
+cbf_param.r = 2.0;
+  cbf_param.alpha = 1.0;
+  cbf_ac_state.r=2.0;
+  cbf_ac_state.alpha=1.0;
   // Initilize the obstacles tables with the ac_id of the neighborns
   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
@@ -172,7 +183,9 @@ uint32_t now = get_sys_time_msec();
  
  for (uint8_t i = 0; i < CBF_MAX_NEIGHBORS; ++i)  {
 
-    if (cbf_obs_tables[i].available == 0) { continue; } // ignore unavailable neighborns
+    if (cbf_obs_tables[i].available == 0) { 
+    	continue; 
+    	} // ignore unavailable neighborns
 
     uint32_t timeout = now - cbf_obs_tables[i].t_last_msg;
 
@@ -180,6 +193,7 @@ uint32_t now = get_sys_time_msec();
       cbf_obs_tables[i].available = 0;
       cbf_telemetry.acs_timeslost[i] = cbf_telemetry.acs_timeslost[i] + 1;
       cbf_obs_tables[i].omega_safe = 0;
+      
       continue;
       } 
      // Build the eta[j] (safe function)
@@ -224,12 +238,17 @@ uint32_t now = get_sys_time_msec();
   	}   
   
   // Modified field (only if there are active conditions
+  cbf_ac_state.active_conds=active_conds;
+  cbf_ac_state.xi_y=gvf_c_field.xi_y;
+  cbf_ac_state.xi_x=gvf_c_field.xi_x;
   if (active_conds>0){
   	gvf_c_field.xi_x=gvf_c_field.xi_x-cx;
   	gvf_c_field.xi_y=gvf_c_field.xi_x-cy;
   }
   
  }    
+ cbf_ac_state.xicbf_x=gvf_c_field.xi_x;
+ cbf_ac_state.xicbf_y=gvf_c_field.xi_y;
  send_cbf_state_to_nei();
 }
 // Helpers

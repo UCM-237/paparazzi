@@ -54,6 +54,7 @@
   <modules>
     <module name="gvf_module"/>
     <module name="gvf_parametric_bare"/>
+    <module name="gvf_cbf"/>
   </modules>
   <blocks>
     <block name="Wait GPS" strip_icon="gps.png">

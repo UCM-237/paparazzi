@@ -36,9 +36,7 @@ No Eigen is needed
 
    <init fun = "gvf_cbf_init()"/>
    <datalink message="CBF_STATE" fun="parse_CBF_STATE(buf)" class="telemetry"/>
-   <makefile target="ap|nps" firmware="fixedwing">
-    <file name="gvf_cbf.c"/>
-   </makefile>
+
 
    <makefile target="ap|nps" firmware="rover">
     <file name="gvf_cbf.c"/>
