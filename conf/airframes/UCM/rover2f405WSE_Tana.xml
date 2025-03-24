@@ -132,9 +132,15 @@
 
   <!-- SECTIONS: General config ............................................................. -->
   <section name="IMU" prefix="IMU_">
-    <define name="BODY_TO_IMU_PHI"   value="0." unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
-    <define name="BODY_TO_IMU_PSI"   value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_PHI"   value="0.0" unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="0.0" unit="deg"/>
+    <define name="BODY_TO_IMU_PSI"   value="90.0" unit="deg"/>
+    <define name="ACCEL_X_SIGN" 		 value="-1"/>
+    <define name="ACCEL_Y_SIGN"      value="1"/>
+    <define name="ACCEL_Z_SIGN"      value="-1"/>
+    <define name="GYRO_P_SIGN"       value="-1"/>
+    <define name="GYRO_Q_SIGN"       value="1"/>
+    <define name="GYRO_R_SIGN"       value="-1"/>
     <!-- ....CALIBRATION 2022/06/07 .................................................... -->
     <!--define name="ACCEL_X_NEUTRAL" value="88"/>
     <define name="ACCEL_Y_NEUTRAL" value="-12"/>
