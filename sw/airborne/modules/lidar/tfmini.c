@@ -50,6 +50,7 @@ struct TFMini tfmini = {
 
 
 bool enable_servo = false;
+float motor_speed = MOTOR_SPEED;
 struct TFMiniServo tf_servo;
 // int tfmini_servo_pos = 1500;
 
@@ -203,7 +204,7 @@ static void tfmini_parse(uint8_t byte)
 // ####################################
 
 void tfmini_servo(){
-  if (get_sys_time_msec() > last_time + MOTOR_SPEED) {
+  if (get_sys_time_msec() > last_time + motor_speed) {
     last_time = get_sys_time_msec();
     if(enable_servo){
       tf_servo.pos += (tf_servo.dir == 0) ? 100 : -100;
@@ -218,11 +219,11 @@ void tfmini_servo(){
   }
 
   // TEST DE EVASION BASICA DE OBSTACULOS. Si hay obstaculo, se pone en modo manual
-  if((tfmini.distance < LIDAR_MAX_RANGE) && (tfmini.distance > LIDAR_MIN_RANGE)){
-    if (tfmini.distance < 0.2){
-      autopilot.mode = 0;   // Este es manual (no estoy seguro de donde los define, creo que en el xml)
-    } 
-  }
+  // if((tfmini.distance < LIDAR_MAX_RANGE) && (tfmini.distance > LIDAR_MIN_RANGE)){
+  //   if (tfmini.distance < 0.2){
+  //     autopilot.mode = 0;   // Este es manual (no estoy seguro de donde los define, creo que en el xml)
+  //   } 
+  // }
 }
 
 

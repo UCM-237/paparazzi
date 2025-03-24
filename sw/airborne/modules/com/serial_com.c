@@ -108,10 +108,11 @@ uint32_t msg_buffer = 0;
 #define IMU_MESSAGE 6
 #define GPS_MESSAGE 7
 #define LIDAR_MESSAGE 8
+#define REF_MESSAGE 12
 
 // Delay of each message (0 for not periodic message, >= 1 for periodic)
 #define TIME_TELEMETRY 8
-#define TIME_HOME 0
+#define TIME_HOME 40
 #define TIME_IMU 4
 #define TIME_GPS 20
 #define TIME_LIDAR 1
@@ -747,6 +748,7 @@ void serial_ping()
 				send_full_message(serial_snd.msg_length, LIDAR_MESSAGE);
 			}
 
+			
 			// ---- BEGIN UNUSED ---------
 			else if(CHECK_BIT(msg_buffer, SONDA_RQ)){
 				serial_snd.msg_length=6;
@@ -811,6 +813,7 @@ void serial_ping()
 		SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
 		SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
 		SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);
+		SET_BIT_IF(counter, TIME_HOME, msg_buffer, HOME_RESPONSE);
 
 		counter = (counter >= 255) ? 0 : counter + 1;
 
