@@ -79,7 +79,7 @@ static uint8_t PPZ_SONDA_DOWN_BYTE = 0x44; // "D"
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint16_t counter = 0;				 // for counting the number of messages sent
 uint32_t msg_buffer = 0;
-#define SEND_INTERVAL 50 // time between sending messages (ms)
+#define SEND_INTERVAL 10 // time between sending messages (ms)
 
 // Sonar parse states
 #define SR_INIT 0
@@ -110,12 +110,13 @@ uint32_t msg_buffer = 0;
 #define LIDAR_MESSAGE 8
 #define REF_MESSAGE 12
 
-// Delay of each message (0 for not periodic message, >= 1 for periodic)
-#define TIME_TELEMETRY 8
-#define TIME_HOME 40
-#define TIME_IMU 4
-#define TIME_GPS 20
-#define TIME_LIDAR 1
+// Delay of each message (ms) (0 for not periodic message, >= 1 for periodic)
+// Minimum delay --> SEND_INTERVAL (10ms)
+#define TIME_TELEMETRY 400
+#define TIME_HOME 2000
+#define TIME_IMU 200
+#define TIME_GPS 1000
+#define TIME_LIDAR 10
 
 
 //Messages received (REVISAR)
@@ -615,12 +616,15 @@ void set_telemetry_message(uint8_t start_byte){
 	uint8_t msg_gps[5]={0,0,0,0,0};
 	uint8_t msg_dist[5]={0,0,0,0,0};
 
+	// Get the attitude
+	struct FloatEulers att = *stateGetNedToBodyEulers_f();
+
 	memset(&serial_snd.msgData[j], 0, 18);
 	gps_coord = stateGetPositionLla_i();
 	serial_snd.lon=gps_coord->lon;
 	serial_snd.lat=gps_coord->lat;
-	int32_t alt = (int)(ahrs_dcm.ltp_to_body_euler.psi*1e7);
-	serial_snd.alt=alt;		// Changed to avoid issues with the rover
+	// int32_t alt = (int)(ahrs_dcm.ltp_to_body_euler.psi*1e7);
+	serial_snd.alt=(int)(att.psi*1e7);
 	itoh(gps_coord->lon,msg_gps,5);
 	for(int i=0;i<5;i++) serial_snd.msgData[i+j]=msg_gps[i];
 	memset(msg_gps,0,5);
@@ -809,11 +813,11 @@ void serial_ping()
 		RESET_BUFFER(msg_buffer);
 
 			// Set the messages to sent in the next iteration
-		SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
-		SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
-		SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
-		SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);
-		SET_BIT_IF(counter, TIME_HOME, msg_buffer, HOME_RESPONSE);
+		SET_BIT_IF(counter, (int) TIME_TELEMETRY/SEND_INTERVAL, msg_buffer, TELEMETRY_SN);
+		SET_BIT_IF(counter, (int) TIME_IMU/SEND_INTERVAL, msg_buffer, IMU_MESSAGE);
+		SET_BIT_IF(counter, (int) TIME_GPS/SEND_INTERVAL, msg_buffer, GPS_MESSAGE);
+		SET_BIT_IF(counter, (int) TIME_LIDAR/SEND_INTERVAL, msg_buffer, LIDAR_MESSAGE);
+		SET_BIT_IF(counter, (int) TIME_HOME/SEND_INTERVAL, msg_buffer, HOME_RESPONSE);
 
 		counter = (counter >= 255) ? 0 : counter + 1;
 
@@ -821,3 +825,20 @@ void serial_ping()
 	
 }	// VOID
 
+
+// ------------------------------------------------------
+// FUNCIONES para el flight plan
+
+void send_measure_msg(uint8_t wp){
+
+	// Modificar esto
+	SET_BIT(msg_buffer, MEASURE_SN);
+	// if (wp == WP_P2){
+	// 	int16_t depth = 5000;
+	// }
+	// else{
+	// 	// No manda nada
+	// 	CLEAR_BIT(msg_buffer, MEASURE_SN);
+	// }
+
+}
