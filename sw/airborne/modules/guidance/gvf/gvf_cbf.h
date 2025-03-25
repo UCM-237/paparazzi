@@ -127,9 +127,9 @@ void backwardSubstitution(double L[N][N], double z[N], double x[N]);
 void inverseUsingLDLT(double L[N][N], double D[N], double invA[N][N]);
 
 /* External functions --------------------------- */
-extern void gvf_cbf_init(void);
-extern void cbf_init(void) ;
-extern void gvf_cbf(void);
+extern void cbf_init(void);
+
+extern bool gvf_cbf(void);
 extern void parse_CBF_STATE(uint8_t *buf);
 #endif // GVF_CBF_H
 

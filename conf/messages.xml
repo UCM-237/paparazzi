@@ -1774,8 +1774,20 @@
       <field name="alpha"     type="float"/>
     </message>
     
+    <message name="CBF_REC" id="184">
+      <description>
+        CBF telemetry message.
+      </description>
+      <field name="Neigbour"    	type="uint16"/>
+      <field name="Available"   	type="uint8"/>
+      <field name="Times_lost"    	type="uint32"/>
+      <field name="px"    		type="float"/>
+      <field name="py"         	type="float"/>
+      <field name="vx"  		type="float"/>
+      <field name="vy"         	type="float"/>
+      
+    </message>
     
-    <!-- 184 is free -->
     <!-- 185 is free -->
     <!-- 186 is free -->
     <!-- 187 is free -->

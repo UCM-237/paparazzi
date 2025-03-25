@@ -34,7 +34,7 @@ No Eigen is needed
      <file name="gvf_cbf.h"/>
    </header>
 
-   <init fun = "gvf_cbf_init()"/>
+   <init fun = "cbf_init()"/>
    <datalink message="CBF_STATE" fun="parse_CBF_STATE(buf)" class="telemetry"/>
 
 
