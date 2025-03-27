@@ -84,6 +84,7 @@ static inline void DlCheckAndParse(struct link_device *dev, struct transport_tx 
   }
 #endif
 
+  
   if (*msg_available) {
     if (update_dl) {
       datalink_time = 0;

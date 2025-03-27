@@ -66,7 +66,9 @@
       <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
     </module>
     
-   <module  name="gvf_cbf" type="module"/>
+   <module name="gvf_cbf">
+       <define name="CBF_NEI_AC_IDS" value="{2,3}"/>
+    </module>
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->

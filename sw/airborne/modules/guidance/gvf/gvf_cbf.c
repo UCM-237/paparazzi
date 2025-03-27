@@ -117,7 +117,7 @@ void cbf_init(void)
     cbf_obs_tables[i].available = 0;
     cbf_telemetry.acs_timeslost[i] = 0; // for telemetry
   }
-
+  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice,strlen("CBF init") ,"CBF init");
   #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF, send_cbf);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF_REC, send_cbf_rec);
@@ -130,6 +130,7 @@ void cbf_init(void)
 
 static void cbf_low_level_getState(void)
 {
+
   cbf_ac_state.x = stateGetPositionEnu_f()->x;
   cbf_ac_state.y = stateGetPositionEnu_f()->y;
   cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
@@ -138,12 +139,15 @@ static void cbf_low_level_getState(void)
     cbf_ac_state.course = 90 - stateGetNedToBodyEulers_f()->psi; // ENU course
     cbf_ac_state.vx = stateGetSpeedEnu_f()->x;
     cbf_ac_state.vy = stateGetSpeedEnu_f()->y;
+  
 }
 
 
 // Fill the i'th obstacle table with the info contained in the buffer  
 static void write_cbf_table(uint16_t i, uint8_t *buf) 
 {
+  char msg[] = "Write CBF Table";
+  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
   cbf_obs_tables[i].state.x = DL_CBF_STATE_x_enu(buf);
   cbf_obs_tables[i].state.y = DL_CBF_STATE_y_enu(buf);
   cbf_obs_tables[i].state.vx = DL_CBF_STATE_vx_enu(buf);
@@ -160,22 +164,25 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
 static void send_cbf_state_to_nei(void)
 {
   struct pprzlink_msg msg;
-
-  for (int i = 0; i < CBF_MAX_NEIGHBORS; i++)
+  
+  for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
     if (cbf_obs_tables[i].ac_id != 0) { // send state to the ACs in CBF_NEI_AC_IDS
       msg.trans = &(DefaultChannel).trans_tx;
       msg.dev = &(DefaultDevice).device;
       msg.sender_id = AC_ID;
       msg.receiver_id = cbf_obs_tables[i].ac_id;
       msg.component_id = 0;
-      
+      int n=1;
       // The information sended is redundant
       pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
                                         &cbf_ac_state.vx, &cbf_ac_state.vy, 
                                         &cbf_ac_state.speed, &cbf_ac_state.course,
-                                        &cbf_ac_state.uref);
+                                        &msg.receiver_id);
+      /*char m[5];
+      sprintf(m,"%u",msg.receiver_id);
+      DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
      }
-    
+    }
 }
 
 //---------------------------------------------------------------------------------
@@ -268,8 +275,12 @@ uint32_t now = get_sys_time_msec();
 // Parse telemetry messages from air
 void parse_CBF_STATE(uint8_t *buf)
 {
-  int16_t sender_id = (int16_t)(SenderIdOfPprzMsg(buf));
-  cbf_ac_state.uref=sender_id;
+  //int16_t sender_id = (int16_t)(SenderIdOfPprzMsg(buf));
+  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("PARSE"), "PARSE");
+  int16_t sender_id = (int16_t) pprzlink_get_msg_sender_id(buf);
+  char *msg;
+  sprintf(msg,"%u",sender_id);
+  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
   for (uint16_t i = 0; i < CBF_MAX_NEIGHBORS; i++)
     if (cbf_obs_tables[i].ac_id == sender_id) {
       write_cbf_table(i, buf);

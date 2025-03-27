@@ -1788,7 +1788,15 @@
       
     </message>
     
-    <!-- 185 is free -->
+        <!-- MULTI_CONS -->
+    <message name="MULTI_CONS" id="185">
+      <description>
+        Air-to-air message containing consensus variables for multi-agent coordination.
+      </description>
+      <field name="x" type="float[]"> Array of consensus state variables </field>
+    </message>
+    
+    
     <!-- 186 is free -->
     <!-- 187 is free -->
     <!-- 188 is free -->

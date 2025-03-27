@@ -21,9 +21,10 @@
       <module name="fdm"           type="rover"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <module name="telemetry_nps" dir="datalink" />
        <!-- Multiple agents simulation -->
-      <!--configure name="MODEM_PORT_OUT" value="4248"/>
-      <configure name="MODEM_PORT_IN"  value="4249"/-->
+      <configure name="MODEM_PORT_OUT" value="4245"/>
+      <configure name="MODEM_PORT_IN"  value="4244"/>
     </target>    
     
     <!-- Same board module as matek_f765_wing but without OSD -->
@@ -81,7 +82,7 @@
     </module>
     <!-- CBF module-->
     <module name="gvf_cbf">
-       <define name="CBF_NEI_AC_IDS" value="{2,3}"/>
+       <define name="CBF_NEI_AC_IDS" value="{9,10}"/>
     </module>
     
     <module name="traffic_info"/>
