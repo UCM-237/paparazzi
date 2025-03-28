@@ -1756,7 +1756,15 @@
     <!-- 189 is free -->
     <!-- 190 is free -->
     <!-- 191 is free -->
-    <!-- 192 is free -->
+    
+    <message name="SLAM" id="192">
+      <field name="offset_x" type="float" unit="m"/>
+      <field name="offset_y" type="float" unit="m"/>
+      <field name="GPS_offset_x" type="float" unit="m"/>
+      <field name="GPS_offset_y" type="float" unit="m"/>
+      <field name="nearest_point_x" type="float" unit="m"/>
+      <field name="nearest_point_y" type="float" unit="m"/>
+    </message>
 
     <message name="AHRS_LKF" id="193">
       <field name="phi"   type="float" unit="rad"   alt_unit="deg"   alt_unit_coef="57.29578" />

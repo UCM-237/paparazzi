@@ -1,6 +1,8 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.4514297" lon0="-3.7290253" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
+<!-- Coordenadas antiguas = 40.4514297, -3.7290253 -->
+
+<flight_plan alt="660" ground_alt="650" lat0="40.451235" lon0="-3.729049" max_dist_from_home="2500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
@@ -31,7 +33,6 @@
     <waypoint name="_N2" x="90" y="-90"/>
     <waypoint name="_N3" x="-90" y="-90"/>
     <waypoint name="_N4" x="-90" y="90"/>
-    <waypoint name="wp1" x="-243.9" y="216.3"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">
@@ -47,7 +48,7 @@
   </variables>
   <modules>
     <module name="gvf_module"/>
-    <module name="gvf_parametric"/>
+    <module name="gvf_parametric_bare"/>
   </modules>
   <blocks>
     <block name="Wait GPS" strip_icon="gps.png">
@@ -86,15 +87,22 @@
       <call fun="gvf_sin_wp1_wp2(WP_P1, WP_P2, gvf_sin_par.w, gvf_sin_par.off, gvf_sin_par.A)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
-    <!--
-    <block name="gvf_bezier">
-      <call fun="gvf_parametric_2D_bezier_wp(WP_BZ0, WP_BZ1, WP_BZ2,WP_BZ3,WP_BZ4, WP_BZ5, WP_BZ6, WP_BZ7, WP_BZ8, WP_BZ9, WP_BZ10, WP_BZ11, WP_BZ12)"/>
+    <block name="gvf_bezier_bare">
+      <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
-    -->
     <block name="gvf_quintic_bezier_bare">
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_control">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun=" increase_bz_pointer()"/>
+      <call fun="rover_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)"deroute="gvf_quintic_bezier_bare"/>
     </block>
   </blocks>
 </flight_plan>

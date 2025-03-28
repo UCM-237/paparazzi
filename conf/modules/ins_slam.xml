@@ -1,0 +1,45 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="ins_slam" dir="ins" task="estimation">
+  <doc>
+    <description>
+      INS with Extended Kalman Filter
+    </description>
+    <define name="USE_INS_NAV_INIT" value="TRUE|FALSE" description="Initialize the origin of the local coordinate system from flight plan. (Default: TRUE)"/>
+    <define name="INS_INT_BARO_ID" value="BARO_BOARD_SENDER_ID" description="The ABI sender id of the baro to use"/>
+    <define name="INS_INT_GPS_ID" value="GPS_MULTI_ID" description="The ABI sender id of the GPS to use"/>
+    <define name="INS_INT_IMU_ID" value="ABI_BROADCAST" description="The ABI sender id of the IMU to use"/>
+    <define name="INS_INT_VEL_ID" value="ABI_BROADCAST" description="The ABI sender id of the VELOCITY_ESTIMATE (e.g. from opticflow"/>
+    <define name="USE_INS_SLAM" value="TRUE|FALSE" description="Use it to enable this module"/>
+  </doc>
+
+  <settings name="INS_SLAM">
+    <dl_settings>
+      <dl_settings NAME="INS_SLAM">
+        <dl_setting var="ins_slam.enable" min="0" step="1" max="1" values="FALSE|TRUE"/>
+        <dl_setting var="ins_slam.max_distance_wall" min="0" step="0.1" max="10" shortname="DISTANCE WALL"/>
+        <dl_setting var="ins_slam.min_distance" min="0" step="0.1" max="1" shortname="MIN_DISTANCE"/>
+        <dl_setting var="ins_slam.max_distance" min="1" step="0.1" max="12" shortname="MAX_DISTANCE"/>
+        <dl_setting var="ins_slam.alpha" min="0" step="0.1" max="1" shortname="ALPHA"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+
+  <dep>
+    <depends>@imu,@gps,@sonar|@position|@velocity</depends>
+    <provides>ins</provides>
+  </dep>
+  <header>
+    <file name="ins_int.h" dir="modules/ins"/>
+    <file name="ins_slam.h" dir="modules/ins"/>
+    <file name="lidar_correction.h" dir="modules/lidar/slam"/>
+  </header>
+  <init fun="ins_int_init()"/>
+  <makefile target="ap">
+    <define name="INS_TYPE_H" value="modules/ins/ins_int.h" type="string"/>
+    <define name="USE_INS_SLAM" value="TRUE"/>
+    <file name="ins.c"/>
+    <file name="ins_slam.c"/>
+    <file name="lidar_correction.c" dir="modules/lidar/slam"/>
+  </makefile>
+</module>

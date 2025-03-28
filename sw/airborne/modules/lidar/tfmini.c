@@ -200,7 +200,7 @@ static void tfmini_parse(uint8_t byte)
 
           // send message (if requested)
           if (tfmini.update_agl) {
-            AbiSendMsgAGL(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance);
+            AbiSendMsgLIDAR_SERVO(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance, tf_servo.ang);
           }
         }
       }

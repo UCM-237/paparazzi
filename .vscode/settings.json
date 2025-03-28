@@ -28,7 +28,15 @@
         "telemetry.h": "c",
         "uart.h": "c",
         "autopilot.h": "c",
-        "tensor": "cpp"
+        "tensor": "cpp",
+        "iostream": "cpp",
+        "lidar_correction.h": "c",
+        "iterator": "c",
+        "ins_slam.h": "c",
+        "*.tcc": "c",
+        "istream": "c",
+        "ostream": "c",
+        "regex": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

@@ -38,9 +38,11 @@
 
 
     <!-- Pos estimated with Kalman Filter -->
-    <!--module name="ins"/--> 
+    <!--<module name="ins"/> --> 
     <!-- <module name="ins_kf"/> -->
-    <module name="ins" type="ekf"/>
+    <!-- <module name="ins" type="ekf"/> -->
+
+    <module name="ins" type="slam"/>
 
 
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
@@ -80,7 +82,7 @@
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-    
+
     <!-- Obstacle grid -->
     <!--
     <module name="obstacle_rover">

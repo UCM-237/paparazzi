@@ -39,7 +39,8 @@
     <!-- Pos estimated with Kalman Filter -->
     <!-- <module name="ins"/>  --> 
     <!-- <module name="ins" type="kf"/> -->
-    <module name="ins" type="ekf"/>
+    <!-- <module name="ins" type="ekf"/> -->
+    <module name="ins" type="slam"/>
     
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
