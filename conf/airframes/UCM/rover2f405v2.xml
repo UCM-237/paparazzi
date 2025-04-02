@@ -79,7 +79,10 @@
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-    
+    <module name="gvf_cbf">
+   <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
+       <define name="CBF_NEI_AC_IDS" value="{1,3,4,5}"/>
+    </module>
     <!-- Obstacle grid -->
     <!--
     <module name="obstacle_rover">

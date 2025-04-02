@@ -59,6 +59,8 @@
   <blocks>
     <block name="Wait GPS" strip_icon="gps.png">
       <call_once fun="NavKillThrottle()"/>
+      <call_once fun="cbf_init()"/>
+      <call fun="gvf_cbf()"/>
       <while cond="!GpsFixValid()"/>
     </block>
     <block name="Geo init" strip_icon="googleearth.png">
@@ -99,7 +101,7 @@
     </block>
     <block name="gvf_bezier_bare">
       <call_once fun="cbf_init()"/>
-            <call fun="gvf_cbf()"/>
+      <call fun="gvf_cbf()"/>
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>

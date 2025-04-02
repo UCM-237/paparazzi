@@ -2931,7 +2931,7 @@
     </message>
 
     <message name="DCF_REG_TABLE" id="158" link="forwarded">
-      <description>Init the table of an aircraft for the Distributed Circular Formation algorithm. If the nei_id is equal to zero, then you wipe out (clean) the whole table of the aircraft.</description>
+      <description>Init the table of an aircraft for the CBF algorithm. If the nei_id is equal to zero, then you wipe out (clean) the whole table of the aircraft.</description>
       <field name="ac_id" type="uint8">ID of the table's aircraft to be updated</field>
       <field name="nei_id" type="uint8">ID of the neighbor for the table</field>
       <field name="desired_sigma" type="int16">Desired angle to have w.r.t. the neighbor</field>
@@ -2949,6 +2949,19 @@
       <field name="ac_id" type="uint8"/>
       <field name="fd" type="uint8" values="ALL|FLIGHT_RECORDER|PPRZLOG">where the message will be logged</field>
       <field name="msg" type="char[]"/>
+    </message>
+    
+     <message name="CBF_REG_TABLE" id="186" link="forwarded">
+      <description>Init the table of an aircraft for the Distributed Circular Formation algorithm. If the nei_id is equal to zero, then you wipe out (clean) the whole table of the aircraft.</description>
+      <field name="ac_id" type="uint8">ID of the table's aircraft to be updated</field>
+      <field name="nei_id" type="uint8">ID of the neighbor for the table</field>
+      <field name="x_enu"  type="float"/>
+      <field name="y_enu"  type="float"/>
+      <field name="vx_enu" type="float"/>
+      <field name="vy_enu" type="float"/>
+      <field name="speed"  type="float"/>
+      <field name="course" type="float"/>
+      <field name="uref"   type="float"/>
     </message>
     
   </msg_class>

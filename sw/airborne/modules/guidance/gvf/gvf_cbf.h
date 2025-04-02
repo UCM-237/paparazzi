@@ -125,7 +125,7 @@ void forwardSubstitution(double L[N][N], double b[N], double y[N]);
 void diagonalSolve(double D[N], double y[N], double z[N]);
 void backwardSubstitution(double L[N][N], double z[N], double x[N]);
 void inverseUsingLDLT(double L[N][N], double D[N], double invA[N][N]);
-
+void parseCBFTable(uint8_t *buf);
 /* External functions --------------------------- */
 extern void cbf_init(void);
 

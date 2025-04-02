@@ -160,6 +160,50 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
   cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
 }
 
+ void parseCBFTable(uint8_t *buf)
+{
+  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("PARSECBF"), "PARSECBF");
+  uint8_t ac_id = DL_CBF_REG_TABLE_ac_id(buf);
+  if (ac_id == AC_ID) {
+    uint8_t nei_id = DL_CBF_REG_TABLE_nei_id(buf);
+    
+    if (nei_id == 0) {
+      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
+        cbf_obs_tables[i].available = 0;
+      }
+    } else {
+      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++)
+        if (cbf_obs_tables[i].ac_id == (int16_t)nei_id) {
+          	cbf_obs_tables[i].state.x = DL_CBF_REG_TABLE_x_enu(buf);
+  		cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
+  		cbf_obs_tables[i].state.vx = DL_CBF_REG_TABLE_vx_enu(buf);
+  		cbf_obs_tables[i].state.vy = DL_CBF_REG_TABLE_vy_enu(buf);
+  		cbf_obs_tables[i].state.speed  = DL_CBF_REG_TABLE_speed(buf);
+  		cbf_obs_tables[i].state.course = DL_CBF_REG_TABLE_course(buf);
+  		cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
+  		cbf_obs_tables[i].available = 1;
+  		cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
+   
+          return;
+        }
+
+      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++)
+        if (cbf_obs_tables[i].available == -1) {
+          	cbf_obs_tables[i].state.x = DL_CBF_REG_TABLE_x_enu(buf);
+  		cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
+  		cbf_obs_tables[i].state.vx = DL_CBF_REG_TABLE_vx_enu(buf);
+  		cbf_obs_tables[i].state.vy = DL_CBF_REG_TABLE_vy_enu(buf);
+  		cbf_obs_tables[i].state.speed  = DL_CBF_REG_TABLE_speed(buf);
+  		cbf_obs_tables[i].state.course = DL_CBF_REG_TABLE_course(buf);
+  		cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
+  		cbf_obs_tables[i].available = 1;
+  		cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
+          return;
+        }
+    }
+  }
+}
+
 // Send the AC CBF_STATE to the neighborns network
 static void send_cbf_state_to_nei(void)
 {
@@ -174,7 +218,7 @@ static void send_cbf_state_to_nei(void)
       msg.component_id = 0;
       int n=1;
       // The information sended is redundant
-      pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
+     pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
                                         &cbf_ac_state.vx, &cbf_ac_state.vy, 
                                         &cbf_ac_state.speed, &cbf_ac_state.course,
                                         &msg.receiver_id);
@@ -198,7 +242,7 @@ int j=0;
 uint32_t now = get_sys_time_msec();
  
  cbf_low_level_getState();
- 
+ send_cbf_state_to_nei();
  for (uint8_t i = 0; i < CBF_MAX_NEIGHBORS; ++i)  {
 	
     if (cbf_obs_tables[i].available == 0) { 
@@ -267,7 +311,7 @@ uint32_t now = get_sys_time_msec();
  }    
  cbf_ac_state.xicbf_x=gvf_c_field.xi_x;
  cbf_ac_state.xicbf_y=gvf_c_field.xi_y;
- send_cbf_state_to_nei();
+ //
  return true;
 }
 // Helpers
