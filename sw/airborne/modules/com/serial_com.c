@@ -157,6 +157,7 @@ int cont = 0;
 
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
   pprz_msg_send_SERIAL_COM(trans, dev, AC_ID,
+							&serial_msg.button_state,
   						&serial_snd.msg_id,
 							&serial_snd.msg_length,
   						&serial_snd.error,
@@ -547,10 +548,19 @@ void serial_ping()
 {   
 	uint32_t now_s = get_sys_time_msec();
 
+	// Estados
+	serial_msg.button_state[0] = radio_control_get(RADIO_MODE);	// SE
+	serial_msg.button_state[1] = radio_control_get(RADIO_GAIN2);	// SG
+	serial_msg.button_state[2] = radio_control_get(7);	// SA
+
+	// Los errores se liberan al principio (para que no se bloquee sin querer)
+	// serial_snd.error = 0;
+	// serial_msg.error = 0;
+
 	uint8_t msg_byte = 0;
 	struct sonar_parse_t *sonar_data;	// No funciona en el rover, solo en el barco
 	uint8_t msg_gps[5]={0,0,0,0,0};
-	uint8_t msg_dist[5]={0,0,0,0,0};
+	// uint8_t msg_dist[5]={0,0,0,0,0};
 	
 
 	if ((autopilot.mode == 0) && (bloqued_probe == false)){
@@ -563,6 +573,7 @@ void serial_ping()
 		}
 		// Modo Manual
 		else{
+			serial_snd.error = 0;
 			SET_BIT(msg_buffer, SONDA_MANUAL);
 			if (radio_control_get(RADIO_GAIN2)>0){
 				SET_BIT(msg_buffer, SONDA_UP);
@@ -576,17 +587,21 @@ void serial_ping()
 		}		
 	}
 	else if (bloqued_probe == true){
+		serial_snd.error = 1;
 		SET_BIT(msg_buffer, SONDA_CENTER);
 		if(radio_control_get(7)>0){
 			SET_BIT(msg_buffer, SONDA_MANUAL);
 			bloqued_probe = false;
 			serial_msg.error = 0;
+			serial_snd.error = 0;
 		}
 	}
 	else {
 		// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
 		if(serial_msg_test == true){
 			SET_BIT(msg_buffer, MEASURE_SN);
+			// AQUI CREO QUE FALTA ALGO
+			bloqued_probe = true; 
 		}
 		else{
 			SET_BIT(msg_buffer, SONDA_AUTO);
@@ -596,11 +611,12 @@ void serial_ping()
 
 	// Comprobación inicial de los botones
 	if(serial_button_check == false){
+		serial_snd.error = 2; // Esto ya se comprobara
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_CENTER);
 		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
-			serial_button_check == true;
-			serial_snd.error = 1; // Esto ya se comprobara
+			serial_button_check = true;
+			serial_snd.error = 0;
 		}
 	}
 
@@ -670,6 +686,26 @@ void serial_ping()
 
 
 			// Mensajes de la sonda
+			else if(CHECK_BIT(msg_buffer, SONDA_MANUAL)){
+        serial_snd.msg_length = PROBE_MSG_LENGTH;
+        
+        msg_byte = set_header(PPZ_SONDA_MANUAL_BYTE);
+        set_probe_message(msg_byte, 0, 0);
+        
+        send_full_message(serial_snd.msg_length);
+        CLEAR_BIT(msg_buffer, SONDA_MANUAL); 
+			}
+
+			else if(CHECK_BIT(msg_buffer, SONDA_CENTER)){
+        serial_snd.msg_length = PROBE_MSG_LENGTH;
+        
+        msg_byte = set_header(PPZ_SONDA_CENTER_BYTE);
+        set_probe_message(msg_byte, probe_depth, probe_time);
+        
+        send_full_message(serial_snd.msg_length);
+        CLEAR_BIT(msg_buffer, SONDA_CENTER);
+			}
+
 			else if(CHECK_BIT(msg_buffer, SONDA_RQ)){
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
@@ -700,16 +736,6 @@ void serial_ping()
         CLEAR_BIT(msg_buffer, SONDA_DOWN);
 			}
 
-			else if(CHECK_BIT(msg_buffer, SONDA_CENTER)){
-        serial_snd.msg_length = PROBE_MSG_LENGTH;
-        
-        msg_byte = set_header(PPZ_SONDA_CENTER_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
-        
-        send_full_message(serial_snd.msg_length);
-        CLEAR_BIT(msg_buffer, SONDA_CENTER);
-			}
-
 			else if(CHECK_BIT(msg_buffer, SONDA_AUTO)){
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
@@ -718,16 +744,6 @@ void serial_ping()
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_AUTO);
-			}
-
-			else if(CHECK_BIT(msg_buffer, SONDA_MANUAL)){
-        serial_snd.msg_length = PROBE_MSG_LENGTH;
-        
-        msg_byte = set_header(PPZ_SONDA_MANUAL_BYTE);
-        set_probe_message(msg_byte, 0, 0);
-        
-        send_full_message(serial_snd.msg_length);
-        CLEAR_BIT(msg_buffer, SONDA_MANUAL); 
 			}
 
 			else if(CHECK_BIT(msg_buffer, SONDA_TEST)){
@@ -784,9 +800,8 @@ void send_measure_msg(uint8_t wp){
 	probe_time = WaypointY(wp);
 
 	SET_BIT(msg_buffer, MEASURE_SN);
-	serial_response = 0;
+	// serial_response = 0;
 	serial_msg_test = true;
-
 
 }
 

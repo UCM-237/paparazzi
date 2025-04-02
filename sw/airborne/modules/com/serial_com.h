@@ -1,5 +1,5 @@
 /*
- /* Copyright (C) 2025 UCM
+ * Copyright (C) 2025 UCM
  *
  * This file is part of paparazzi
  *
@@ -47,6 +47,7 @@ extern const uint8_t checksumLength;
 /* Parser msg struct */
 #define SERIAL_MAX_PAYLOAD 26
 #define SERIAL_MAX_MSG 17
+#define BUTTONS 3 // Numero de botones usados del mando
 
 
 /* Macros for bit manipulation */
@@ -102,6 +103,8 @@ struct serial_parse_t {
   
   uint16_t time;
   uint16_t depth;
+
+  int16_t button_state[BUTTONS]
 
 };
 

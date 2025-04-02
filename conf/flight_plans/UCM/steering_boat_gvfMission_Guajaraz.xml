@@ -37,6 +37,8 @@
     <waypoint name="L4" x="302.6" y="655.0"/>
     <waypoint name="L5" x="301.5" y="656.3"/>
     <waypoint name="L6" x="303.2" y="654.8"/>
+    <!-- sonda -->
+    <waypoint name="_P1" x="6000" y="200"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">
@@ -107,5 +109,19 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
       <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)"deroute="line_array"/>
     </block>
+
+
+    <!-- ########################## TEST SONDA ############################ -->
+    <block name="Mision_Prueba_Sonda">
+      <go wp="P1"/>
+      <call_once fun="send_measure_msg(WP__P1)"/>
+
+      <while cond="serial_response == 0">
+          <stay wp="P1"/>
+      </while>
+
+      <go wp="P2"/>
+    </block>
+
   </blocks>
 </flight_plan>

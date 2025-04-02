@@ -115,7 +115,7 @@
 
 
     <!-- ########################## TEST SONDA ############################ -->
-    <block name="MisionCompleta">
+    <block name="Mision_Prueba_Sonda">
       <go wp="P1"/>
       <call_once fun="send_measure_msg(WP__P1)"/>
 

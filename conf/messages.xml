@@ -1907,9 +1907,10 @@
     </message>
 
     <message name="SERIAL_COM" id="212">
+       <field name="BUTTON_STATE"	type="int16[3]"/>
      	 <field name="SEND_ID"		  type="uint8"/>
     	 <field name="SEND_LENGTH"	type="uint8"/> 
-    	 <field name="SEND_ERROR"	  type="uint8" values="OK|ERROR1"/>
+    	 <field name="SEND_ERROR"	  type="uint8" values="OK|ERROR1|BUTTONS"/>
     	 <field name="SEND_DEPTH"	  type="uint16"  alt_unit="m"	alt_unit_coef="0.001"/> 
     	 <field name="SEND_TIME"		type="uint16"  alt_unit="s"/>
     	 <field name="SEND_CK"			type="uint16"/>
