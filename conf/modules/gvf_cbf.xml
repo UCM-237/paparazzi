@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="gvf_parametric_bare_cbf" dir="guidance/gvf">
+<module name="gvf_cbf" dir="guidance/gvf">
   <doc>
     <description>Guidance algorithm for tracking 2D and 3D smooth trajectories that are defined by a parametric equation. Including CBF to avoid other robots.
 No Eigen is needed
