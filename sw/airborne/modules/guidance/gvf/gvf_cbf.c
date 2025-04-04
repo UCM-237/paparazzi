@@ -103,22 +103,23 @@ void cbf_init(void)
   cbf_ac_state.xicbf_x=0;
   cbf_ac_state.xi_y=0;
   cbf_ac_state.xi_x=0;
+  cbf_control.n_neighborns=0;
  // Initilize the obstacles tables with the ac_id of the neighborns
   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
     if (cbf_nei_ac_ids[i] > 0 && cbf_nei_ac_ids[i] < 255) {
       cbf_obs_tables[i].ac_id = cbf_nei_ac_ids[i];
-      cbf_telemetry.acs_id[cbf_control.n_neighborns] = cbf_nei_ac_ids[i]; // for telemetry
+      cbf_telemetry.acs_id[i] = cbf_nei_ac_ids[i]; // for telemetry
 
       cbf_control.n_neighborns = cbf_control.n_neighborns + 1;
-    } else {
+    } 
+    else {
       cbf_obs_tables[i].ac_id = 0;
     }
     cbf_obs_tables[i].available = 0;
     cbf_telemetry.acs_timeslost[i] = 0; // for telemetry
   }
   cbf_ac_state.nei=cbf_control.n_neighborns;
-  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice,strlen("CBF init") ,"CBF init");
   #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF, send_cbf);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF_REC, send_cbf_rec);
@@ -131,9 +132,9 @@ void cbf_init(void)
 
 static void cbf_low_level_getState(void)
 {
-
+/*
   cbf_ac_state.x = stateGetPositionEnu_f()->x;
-  cbf_ac_state.y = stateGetPositionEnu_f()->y;
+  cbf_ac_state.y = stateGetPositionEnu_f()->y;*/
   cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
   // We assume that the course and psi
   // of the rover (steering wheel) are the same
@@ -141,7 +142,7 @@ static void cbf_low_level_getState(void)
     cbf_ac_state.vx = stateGetSpeedEnu_f()->x;
     cbf_ac_state.vy = stateGetSpeedEnu_f()->y;
     cbf_ac_state.x=49;//QUITAR
-  
+    cbf_ac_state.y=1;
 }
 
 
@@ -157,11 +158,11 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
   cbf_obs_tables[i].state.course = DL_CBF_STATE_course(buf);
   cbf_obs_tables[i].state.uref = DL_CBF_STATE_uref(buf);
   
-  cbf_obs_tables[i].available = 1;
+  cbf_obs_tables[i].available = (uint8_t) 1;
   cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
-  sprintf(msg,"Rover %u, table pos i %u, x, %d",cbf_obs_tables[i].ac_id, i, cbf_obs_tables[i].state.x);
-  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
-  
+  /*sprintf(msg,"Rover %u, table pos i %u, x, %f, y, %f, av, %u",cbf_obs_tables[i].ac_id, i, cbf_obs_tables[i].state.x,cbf_obs_tables[i].state.y,cbf_obs_tables[i].available);
+  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);*/
+    
 }
 
  void parseCBFTable(uint8_t *buf)
@@ -174,8 +175,9 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
       for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
         cbf_obs_tables[i].available = 0;
       }
-    } else {
-      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++)
+    } 
+    else {
+      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
         if (cbf_obs_tables[i].ac_id == (int16_t)nei_id) {
           	cbf_obs_tables[i].state.x = DL_CBF_REG_TABLE_x_enu(buf);
   		cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
@@ -189,9 +191,9 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
    
           return;
         }
-
-      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++)
-        if (cbf_obs_tables[i].available == -1) {
+}
+      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
+        if (cbf_obs_tables[i].available == 0) {
           	cbf_obs_tables[i].state.x = DL_CBF_REG_TABLE_x_enu(buf);
   		cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
   		cbf_obs_tables[i].state.vx = DL_CBF_REG_TABLE_vx_enu(buf);
@@ -206,13 +208,13 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
     }
   }
 }
-
+}
 // Send the AC CBF_STATE to the neighborns network
 static void send_cbf_state_to_nei(void)
 {
   struct pprzlink_msg msg;
   
-  for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
+  for (int i = 0; i < cbf_control.n_neighborns; i++){
     if (cbf_obs_tables[i].ac_id != 0) { // send state to the ACs in CBF_NEI_AC_IDS
       msg.trans = &(DefaultChannel).trans_tx;
       msg.dev = &(DefaultDevice).device;
@@ -224,10 +226,10 @@ static void send_cbf_state_to_nei(void)
      pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
                                         &cbf_ac_state.vx, &cbf_ac_state.vy, 
                                         &cbf_ac_state.speed, &cbf_ac_state.course,
-                                        &msg.receiver_id);
-      /*char m[5];
+                                        &cbf_ac_state.uref);
+      char m[5];
       sprintf(m,"%u",msg.receiver_id);
-      DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
+      DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);
      }
     }
 }
@@ -246,7 +248,7 @@ uint32_t now = get_sys_time_msec();
  
  cbf_low_level_getState();
  send_cbf_state_to_nei();
- for (uint8_t i = 0; i < CBF_MAX_NEIGHBORS; ++i)  {
+ for (uint8_t i = 0; i < cbf_control.n_neighborns; ++i)  {
 	
     if (cbf_obs_tables[i].available == 0) { 
     	continue; 
@@ -279,8 +281,8 @@ uint32_t now = get_sys_time_msec();
   if (active_conds>0) {
   	double Aact[active_conds][active_conds];
   	for (uint8_t i=0;i<active_conds;i++){
-  		for   (uint8_t j=0;j<active_conds;j++){
-  			Aact[i][j]=Aa[i][0]*Aa[j][0]+Aa[i][1]*Aa[j][1];
+  		for   (uint8_t l=0;l<active_conds;l++){
+  			Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
   		}
   	}
   
@@ -290,8 +292,8 @@ uint32_t now = get_sys_time_msec();
   	double lambda_A[active_conds];
   	for (uint8_t i=0;i<active_conds;i++){
   		int su=0;
-  		for   (j=0;j<active_conds;j++){
-  			su=invA[i][j]*(Aact[j][0]*gvf_c_field.xi_x+Aact[j][1]*gvf_c_field.xi_y-b[j]);
+  		for   (int l=0;l<active_conds;l++){
+  			su=invA[i][l]*(Aact[l][0]*gvf_c_field.xi_x+Aact[l][1]*gvf_c_field.xi_y-b[l]);
   		}
   		lambda_A[i]=su;
   	}  
@@ -322,13 +324,11 @@ uint32_t now = get_sys_time_msec();
 // Parse telemetry messages from air
 void parse_CBF_STATE(uint8_t *buf)
 {
-  //int16_t sender_id = (int16_t)(SenderIdOfPprzMsg(buf));
-  //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("PARSE"), "PARSE");
   int16_t sender_id = (int16_t) pprzlink_get_msg_sender_id(buf);
   char *msg;
   sprintf(msg,"Sender %u",sender_id);
   DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
-  for (uint16_t i = 0; i < CBF_MAX_NEIGHBORS; i++)
+  for (uint16_t i = 0; i < cbf_control.n_neighborns; i++)
     if (cbf_obs_tables[i].ac_id == sender_id) {
       write_cbf_table(i, buf);
       break;

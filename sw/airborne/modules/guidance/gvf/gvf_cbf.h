@@ -40,7 +40,7 @@
 
 // Default number of neighbors per robot
 #ifndef CBF_MAX_NEIGHBORS
-#define CBF_MAX_NEIGHBORS 4
+#define CBF_MAX_NEIGHBORS 10
 
 #endif
 
@@ -107,7 +107,7 @@ typedef struct{
   cbf_state_t state;
   
   float omega_safe;
-  bool available;
+  uint8_t available;
   uint32_t t_last_msg;
 } cbf_tab_entrie_t;
 

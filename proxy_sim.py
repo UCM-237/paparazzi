@@ -32,7 +32,7 @@ from time import sleep
 PAPARAZZI_HOME = os.getenv("PAPARAZZI_HOME")
 
 PAPARAZZI_PROXY = PAPARAZZI_HOME + "/sw/ground_segment/tmtc/pprzlink_proxy.py"
-AIRFRAME_DIR = "airframes/UGR/"
+AIRFRAME_DIR = "airframes/UCM/"
 AIRFRAME_DIR_LONG = PAPARAZZI_HOME + "/conf/" + AIRFRAME_DIR
 
 INIT_OUT_PORT = 4244
