@@ -96,6 +96,9 @@ typedef struct {
   float speed_error;
   float kp;
   float ki;
+
+  int32_t command[2];
+
 } ctrl_t;
 
 extern ctrl_t guidance_control;

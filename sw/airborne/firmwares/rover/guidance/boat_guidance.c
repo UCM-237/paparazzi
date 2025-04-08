@@ -64,12 +64,15 @@ static float mvg_avg[MOV_AVG_M] = {0};
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 static uint8_t dummy = 0;
-static void send_rover_ctrl(struct transport_tx *trans, struct link_device *dev)
+static void send_boat_ctrl(struct transport_tx *trans, struct link_device *dev)
 {
-  pprz_msg_send_ROVER_CTRL(trans, dev, AC_ID,
+  pprz_msg_send_BOAT_CTRL(trans, dev, AC_ID,
                     	    &guidance_control.cmd.speed,
                     	    &guidance_control.speed_error,
                     	    &guidance_control.throttle,
+                          &guidance_control.bearing,
+                          &guidance_control.command[0],
+                    	    &guidance_control.command[1],
                     	    &guidance_control.cmd.omega,
                     	    &guidance_control.kp,
                     	    &guidance_control.ki,
@@ -123,7 +126,7 @@ void boat_guidance_init(void)
   
   #ifdef BOAT_DEBUG
   #if PERIODIC_TELEMETRY
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_ROVER_CTRL, send_rover_ctrl);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_BOAT_CTRL, send_boat_ctrl);
   #endif
   #endif
 }
@@ -148,8 +151,10 @@ void boat_guidance_read_rc(void){
   guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE];
   guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL];
   
-  commands[COMMAND_MLEFT]  = (guidance_control.rc_throttle - guidance_control.rc_bearing)/2;
-  commands[COMMAND_MRIGHT] = (guidance_control.rc_throttle + guidance_control.rc_bearing)/2;
+  guidance_control.command[0] = (guidance_control.rc_throttle - guidance_control.rc_bearing)/2;
+  guidance_control.command[1] = (guidance_control.rc_throttle + guidance_control.rc_bearing)/2;
+  commands[COMMAND_MLEFT]  = guidance_control.command[0];
+  commands[COMMAND_MRIGHT] = guidance_control.command[1];
   
   boat_bound_cmds();
 }
@@ -168,8 +173,10 @@ void boat_guidance_read_NAV(void)
 	}
   
   //Definimos las ordones suponiendo que no hay saturacion
-  commands[COMMAND_MLEFT]  = (guidance_control.throttle - guidance_control.bearing)/2;
-  commands[COMMAND_MRIGHT] = (guidance_control.throttle + guidance_control.bearing)/2;
+  guidance_control.command[0] = (guidance_control.throttle - guidance_control.bearing)/2;
+  guidance_control.command[1] = (guidance_control.throttle + guidance_control.bearing)/2;
+  commands[COMMAND_MLEFT]  = guidance_control.command[0];
+  commands[COMMAND_MRIGHT] = guidance_control.command[1];
   
   boat_bound_cmds();
 }

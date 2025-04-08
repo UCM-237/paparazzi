@@ -36,7 +36,8 @@
         <call fun="nav_periodic_task()"/>
       </control>
       <control>
-	<call fun="SetCommandsFromRC(commands, radio_control.values)"/>
+        <!-- <call fun="boat_guidance_read_rc()"/> -->
+	      <call fun="SetCommandsFromRC(commands, radio_control.values)"/>
         <call fun="SetActuatorsFromCommands(commands, autopilot_get_mode())"/>
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
