@@ -399,6 +399,7 @@ bool gvf_line_wp_heading(uint8_t wp, float heading)
 
 bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, uint8_t wp7, uint8_t wp8, uint8_t wp9, uint8_t wp10, uint8_t wp11, uint8_t wp12, uint8_t wp13, uint8_t wp14, uint8_t wp15, uint8_t wp16, uint8_t wp17, uint8_t wp18, uint8_t wp19, uint8_t wp20, uint8_t wp21, uint8_t wp22, uint8_t wp23, uint8_t wp24, uint8_t wp25, uint8_t wp26, uint8_t wp27, uint8_t wp28, uint8_t wp29, uint8_t wp30, uint8_t wp31, uint8_t wp32, uint8_t wp33, uint8_t wp34, uint8_t wp35, uint8_t wp36, uint8_t wp37, uint8_t wp38, uint8_t wp39, uint8_t wp40, uint8_t wp41, uint8_t wp42, uint8_t wp43, uint8_t wp44, uint8_t wp45, uint8_t wp46, uint8_t wp47, uint8_t wp48, uint8_t wp49, uint8_t wp50, float d1, float d2)
 {
+
 	// Create the points
 	gvf_trajectory.type = 2;
 	//num_wp_moved = 16;
@@ -465,8 +466,7 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
   x[50] = WaypointX(wp50); y[50] = WaypointY(wp50);
 
   
-  int j = 0;
-	for(int k = 0; k < num_wp_moved-1; k++)
+	for(int k = 0; k < GVF_N_LINES-1; k++)
 	{
 	
 		gvf_lines_array[k].p1x = x[k];
@@ -474,20 +474,34 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 		gvf_lines_array[k].p2x = x[k+1];
 		gvf_lines_array[k].p2y = y[k+1];
 		//printf("Valor de k = %d \n", k);
+		
+	  if (gvf_lines_array[gvf_control.which_line].p2x == x[num_wp_moved] && gvf_lines_array[gvf_control.which_line].p2y == y[num_wp_moved]){
+		
+  		gvf_lines_array[k].p1x = x[num_wp_moved];
+		  gvf_lines_array[k].p1y = y[num_wp_moved];
+		  gvf_lines_array[k].p2x = x[num_wp_moved];
+		  gvf_lines_array[k].p2y = y[num_wp_moved];
+		
+		}
+		
 	}
 	struct EnuCoor_f *p = stateGetPositionEnu_f();
  	float px = p->x;
 	float py = p->y;
 	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
-	if((dist <= gvf_c_stopwp.distance_stop )){
-		if(!gvf_c_stopwp.stop_at_wp){
-			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
-			}		
-		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
-			gvf_c_stopwp.stay_still = 1;
-			}
-		}
+	bool stop_flag = 0;
+	//printf("Punto al que va x: %f \nPunto al que va y: %f", gvf_lines_array[gvf_control.which_line].p2x, gvf_lines_array[gvf_control.which_line].p2y);
+  	if((dist <= gvf_c_stopwp.distance_stop)){
+  		if(!gvf_c_stopwp.stop_at_wp){
+  			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+  		}		
+  		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+  			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+  			gvf_c_stopwp.stay_still = 1;
+  			//gvf_c_stopwp.pxd = gvf_lines_array[gvf_control.which_line].p1x; 
+  			//gvf_c_stopwp.pyd = gvf_lines_array[gvf_control.which_line].p1y;
+  		}
+  	}
   	float x1 = gvf_lines_array[gvf_control.which_line].p1x;
    	float y1 = gvf_lines_array[gvf_control.which_line].p1y;
    	float x2 = gvf_lines_array[gvf_control.which_line].p2x;
@@ -497,6 +511,7 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
     gvf_trajectory.p[5] = 0;
     gvf_plen_wps = 3;
     return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
+    
 }
 
 // ELLIPSE

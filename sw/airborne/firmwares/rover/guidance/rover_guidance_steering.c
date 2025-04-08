@@ -252,6 +252,7 @@ void rover_guidance_steering_speed_ctrl_pid(void)
 	guidance_control.speed_error = guidance_control.cmd.speed - speed_avg;
 	update_pid_f(&rover_pid, guidance_control.speed_error, time_step);
 
+  
 	guidance_control.throttle = BoundThrottle(guidance_control.cmd.speed*guidance_control.kf + get_pid_f(&rover_pid));
 	
 	// Telemetry TODO: unify in one function

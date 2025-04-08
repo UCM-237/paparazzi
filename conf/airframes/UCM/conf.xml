@@ -68,7 +68,7 @@
   <aircraft
    name="UAV_Boyi"
    ac_id="7"
-   airframe="airframes/UCM/rover2f405WSE.xml"
+   airframe="airframes/UCM/boyi.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
    telemetry="telemetry/default_rover_pidcontrol.xml"
    flight_plan="flight_plans/Defaults/Default_Guajaraz_Rover.xml"
