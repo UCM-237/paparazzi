@@ -1,28 +1,28 @@
 <!-- Same as Pradolongo, but with the origin in Campillo -->
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.3202741" lon0="-3.5027159" max_dist_from_home="1600" name="Campillo Test" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.3209150" lon0="-3.5100712" max_dist_from_home="1600" name="Campillo Test" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
     <waypoint name="HOME" x="0" y="0"/>
-    <waypoint name="STDBY" x="296.9" y="24.6"/>
-    <waypoint name="ELLIPSE" x="132.5" y="28.7"/>
-    <waypoint name="P1" x="-2" y="-4"/>
-    <waypoint name="P2" x="2" y="-4"/>
-    <waypoint name="BZ0" x="0" y="0"/>
-    <waypoint name="BZ1" x="-16.3" y="27.7"/>
-    <waypoint name="BZ2" x="-59.5" y="32.0"/>
-    <waypoint name="BZ3" x="-74.7" y="13.5"/>
-    <waypoint name="BZ4" x="-102.0" y="-19.3"/>
-    <waypoint name="BZ5" x="-123.4" y="-23.6"/>
-    <waypoint name="BZ6" x="-144.2" y="-26.9"/>
-    <waypoint name="BZ7" x="-162.8" y="-17.3"/>
-    <waypoint name="BZ8" x="-164.3" y="0.3"/>
-    <waypoint name="BZ9" x="-195.1" y="-6.1"/>
-    <waypoint name="BZ10" x="-184.3" y="-37.0"/>
-    <waypoint name="BZ11" x="-156.2" y="-52.3"/>
+    <waypoint name="STDBY" lat="40.3209437" lon="-3.5096997"/>
+    <waypoint name="ELLIPSE" lat="40.3208690" lon="-3.5086590"/>
+    <waypoint name="P1" lat="40.3201290" lon="-3.5091919"/>
+    <waypoint name="P2" lat="40.3215860" lon="-3.5092290"/>
+    <waypoint name="BZ0" x="240.0" y="-60.0"/>
+    <waypoint name="BZ1" x="223.7" y="-32.3"/>
+    <waypoint name="BZ2" x="180.5" y="-28.0"/>
+    <waypoint name="BZ3" x="165.3" y="-46.5"/>
+    <waypoint name="BZ4" x="138.0" y="-79.3"/>
+    <waypoint name="BZ5" x="116.6" y="-83.6"/>
+    <waypoint name="BZ6" x="95.8" y="-86.9"/>
+    <waypoint name="BZ7" x="77.2" y="-77.3"/>
+    <waypoint name="BZ8" x="75.7" y="-59.7"/>
+    <waypoint name="BZ9" x="44.9" y="-66.1"/>
+    <waypoint name="BZ10" x="55.7" y="-97.0"/>
+    <waypoint name="BZ11" x="83.8" y="-112.3"/>
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -31,13 +31,13 @@
     <waypoint name="_N2" x="796.4" y="-865.4"/>
     <waypoint name="_N3" x="-908.7" y="-865.4"/>
     <waypoint name="_N4" x="-908.7" y="1254.9"/>
-    <waypoint name="L0" x="262.4" y="624.2"/>
-    <waypoint name="L1" x="105.3" y="651.0"/>
-    <waypoint name="L2" x="-115.1" y="610.7"/>
-    <waypoint name="L3" x="303.6" y="654.2"/>
-    <waypoint name="L4" x="302.6" y="655.0"/>
-    <waypoint name="L5" x="301.5" y="656.3"/>
-    <waypoint name="L6" x="303.2" y="654.8"/>
+    <waypoint name="L0" lat="40.3209449" lon="-3.5094740"/>
+    <waypoint name="L1" lat="40.3209689" lon="-3.5078862"/>
+    <waypoint name="L2" lat="40.3209666" lon="-3.5077648"/>
+    <waypoint name="L3" lat="40.3209674" lon="-3.5076630"/>
+    <waypoint name="L4" lat="40.3209661" lon="-3.5075641"/>
+    <waypoint name="L5" lat="40.3209695" lon="-3.5074385"/>
+    <waypoint name="L6" lat="40.3209693" lon="-3.5073186"/>
     <!-- sonda -->
     <waypoint name="_P1" x="6000" y="200"/>
   </waypoints>
