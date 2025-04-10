@@ -114,7 +114,7 @@ struct NpsFdm {
   double pressure_sl;      ///< pressure at sea level in Pascal
   double aoa;			         ///< angle of attack in rad
   double sideslip;         ///< sideslip angle in rad
-
+  double phi_d;
   // Control surface positions (normalized values)
   float elevator;
   float flap;

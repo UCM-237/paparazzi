@@ -1720,14 +1720,9 @@
     	<field name="speed_error"      type="float" unit="m/s" /> <!-- Speed error -->
     	<field name="throttle_command" type="float"/>						  <!-- throttle command -->
     	<field name="delta_sp"         type="float" unit="deg"/>  <!-- Angle of wheels setpoint -->
-    	<field name="kp"						   type="float"/>							<!-- Proporcional constant for the pid -->	
-    	<field name="ki"						   type="float"/>						  <!-- Integral constant for the pid -->
-    	<field name="kd"						   type="float"/>							<!-- Derivative constant for the pid -->
     	<field name="i_action"         type="float"/>						  <!-- Integral action -->
     	<field name="p_action"         type="float"/>						  <!-- Proportional action -->
-    	<field name="d_action"				 type="float"/>						  <!-- Derivative action -->
     	<field name="speed_measured"   type="float"/>						  <!-- Measured speed -->
-    	<field name="curvature"				 type="float"/>							<!-- Computed curvature with the GVF -->
     </message>
 
 

@@ -1,0 +1,161 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+
+<flight_plan alt="660" ground_alt="650" lat0="39.78917" lon0="-4.08694" max_dist_from_home="1600" name="GSA 1 - Rotorcraft Multiflight (Portland)" security_height="0.3">
+  <header>
+#include "autopilot.h"
+</header>
+  <waypoints>
+    <waypoint name="HOME" x="0" y="0"/>
+    <waypoint name="STDBY" x="333.9" y="620.6"/>
+    <waypoint name="ELLIPSE" x="296.3" y="624.4"/>
+    <waypoint name="_N1" x="796.4" y="1254.9"/>
+    <waypoint name="_N2" x="796.4" y="-865.4"/>
+    <waypoint name="_N3" x="-908.7" y="-865.4"/>
+    <waypoint name="_N4" x="-908.7" y="1254.9"/>
+    <waypoint name="L0" x="952.2" y="768.4"/>
+    <waypoint name="L1" x="956.2" y="770.4"/>
+    <waypoint name="L2" x="956.2" y="770.4"/>
+    <waypoint name="L3" x="956.2" y="770.4"/>
+    <waypoint name="L4" x="956.2" y="770.4"/>
+    <waypoint name="L5" x="956.2" y="770.4"/>
+    <waypoint name="L6" x="956.2" y="770.4"/>
+    <waypoint name="L7" x="956.2" y="770.4"/>
+    <waypoint name="L8" x="956.2" y="770.4"/>
+    <waypoint name="L9" x="956.2" y="770.4"/>
+    <waypoint name="L10" x="956.2" y="770.4"/>
+    <waypoint name="L11" x="956.2" y="770.4"/>
+    <waypoint name="L12" x="956.2" y="770.4"/>
+    <waypoint name="L13" x="956.2" y="770.4"/>
+    <waypoint name="L14" x="956.2" y="770.4"/>
+    <waypoint name="L15" x="956.2" y="770.4"/>
+    <waypoint name="L16" x="956.2" y="770.4"/>
+    <waypoint name="L17" x="952.2" y="768.4"/>
+    <waypoint name="L18" x="956.2" y="770.4"/>
+    <waypoint name="L19" x="956.2" y="770.4"/>
+    <waypoint name="L20" x="956.2" y="770.4"/>
+    <waypoint name="L21" x="956.2" y="770.4"/>
+    <waypoint name="L22" x="956.2" y="770.4"/>
+    <waypoint name="L23" x="956.2" y="770.4"/>
+    <waypoint name="L24" x="956.2" y="770.4"/>
+    <waypoint name="L25" x="956.2" y="770.4"/>
+    <waypoint name="L26" x="956.2" y="770.4"/>
+    <waypoint name="L27" x="956.2" y="770.4"/>
+    <waypoint name="L28" x="956.2" y="770.4"/>
+    <waypoint name="L29" x="956.2" y="770.4"/>
+    <waypoint name="L30" x="956.2" y="770.4"/>
+    <waypoint name="L31" x="956.2" y="770.4"/>
+    <waypoint name="L32" x="956.2" y="770.4"/>
+    <waypoint name="L33" x="956.2" y="770.4"/>
+    <waypoint name="L34" x="956.2" y="770.4"/>
+    <waypoint name="L35" x="956.2" y="770.4"/>
+    <waypoint name="L36" x="956.2" y="770.4"/>
+    <waypoint name="L37" x="956.2" y="770.4"/>
+    <waypoint name="L38" x="956.2" y="770.4"/>
+    <waypoint name="L39" x="956.2" y="770.4"/>
+    <waypoint name="L40" x="956.2" y="770.4"/>
+    <waypoint name="L41" x="956.2" y="770.4"/>
+    <waypoint name="L42" x="956.2" y="770.4"/>
+    <waypoint name="L43" x="956.2" y="770.4"/>
+    <waypoint name="L44" x="956.2" y="770.4"/>
+    <waypoint name="L45" x="956.2" y="770.4"/>
+    <waypoint name="L46" x="956.2" y="770.4"/>
+    <waypoint name="L47" x="956.2" y="770.4"/>
+    <waypoint name="L48" x="956.2" y="770.4"/>
+    <waypoint name="L49" x="956.2" y="770.4"/>
+    <waypoint name="L50" x="956.2" y="770.4"/>   
+    <waypoint name="CLIMB" x="-4.9" y="-3.4"/>
+  </waypoints>
+  <sectors>
+    <sector color="red" name="Net">
+      <corner name="_N1"/>
+      <corner name="_N2"/>
+      <corner name="_N3"/>
+      <corner name="_N4"/>
+    </sector>
+  </sectors>
+  <blocks>
+    <block name="Wait GPS">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+    </block>
+    <block name="Geo init">
+      <while cond="LessThan(NavBlockTime(), 10)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+    </block>
+    <block name="Holding point">
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+    <block group="init_control" name="Start Motors" strip_button="Start Motors" strip_icon="start_motors.png">
+      <call_once fun="NavResurrect()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+    <block group="init_control" name="Takeoff" strip_button="Takeoff" strip_icon="launch.png">
+      <exception cond="GetPosHeight() @GT 2.0" deroute="Standby"/>
+      <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
+      <stay vmode="climb" climb="nav.climb_vspeed" wp="CLIMB"/>
+    </block>
+    <block group="waypoint_control_col1" name="Standby" strip_button="Standby" strip_icon="standby.png">
+      <stay wp="STDBY"/>
+    </block>
+    <block group="waypoint_control_col1" name="stay_L50" strip_button="Waypoint 50" strip_icon="waypoint_one.png">
+      <stay wp="L50"/>
+    </block>
+    <block name="route_x">
+      <go approaching_time="0" from="L0" hmode="route" wp="L1"/>
+      <go approaching_time="0" from="L1" hmode="route" wp="L2"/>
+      <go approaching_time="0" from="L2" hmode="route" wp="L3"/>
+      <go approaching_time="0" from="L3" hmode="route" wp="L4"/>
+      <go approaching_time="0" from="L4" hmode="route" wp="L5"/>
+      <go approaching_time="0" from="L5" hmode="route" wp="L6"/>
+      <go approaching_time="0" from="L6" hmode="route" wp="L7"/>
+      <go approaching_time="0" from="L7" hmode="route" wp="L8"/>
+      <go approaching_time="0" from="L8" hmode="route" wp="L9"/>
+      <go approaching_time="0" from="L9" hmode="route" wp="L10"/>
+      <go approaching_time="0" from="L10" hmode="route" wp="L11"/>
+      <go approaching_time="0" from="L11" hmode="route" wp="L12"/>
+      <go approaching_time="0" from="L12" hmode="route" wp="L13"/>
+      <go approaching_time="0" from="L13" hmode="route" wp="L14"/>
+      <go approaching_time="0" from="L14" hmode="route" wp="L15"/>
+      <go approaching_time="0" from="L15" hmode="route" wp="L16"/>
+      <go approaching_time="0" from="L16" hmode="route" wp="L17"/>
+      <go approaching_time="0" from="L17" hmode="route" wp="L18"/>
+      <go approaching_time="0" from="L18" hmode="route" wp="L19"/>
+      <go approaching_time="0" from="L19" hmode="route" wp="L20"/>
+      <go approaching_time="0" from="L20" hmode="route" wp="L21"/>
+      <go approaching_time="0" from="L21" hmode="route" wp="L22"/>
+      <go approaching_time="0" from="L22" hmode="route" wp="L23"/>
+      <go approaching_time="0" from="L23" hmode="route" wp="L24"/>
+      <go approaching_time="0" from="L24" hmode="route" wp="L25"/>
+      <go approaching_time="0" from="L25" hmode="route" wp="L26"/>
+      <go approaching_time="0" from="L26" hmode="route" wp="L27"/>
+      <go approaching_time="0" from="L27" hmode="route" wp="L28"/>
+      <go approaching_time="0" from="L28" hmode="route" wp="L29"/>
+      <go approaching_time="0" from="L29" hmode="route" wp="L30"/>
+      <go approaching_time="0" from="L30" hmode="route" wp="L31"/>
+      <go approaching_time="0" from="L31" hmode="route" wp="L32"/>
+      <go approaching_time="0" from="L32" hmode="route" wp="L33"/>
+      <go approaching_time="0" from="L33" hmode="route" wp="L34"/>
+      <go approaching_time="0" from="L34" hmode="route" wp="L35"/>
+      <go approaching_time="0" from="L35" hmode="route" wp="L36"/>
+      <go approaching_time="0" from="L36" hmode="route" wp="L37"/>
+      <go approaching_time="0" from="L37" hmode="route" wp="L38"/>
+      <go approaching_time="0" from="L38" hmode="route" wp="L39"/>
+      <go approaching_time="0" from="L39" hmode="route" wp="L40"/>
+      <go approaching_time="0" from="L40" hmode="route" wp="L41"/>
+      <go approaching_time="0" from="L41" hmode="route" wp="L42"/>
+      <go approaching_time="0" from="L42" hmode="route" wp="L43"/>
+      <go approaching_time="0" from="L43" hmode="route" wp="L44"/>
+      <go approaching_time="0" from="L44" hmode="route" wp="L45"/>
+      <go approaching_time="0" from="L45" hmode="route" wp="L46"/>
+      <go approaching_time="0" from="L46" hmode="route" wp="L47"/>
+      <go approaching_time="0" from="L47" hmode="route" wp="L48"/>
+      <go approaching_time="0" from="L48" hmode="route" wp="L49"/>
+      <go approaching_time="0" from="L49" hmode="route" wp="L50"/>
+      <deroute block="stay_L50"/>      
+    </block>
+    <block name="landed">
+      <attitude pitch="0" roll="0" throttle="0" vmode="throttle" until="FALSE"/>
+    </block>
+  </blocks>
+</flight_plan>

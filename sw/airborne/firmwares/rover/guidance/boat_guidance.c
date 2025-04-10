@@ -112,7 +112,7 @@ void boat_guidance_init(void)
 
 	// Mov avg init Speed and distance
 	float speed = stateGetHorizontalSpeedNorm_f();
-	tfmini_event();
+	//tfmini_event();
 	for(int k = 0; k < MOV_AVG_M; k++){
 		mvg_avg[k] = speed;
 	}
@@ -136,12 +136,12 @@ void boat_bound_cmds(void)
  //Protejemos de la saturación, pero solo positiva... 
   if (commands[COMMAND_MRIGHT] > MAX_PPRZ){
    commands[COMMAND_MRIGHT] = MAX_PPRZ;
-   commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.throttle - guidance_control.bearing)/(guidance_control.throttle + guidance_control.bearing);
+   commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.throttle - guidance_control.bearing);///(guidance_control.throttle + guidance_control.bearing);
   }
   
   if (commands[COMMAND_MLEFT] > MAX_PPRZ){
    commands[COMMAND_MLEFT] = MAX_PPRZ;
-   commands[COMMAND_MRIGHT]  = MAX_PPRZ*(guidance_control.throttle + guidance_control.bearing)/(guidance_control.throttle - guidance_control.bearing);
+   commands[COMMAND_MRIGHT]  = MAX_PPRZ*(guidance_control.throttle + guidance_control.bearing);///(guidance_control.throttle - guidance_control.bearing);
   }
 }
 
