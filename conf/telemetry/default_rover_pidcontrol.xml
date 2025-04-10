@@ -7,7 +7,6 @@
 
     <mode name="default" key_press="d">
     
-      
       <message name="INFO_MSG"               period="0.45"/>
       <message name="AUTOPILOT_VERSION"      period="11.1"/>
       <message name="NAVIGATION"             period="1."/>
@@ -37,21 +36,19 @@
       <message name="STATE_FILTER_STATUS"    period="3.2"/>
       <message name="AIR_DATA"               period="1.9"/> 
       <message name="SURVEY"                 period="2.5"/>
-      <!--
       <message name="OPTIC_FLOW_EST"         period="0.5"/> 
-      -->
       <message name="I2C_ERRORS"             period="5.1"/>
       <message name="UART_ERRORS"            period="4.1"/>
-      <message name="IMU_MAG_RAW"            period="0.8"/> 
-      
-      <message name="GVF_PARAMETRIC"         period="0.4"/>
-      
-      <message name="GVF"                    period="0.5"/>
-      <message name="LIDAR"                  period="1.0"/>
-      <message name="ROVER_CTRL"             period="0.50"/>
-      <message name="ACTUATORS"	       period="0.50"/>
-      
-      <!--message name="OBSTACLE_GRID"	       period="3"/-->
+      <message name="IMU_MAG_RAW"            period="2.0"/> 
+      <message name="GVF_PARAMETRIC"         period="1.0"/>
+      <message name="GVF"                    period="1.0"/>
+      <!--message name="LIDAR"               period="1.0"/-->
+      <message name="BOAT_CTRL"             period="0.50"/> 
+      <message name="STATIC_CONTROL"         period="1.0"/> 
+      <message name="SERIAL_COM"	           period="0.5"/>
+      <message name="BR_SONAR"	             period="1.0"/>
+      <message name="IMU_ACCEL"	             period="0.5"/>
+      <message name="IMU_GYRO"	             period="0.5"/>
       
       
     </mode>

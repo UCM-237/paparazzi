@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 #include "std.h"
-#include "../flight_gear.h"
+#include "flight_gear.h"
 #include "math/pprz_geodetic_double.h"
 #include "math/pprz_algebra_double.h"
 
@@ -114,7 +114,7 @@ struct NpsFdm {
   double pressure_sl;      ///< pressure at sea level in Pascal
   double aoa;			         ///< angle of attack in rad
   double sideslip;         ///< sideslip angle in rad
-
+  double phi_d;
   // Control surface positions (normalized values)
   float elevator;
   float flap;

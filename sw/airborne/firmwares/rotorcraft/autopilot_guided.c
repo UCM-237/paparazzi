@@ -32,6 +32,7 @@
 #include "state.h"
 #include "pprzlink/dl_protocol.h"
 
+#ifdef AP_MODE_GUIDED
 
 bool autopilot_guided_goto_ned(float x, float y, float z, float heading)
 {
@@ -107,7 +108,7 @@ void autopilot_guided_update(uint8_t flags, float x, float y, float z, float yaw
     if (!bit_is_set(flags, 0) && !bit_is_set(flags, 1)) {   // set absolute position setpoint
       guidance_h_set_pos(setpoint.x, setpoint.y);
     } else {
-      if (stateIsLocalCoordinateValid()) {
+      //if (stateIsLocalCoordinateValid()) {
         if (bit_is_set(flags, 1)) {  // set position as offset in body frame
           float psi = stateGetNedToBodyEulers_f()->psi;
 
@@ -118,7 +119,7 @@ void autopilot_guided_update(uint8_t flags, float x, float y, float z, float yaw
           setpoint.y += stateGetPositionNed_f()->y;
         }
         guidance_h_set_pos(setpoint.x, setpoint.y);
-      }
+      //}
     }
   }
 
@@ -161,4 +162,59 @@ void autopilot_guided_parse_GUIDED(uint8_t *buf) {
       DL_GUIDED_SETPOINT_NED_z(buf),
       DL_GUIDED_SETPOINT_NED_yaw(buf));
 }
+
+#else
+
+bool autopilot_guided_goto_ned(float x, float y, float z, float heading)
+{
+  (void) x;
+  (void) y;
+  (void) z;
+  (void) heading;
+  return false;
+}
+
+bool autopilot_guided_goto_ned_relative(float dx, float dy, float dz, float dyaw)
+{
+  (void) dx;
+  (void) dy;
+  (void) dz;
+  (void) dyaw;
+  return false;
+}
+
+bool autopilot_guided_goto_body_relative(float dx, float dy, float dz, float dyaw)
+{
+  (void) dx;
+  (void) dy;
+  (void) dz;
+  (void) dyaw;
+  return false;
+}
+
+bool autopilot_guided_move_ned(float vx, float vy, float vz, float heading)
+{
+  (void) vx;
+  (void) vy;
+  (void) vz;
+  (void) heading;
+  return false;
+}
+
+void autopilot_guided_update(uint8_t flags, float x, float y, float z, float yaw)
+{
+  (void) flags;
+  (void) x;
+  (void) y;
+  (void) z;
+  (void) yaw;
+}
+
+/** Parse GUIDED_SETPOINT_NED messages from datalink
+ */
+void autopilot_guided_parse_GUIDED(uint8_t *buf) {
+  (void) buf;
+}
+
+#endif
 

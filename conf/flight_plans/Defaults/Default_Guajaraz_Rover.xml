@@ -114,7 +114,9 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="line_array" strip_icon="line.png">
-      <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, WP_L7, WP_L8, WP_L9, WP_L10, WP_L11, WP_L12, WP_L13, WP_L14, WP_L15, WP_L16, WP_L17, WP_L18, WP_L19, WP_L20, WP_L21, WP_L22, WP_L23, WP_L24, WP_L25, WP_L26, WP_L27, WP_L28, WP_L29, WP_L30, WP_L31, WP_L32, WP_L33, WP_L34, WP_L35, WP_L36, WP_L37, WP_L38, WP_L39, WP_L40, WP_L41, WP_L42, WP_L43, WP_L44, WP_L45, WP_L46, WP_L47, WP_L48, WP_L49, WP_L50, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+
+      <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
   </blocks>

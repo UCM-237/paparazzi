@@ -65,6 +65,10 @@ typedef uint8_t unit_t;
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef M_PI_6
+#define M_PI_6 (M_PI/6)
+#endif
+
 #ifndef M_PI_4
 #define M_PI_4 (M_PI/4)
 #endif
@@ -135,8 +139,9 @@ typedef uint8_t unit_t;
 
 #define BoundUpper(_x, _max) { if (_x > (_max)) _x = (_max);}
 
+// Note: the bound function will bound NaN to min as any comparison that contains NaN is false.
+#define Bound(_x, _min, _max) { if (!(_x > (_min))) _x = (_min); else if (!(_x < (_max))) _x = (_max); }
 
-#define Bound(_x, _min, _max) { if (_x > (_max)) _x = (_max); else if (_x < (_min)) _x = (_min); }
 #define BoundInverted(_x, _min, _max) {           \
     if ((_x < (_min)) && (_x > (_max))) {         \
       if (abs(_x - (_min)) < abs(_x - (_max)))    \

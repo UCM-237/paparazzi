@@ -46,11 +46,11 @@ bool mission_point_of_lla(struct EnuCoor_f *point, struct LlaCoor_i *lla)
   }
 
   // change geoid alt to ellipsoid alt
-  lla->alt = lla->alt - state.ned_origin_i.hmsl + state.ned_origin_i.lla.alt;
+  lla->alt = lla->alt - stateGetHmslOrigin_i() + stateGetLlaOrigin_i().alt;
 
   //Compute ENU components from LLA with respect to ltp origin
   struct EnuCoor_i tmp_enu_point_i;
-  enu_of_lla_point_i(&tmp_enu_point_i, &state.ned_origin_i, lla);
+  enu_of_lla_point_i(&tmp_enu_point_i, stateGetNedOrigin_i(), lla);
   struct EnuCoor_f tmp_enu_point_f;
   // result of enu_of_lla_point_i is in cm, convert to float in m
   VECT3_SMUL(tmp_enu_point_f, tmp_enu_point_i, 0.01);
@@ -88,7 +88,11 @@ static inline bool mission_nav_wp(struct _mission_element *el)
   struct EnuCoor_f *target_wp = &(el->element.mission_wp.wp);
 
   //Check proximity and wait for 'duration' seconds in proximity circle if desired
-  if (nav.nav_approaching(target_wp, NULL, CARROT)) {
+  if (nav.nav_approaching(target_wp, NULL, CARROT)
+#ifdef MISSION_ALT_PROXIMITY
+      && fabsf(stateGetPositionEnu_f()->z - target_wp->z) <= MISSION_ALT_PROXIMITY
+#endif
+      ) {
     last_mission_wp = *target_wp;
 
     if (el->duration > 0.f) {
@@ -131,7 +135,11 @@ static inline bool mission_nav_segment(struct _mission_element *el)
   struct EnuCoor_f *to_wp   = &(el->element.mission_segment.to);
 
   //Check proximity and wait for 'duration' seconds in proximity circle if desired
-  if (nav.nav_approaching(to_wp, from_wp, CARROT)) {
+  if (nav.nav_approaching(to_wp, from_wp, CARROT)
+#ifdef MISSION_ALT_PROXIMITY
+      && fabsf(stateGetPositionEnu_f()->z - to_wp->z) <= MISSION_ALT_PROXIMITY
+#endif
+      ) {
     last_mission_wp = *to_wp;
 
     if (el->duration > 0.f) {
@@ -167,7 +175,11 @@ static inline bool mission_nav_path(struct _mission_element *el)
     struct EnuCoor_f *to_wp   = &(el->element.mission_path.path[el->element.mission_path.path_idx]);
 
     //Check proximity and wait for t seconds in proximity circle if desired
-    if (nav.nav_approaching(to_wp, from_wp, CARROT)) {
+    if (nav.nav_approaching(to_wp, from_wp, CARROT)
+#ifdef MISSION_ALT_PROXIMITY
+      && fabsf(stateGetPositionEnu_f()->z - from_wp->z) <= MISSION_ALT_PROXIMITY
+#endif
+        ) {
       last_mission_wp = *to_wp;
 
       if (el->duration > 0.f) {

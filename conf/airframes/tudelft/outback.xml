@@ -38,7 +38,9 @@
       <module name="opa_controller"/>
       <module name="mag_pitot_uart" />
       <module name="pwm_meas"/>
-      <module name="rpm_sensor"/>
+      <module name="rpm_sensor">
+        <define name="RPM_SENSOR_ACTUATOR_IDX" value="0"/>
+      </module>
 
       <module name="geo_mag"/>
       <module name="air_data">
@@ -54,7 +56,9 @@
         <define name="SDLOGGER_ON_ARM" value="TRUE"/>
       </module>
       <module name="gps_ubx_ucenter"/>
-      <module name="heli_throttle_curve"/>
+      <module name="heli_throttle_curve">
+        <define name="THROTTLE_CURVE_RPM_ACT" value="0"/>
+      </module>
       <define name="ROTORCRAFT_IS_HELI" value="TRUE" />
       <define name="RC_LOST_MODE" value="AP_MODE_NAV" />
     </target>
@@ -199,7 +203,6 @@
   <section name="MISC">
     <define name="NAV_CLIMB_VSPEED" value="2.5"/>
     <define name="NAV_DESCEND_VSPEED" value="-0.7"/>
-    <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
   </section>
 
   <section name="IMU" prefix="IMU_">

@@ -34,7 +34,11 @@
 #include "generated/airframe.h"
 #include "generated/flight_plan.h"
 
+<<<<<<< HEAD
 #include "firmwares/rover/guidance/rover_guidance_steering.h"
+=======
+#include "firmwares/rover/guidance/boat_guidance.h"
+>>>>>>> boat_armando
 #include "state.h"
 
 // Check if rover firmware 
@@ -57,14 +61,24 @@ static struct EnuCoor_d rover_vel;
 static struct EnuCoor_d rover_acc;
 
 /** Physical model parameters **/
+<<<<<<< HEAD
 static float mu = 0.01;
 
+=======
+static float mu_x = 1;
+static float mu_y = 0.3;
+static float mu_w = 2;
+>>>>>>> boat_armando
 
 /** NPS FDM rover init ***************************/
 void nps_fdm_init(double dt)
 {
   fdm.init_dt = dt; // (1 / simulation freq)
+<<<<<<< HEAD
   fdm.curr_dt = dt; // ¿Configurable from GCS?
+=======
+  fdm.curr_dt = dt; // ¿Configurable from GCS? Originalmente estaba puesto 0.0001
+>>>>>>> boat_armando
   fdm.time = dt;
 
   fdm.on_ground = TRUE;
@@ -75,7 +89,11 @@ void nps_fdm_init(double dt)
   fdm.total_pressure = -1;
   fdm.dynamic_pressure = -1;
   fdm.temperature = -1;
+<<<<<<< HEAD
 
+=======
+  fdm.phi_d = 0;
+>>>>>>> boat_armando
   fdm.ltpprz_to_body_eulers.psi = 0.0;
   
   init_ltp();
@@ -91,6 +109,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   the LTP plane (so we transfer every integration step to NED and ECEF at the end).
   */
 
+<<<<<<< HEAD
   #ifdef COMMAND_STEERING // STEERING ROVER PHYSICS
 
   // Steering rover cmds: 
@@ -98,6 +117,13 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   //    COMMAND_TRHOTTLE -> acceleration in heading direction
 
   double delta = RadOfDeg(commands[COMMAND_STEERING] * MAX_DELTA);
+=======
+  #ifdef COMMAND_MRIGHT // STEERING ROVER PHYSICS
+  // Steering rover cmds: 
+  //    COMMAND_MRIGHT -> acceleration in right motor
+  //    COMMAND_MLEFT -> acceleration in letf motor
+  
+>>>>>>> boat_armando
 
   /** Physical model for car-like robots .................. **/
   // From previous step...
@@ -105,6 +131,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   enu_of_ecef_vect_d(&rover_vel, &ltpdef, &fdm.ecef_ecef_vel);
   double speed = FLOAT_VECT2_NORM(rover_vel);
   double phi = fdm.ltpprz_to_body_eulers.psi;
+<<<<<<< HEAD
   double phi_d  = tan(delta) / DRIVE_SHAFT_DISTANCE * speed;
 
   // Setting accelerations
@@ -125,6 +152,36 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   // phi have to be contained in [-180º,180º). So:
   phi = (phi > M_PI)? - 2*M_PI + phi : (phi < -M_PI)? 2*M_PI + phi : phi;
 
+=======
+  double tau = (-commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT])/2;
+  double fa = (commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT])/2;
+  double a = cos(phi);
+  double b = sin(phi);
+  //printf("psi ltp %f\n psi ltpprz %f\n", fdm.ltp_to_body_eulers.psi, fdm.ltpprz_to_body_eulers.psi);
+  // Setting accelerations
+  rover_acc.x = fa * a - (pow(a,2)*mu_x*rover_vel.x +  pow(b,2)*mu_y*rover_vel.x + a*b*rover_vel.y*(mu_x-mu_y));
+  rover_acc.y = fa * b - (pow(b,2)*mu_x*rover_vel.y +  pow(a,2)*mu_x*rover_vel.y + a*b*rover_vel.x*(mu_x-mu_y));
+  printf("phi_d %f\n", fdm.phi_d);
+  double phi_dd = tau - mu_w*fdm.phi_d; //aceleracion angular
+  //printf("Throttle izq = %f\n Throttle dch = %f\n",commands[COMMAND_MLEFT]-commands[COMMAND_MRIGHT]);
+  //printf("Tau = %f\n fa = %f\n", tau, fa);
+  
+  // Velocities (EULER INTEGRATION)
+  rover_vel.x += rover_acc.x * fdm.curr_dt;
+  rover_vel.y += rover_acc.y * fdm.curr_dt;
+  fdm.phi_d  += phi_dd*fdm.curr_dt;
+  
+  // Positions
+  rover_pos.x += rover_vel.x * fdm.curr_dt;
+  rover_pos.y += rover_vel.y * fdm.curr_dt;
+  phi += fdm.phi_d * fdm.curr_dt;
+  
+  // phi have to be contained in [-180º,180º). So:
+  phi = (phi > M_PI)? - 2*M_PI + phi : (phi < -M_PI)? 2*M_PI + phi : phi;
+  
+  phi = M_PI/4;
+  //printf("phi = %f\n", phi);
+>>>>>>> boat_armando
   #else
   #warning "The physics of this rover are not yet implemented in nps_fdm_rover!!"
   #endif // STEERING ROVER PHYSICS
@@ -152,9 +209,15 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
 
   // Exporting Eulers to AHRS (in quaternions)
   double_quat_of_eulers(&fdm.ltp_to_body_quat, &fdm.ltp_to_body_eulers);
+<<<<<<< HEAD
 
   // Angular vel & acc
   fdm.body_ecef_rotvel.r   = phi_d; 
+=======
+  
+  // Angular vel & acc
+  fdm.body_ecef_rotvel.r   = fdm.phi_d; 
+>>>>>>> boat_armando
   fdm.body_ecef_rotaccel.r = phi_dd;
 
 }

@@ -70,9 +70,7 @@ static inline void nav_set_altitude(void);
 void nav_init(void)
 {
   waypoints_init();
-
-  nav_block = 0;
-  nav_stage = 0;
+  common_flight_plan_init();
 
   nav.horizontal_mode = NAV_HORIZONTAL_MODE_WAYPOINT;
   nav.vertical_mode = NAV_VERTICAL_MODE_ALT;
@@ -86,9 +84,6 @@ void nav_init(void)
   FLOAT_RATES_ZERO(nav.rates);
 
   nav.throttle = 0;
-  nav.cmd_roll = 0;
-  nav.cmd_pitch = 0;
-  nav.cmd_yaw = 0;
   nav.roll = 0.f;
   nav.pitch = 0.f;
   nav.heading = 0.f;
@@ -96,6 +91,7 @@ void nav_init(void)
   nav.climb = 0.f;
   nav.fp_altitude = SECURITY_HEIGHT;
   nav.nav_altitude = SECURITY_HEIGHT;
+  nav.fp_max_speed = -1.f;
   flight_altitude = SECURITY_ALT;
 
   nav.too_far_from_home = false;
@@ -157,7 +153,6 @@ void nav_parse_MOVE_WP(uint8_t *buf)
     /* WP_alt from message is alt above MSL in mm
      * lla.alt is above ellipsoid in mm
      */
-     printf("Hola");
     lla.alt = DL_MOVE_WP_alt(buf) - state.ned_origin_i.hmsl +
       state.ned_origin_i.lla.alt;
     waypoint_move_lla(wp_id, &lla);
@@ -264,7 +259,7 @@ static inline void nav_set_altitude(void)
   // altitude mode
   if (fabsf(nav.fp_altitude - last_alt) > 0.2f) {
     nav.nav_altitude = nav.fp_altitude;
-    flight_altitude = nav.nav_altitude + state.ned_origin_f.hmsl;
+    flight_altitude = nav.nav_altitude + stateGetHmslOrigin_f();
     last_alt = nav.fp_altitude;
   }
 }
@@ -273,14 +268,14 @@ static inline void nav_set_altitude(void)
 /** Reset the geographic reference to the current GPS fix */
 void nav_reset_reference(void)
 {
-  ins_reset_local_origin();
+  AbiSendMsgINS_RESET(0, INS_RESET_REF);
   /* update local ENU coordinates of global waypoints */
   waypoints_localize_all();
 }
 
 void nav_reset_alt(void)
 {
-  ins_reset_altitude_ref();
+  AbiSendMsgINS_RESET(0, INS_RESET_VERTICAL_REF);
   waypoints_localize_all();
 }
 
@@ -306,9 +301,12 @@ void nav_periodic_task(void)
 
 bool nav_detect_ground(void)
 {
-  if (!autopilot.ground_detected) { return false; }
-  autopilot.ground_detected = false;
-  return true;
+  if (autopilot.ground_detected) {
+    autopilot.ground_detected = false;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool nav_is_in_flight(void)
@@ -339,25 +337,6 @@ void nav_home(void)
 
   /* run carrot loop */
   nav_run();
-}
-
-/** Set manual roll, pitch and yaw without stabilization
- *
- * @param[in] roll command in pprz scale (int32_t)
- * @param[in] pitch command in pprz scale (int32_t)
- * @param[in] yaw command in pprz scale (int32_t)
- *
- * This function allows to directly set commands from the flight plan,
- * if in nav_manual mode.
- * This is for instance useful for helicopters during the spinup
- */
-void nav_set_manual(int32_t roll, int32_t pitch, int32_t yaw)
-{
-  nav.horizontal_mode = NAV_HORIZONTAL_MODE_MANUAL;
-  nav.setpoint_mode = NAV_SETPOINT_MODE_MANUAL;
-  nav.cmd_roll = roll;
-  nav.cmd_pitch = pitch;
-  nav.cmd_yaw = yaw;
 }
 
 /** Returns squared horizontal distance to given point */

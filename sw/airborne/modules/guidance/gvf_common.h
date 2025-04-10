@@ -17,7 +17,6 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
- 
  #ifndef GVF_COMMON_H
  #define GVF_COMMON_H
  
@@ -52,6 +51,9 @@ typedef struct{
 	int   stop_at_wp;
 	uint32_t wait_time;
 	float distance_stop;
+        float pxd;
+	float pyd;
+	uint8_t next_wp;
 } gvf_common_stop_at_wp;
  
 extern gvf_common_params gvf_c_info;

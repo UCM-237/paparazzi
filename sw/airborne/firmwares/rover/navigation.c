@@ -96,9 +96,7 @@ static void send_num_wp_moved(struct transport_tx *trans, struct link_device *de
 void nav_init(void)
 {
   waypoints_init();
-
-  nav_block = 0;
-  nav_stage = 0;
+  common_flight_plan_init();
 
   nav.mode = NAV_MODE_WAYPOINT;
 
@@ -138,7 +136,7 @@ void nav_parse_MOVE_WP(uint8_t *buf)
 {
   uint8_t ac_id = DL_MOVE_WP_ac_id(buf);
   if (ac_id != AC_ID) { return; }
-  if (stateIsLocalCoordinateValid()) {
+//  if (stateIsLocalCoordinateValid()) {
     uint8_t wp_id = DL_MOVE_WP_wp_id(buf);
     struct LlaCoor_i lla;
     lla.lat = DL_MOVE_WP_lat(buf);
@@ -160,7 +158,7 @@ void nav_parse_MOVE_WP(uint8_t *buf)
     num_wp_moved ++;
     */
   }
-}
+
 
 void nav_parse_NUM_WAYPOINT_MOVED_DATALINK(uint8_t *buf)
 {
@@ -216,14 +214,14 @@ bool nav_check_wp_time(struct EnuCoor_f *wp, float stay_time)
 /** Reset the geographic reference to the current GPS fix */
 void nav_reset_reference(void)
 {
-  ins_reset_local_origin();
+  AbiSendMsgINS_RESET(0, INS_RESET_REF);
   /* update local ENU coordinates of global waypoints */
   waypoints_localize_all();
 }
 
 void nav_reset_alt(void)
 {
-  ins_reset_altitude_ref();
+  AbiSendMsgINS_RESET(0, INS_RESET_VERTICAL_REF);
   waypoints_localize_all();
 }
 

@@ -69,6 +69,9 @@ extern "C" {
 #include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_splines.h"
 #include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_bezier_splines.h"
 
+#include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_splines.h"
+#include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_bezier_splines.h"
+
 /** @typedef gvf_parametric_con
 * @brief Control parameters for the GVF_PARAMETRIC
 * @param w Virtual coordinate from the parametrization of the trajectory
@@ -97,8 +100,8 @@ enum trajectories_parametric {
   TREFOIL_2D = 0,
   ELLIPSE_3D = 1,
   LISSAJOUS_3D = 2,
-  SPLINES_2D = 4,  
-  BEZIER_2D = 3,	
+  SPLINES_2D = 3,  	
+  BEZIER_2D = 3,
   NONE_PARAMETRIC = 255,
 };
 
@@ -118,6 +121,9 @@ extern spline_t gvf_splines_2D_y[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
 extern bezier_t gvf_bezier_2D[GVF_PARAMETRIC_2D_BEZIER_N_SEG];
 
 extern gvf_parametric_tra gvf_parametric_trajectory;
+
+// Bezier struct
+extern bezier_t gvf_bezier_2D[GVF_PARAMETRIC_2D_BEZIER_N_SEG];
 
 // Init function
 extern void gvf_parametric_init(void);
