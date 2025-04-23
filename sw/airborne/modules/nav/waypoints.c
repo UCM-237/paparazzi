@@ -34,6 +34,8 @@ struct Waypoint waypoints[NB_WAYPOINT];
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 
+uint8_t num_wp_moved;
+
 static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
   static uint8_t i;
@@ -45,6 +47,28 @@ static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
                              &(waypoints[i].enu_i.y),
                              &(waypoints[i].enu_i.z));
 }
+
+
+static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
+{
+  
+  
+  pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
+                             &num_wp_moved);
+
+}
+/*
+static void send_num_wp_moved_datalink(struct transport_tx *trans, struct link_device *dev)
+{
+  uint8_t num_wp_moved_datalink;
+  
+  pprz_msg_send_NUM_WP_MOVED_DATALINK(trans, dev, AC_ID,
+                             &num_wp_moved_datalink);
+  uint8_t *new_num_wp_moved_datalink = &num_wp_moved_datalink; 
+  printf("MENSAJE RECIBIDO DATALINK: \n num=%d \n", *new_num_wp_moved_datalink);
+
+}
+*/
 #endif
 
 /** initialize global and local waypoints */
@@ -69,6 +93,7 @@ void waypoints_init(void)
 
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_WP_MOVED, send_wp_moved);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
 #endif
 }
 
@@ -428,3 +453,17 @@ void waypoint_position_copy(uint8_t wp_dest, uint8_t wp_src)
     waypoints[wp_dest].lla.lon = waypoints[wp_src].lla.lon;
   }
 }
+
+
+
+/*
+void nav_parse_NUM_WAYPOINT_MOVED_DATALINK(uint8_t *buf)
+{
+
+  uint8_t num = DL_NUM_WAYPOINT_MOVED_DATALINK_num(buf);
+  printf("num = %d\n", num);
+  num_wp_moved = num;
+
+}
+*/
+

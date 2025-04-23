@@ -12,6 +12,8 @@
       <message name="ESTIMATOR"           period="0.5"/>
       <message name="ENERGY"              period="1.1"/>
       <message name="WP_MOVED"            period="0.5"/>
+      <message name="NUM_WP_MOVED"        period="1.4"/>
+      <!--message name="NUM_WAYPOINT_MOVED_DATALINK"         period="1.6"/-->
       <message name="CIRCLE"              period="1.05"/>
       <message name="DESIRED"             period="1.05"/>
       <message name="SEGMENT"             period="1.2"/>

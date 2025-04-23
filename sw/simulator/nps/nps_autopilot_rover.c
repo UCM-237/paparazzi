@@ -188,7 +188,7 @@ void sim_overwrite_ahrs(void)
   struct FloatRates rates_f;
   RATES_COPY(rates_f, fdm.body_ecef_rotvel);
   stateSetBodyRates_f(MODULE_NPS_ID, &rates_f);
-
+  
 }
 
 void sim_overwrite_ins(void)

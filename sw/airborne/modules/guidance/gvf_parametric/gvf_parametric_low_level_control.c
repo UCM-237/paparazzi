@@ -82,7 +82,10 @@ void gvf_parametric_low_level_control_3D(float heading_rate USED_IN_FIXEDWING_ON
       -gvf_parametric_control.k_roll * atanf(heading_rate * ground_speed / GVF_PARAMETRIC_GRAVITY / cosf(att->theta));
     BoundAbs(h_ctl_roll_setpoint, h_ctl_roll_max_setpoint); // Setting point for roll angle
   }
+<<<<<<< HEAD
+=======
 
+>>>>>>> boat_armando
   
 // Allow for rover operation
 #elif defined(ROVER_FIRMWARE)

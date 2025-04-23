@@ -98,27 +98,68 @@
 /** Steering rover guidance STRUCTURES **/
 // High level commands
 typedef struct {
+  float max_speed;
+  float min_speed;
   float speed;
   float delta;
+  float z_kappa;
+  float z_ori;
 } sr_cmd_t;
+
+// Nonlinear speed constant
+typedef struct {
+  float k;
+} sr_cmd_non_linear_t;
 
 // Main structure
 typedef struct {
   sr_cmd_t cmd;
-  float throttle;
+  sr_cmd_non_linear_t cmd_nonlinear;
 
+  int   use_non_linear;
+  float throttle;
   float speed_error;
   float kf;
   float kp;
   float ki;
+  float kd;
 } rover_ctrl;
 
+// Obstacle avoidance structure
+typedef struct {
+  float distance;
+  float max_distance;
+  float min_distance;
+  int use_obstacle_avoidance;
+  int use_speed_function;
+  float old_psi;
+  int turn_90_deg;
+  int choose_direction;
+} rover_obstacle_avoidance;
+
+// Rollover protection structure
+typedef struct {
+  int protect_curvature;
+  int use_cbf;
+  float max_lateral_accel;
+  float beta;
+  float h_cbf;
+} rover_rollover_protection;
+
 extern rover_ctrl guidance_control;
+extern rover_rollover_protection rollover_protection;
+extern rover_obstacle_avoidance obstacle_avoidance;
 
 /** Steering rover guidance EXT FUNCTIONS **/
 extern void rover_guidance_steering_init(void);
 extern void rover_guidance_steering_heading_ctrl(float omega);
 extern void rover_guidance_steering_speed_ctrl(void);
+extern void rover_guidance_steering_obtain_setpoint(float *dv_sp);
+extern void rover_guidance_steering_speed_ctrl_pid(void);
+extern void rover_guidance_steering_speed_ctrl_lyap(float);
+extern void rover_guidance_steering_update_measurment(void);
+extern float rover_guidance_steering_omega_obstacle_avoidance(void);
+extern float rover_guidance_steering_omega_obstacle_avoidance_v2(void);
 extern void rover_guidance_steering_pid_reset(void);
 extern void rover_guidance_steering_kill(void);
 

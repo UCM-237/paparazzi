@@ -66,6 +66,8 @@ extern "C" {
 #include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_3d_ellipse.h"
 #include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_3d_lissajous.h"
 #include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_trefoil.h"
+#include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_splines.h"
+#include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_bezier_splines.h"
 
 #include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_splines.h"
 #include "modules/guidance/gvf_parametric/trajectories/gvf_parametric_2d_bezier_splines.h"
@@ -115,6 +117,8 @@ typedef struct {
 extern spline_t gvf_splines_2D_x[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
 extern spline_t gvf_splines_2D_y[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
 
+// Bezier struct
+extern bezier_t gvf_bezier_2D[GVF_PARAMETRIC_2D_BEZIER_N_SEG];
 
 extern gvf_parametric_tra gvf_parametric_trajectory;
 
@@ -137,8 +141,9 @@ extern bool gvf_parametric_2D_trefoil_wp(uint8_t, float, float, float, float, fl
 // 2D Splines
 extern bool gvf_parametric_2D_splines_wp(uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , float , float , float , float , float , float , float , float ,float );
 extern bool gvf_parametric_2D_splines_XY(void);
+
 // 2D BEZIER
-extern bool gvf_parametric_2D_bezier_wp(uint8_t);
+extern bool gvf_parametric_2D_bezier_wp(uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t , uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
 extern bool gvf_parametric_2D_bezier_XY(void);
 
 // 3D Ellipse

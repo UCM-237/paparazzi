@@ -39,7 +39,8 @@
         "pprz_geodetic_int.h": "c",
         "navigation.h": "c",
         "stdint.h": "c",
-        "modules.h": "c"
+        "modules.h": "c",
+        "gvf_ellipse.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",
@@ -47,4 +48,5 @@
     "ocaml.sandbox": {
         "kind": "global"
     },
+    "C_Cpp.errorSquiggles": "disabled",
 }

@@ -110,8 +110,11 @@
       <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)"deroute="line_array"/>
     </block>
 
+    <block name = "go">
+      <go wp="P1"/>
+    </block>
 
-    <!-- ########################## TEST SONDA ############################ -->
+    <!-- ########################## TEST SONDA ############################ 
     <block name="Mision_Prueba_Sonda">
       <go wp="P1"/>
       <call_once fun="send_measure_msg(WP__P1)"/>
@@ -122,6 +125,6 @@
 
       <go wp="P2"/>
     </block>
-
+-->
   </blocks>
 </flight_plan>

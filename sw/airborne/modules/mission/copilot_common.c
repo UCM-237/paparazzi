@@ -110,6 +110,7 @@ void copilot_periodic(void)
         &copilot_status.error_code);
 
     send_copilot_status = false;
+    printf("Copilot_status");
   }
   pprz_mtx_unlock(&copilot_status_mtx);
 

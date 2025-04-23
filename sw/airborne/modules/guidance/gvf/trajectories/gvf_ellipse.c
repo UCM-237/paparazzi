@@ -43,12 +43,12 @@
 
 /*! Default first axis for the ellipse trajectory */
 #ifndef GVF_ELLIPSE_A
-#define GVF_ELLIPSE_A 80
+#define GVF_ELLIPSE_A 4
 #endif
 
 /*! Default second axis for the ellipse trajectory */
 #ifndef GVF_ELLIPSE_B
-#define GVF_ELLIPSE_B 80
+#define GVF_ELLIPSE_B 4
 #endif
 
 /*! Default orientation in degrees for the ellipse trajectory */

@@ -1720,14 +1720,9 @@
     	<field name="speed_error"      type="float" unit="m/s" /> <!-- Speed error -->
     	<field name="throttle_command" type="float"/>						  <!-- throttle command -->
     	<field name="delta_sp"         type="float" unit="deg"/>  <!-- Angle of wheels setpoint -->
-    	<field name="kp"						   type="float"/>							<!-- Proporcional constant for the pid -->	
-    	<field name="ki"						   type="float"/>						  <!-- Integral constant for the pid -->
-    	<field name="kd"						   type="float"/>							<!-- Derivative constant for the pid -->
     	<field name="i_action"         type="float"/>						  <!-- Integral action -->
     	<field name="p_action"         type="float"/>						  <!-- Proportional action -->
-    	<field name="d_action"				 type="float"/>						  <!-- Derivative action -->
     	<field name="speed_measured"   type="float"/>						  <!-- Measured speed -->
-    	<field name="curvature"				 type="float"/>							<!-- Computed curvature with the GVF -->
     </message>
 
 
@@ -1777,8 +1772,10 @@
     <!-- 188 is free -->
     <!-- 189 is free -->
     <!-- 190 is free -->
-    <!-- 191 is free -->
-    <!-- 192 is free -->
+    
+    <message name="NUM_WP_MOVED" id="191">
+      <field name="num_wp_moved" type="uint8"/>
+     </message>
 
     <message name="AHRS_LKF" id="193">
       <field name="phi"   type="float" unit="rad"   alt_unit="deg"   alt_unit_coef="57.29578" />
@@ -2911,7 +2908,11 @@
       <description>Message from ground to be logged on the drone</description>
       <field name="ac_id" type="uint8"/>
       <field name="fd" type="uint8" values="ALL|FLIGHT_RECORDER|PPRZLOG">where the message will be logged</field>
-      <field name="msg" type="char[]"/>
+      <field name="msg" type="char[]"/>      
+    </message>
+    
+    <message name="NUM_WAYPOINT_MOVED_DATALINK" id="161" link="broadcasted">
+      <field name="num" type="uint8"/>
     </message>
     
   </msg_class>
@@ -3291,6 +3292,7 @@
       <field name="button4" type="uint8" unit="bool">button 4 status</field>
     </message>
 
+    
     <message name="PLUMES" id="100">
       <field name="ids" type="string" format="csv"/>
       <field name="lats" type="string" format="csv"/>
@@ -3303,6 +3305,10 @@
       <field name="dest" type="string">ac_id:file_descriptor | ground_name | 0 (ground broadcast) | 0xFF (broadcast)</field>
       <field name="source" type="string">ground_name of the agent sending the message</field>
       <field name="msg" type="string"/>
+    </message>
+    
+    <message name="NUM_WAYPOINT_MOVED_GROUND" id="102" link="broadcasted">
+      <field name="num" type="uint8"/>
     </message>
   </msg_class>
 

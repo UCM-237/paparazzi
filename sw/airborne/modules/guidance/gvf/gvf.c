@@ -23,13 +23,22 @@
 #include <math.h>
 #include "std.h"
 
-#include "gvf.h"
-#include "gvf_low_level_control.h"
-#include "trajectories/gvf_ellipse.h"
-#include "trajectories/gvf_line.h"
-#include "trajectories/gvf_sin.h"
+#include "pprzlink/messages.h"
+#include "pprzlink/telemetry/NUM_WP_MOVED.h"
+
+#include "modules/guidance/gvf/gvf.h"
+#include "modules/guidance/gvf/gvf_low_level_control.h"
+#include "modules/guidance/gvf/trajectories/gvf_ellipse.h"
+#include "modules/guidance/gvf/trajectories/gvf_line.h"
+#include "modules/guidance/gvf/trajectories/gvf_sin.h"
 #include "autopilot.h"
 #include "../gvf_common.h"
+
+
+
+
+
+uint8_t num_pnts;
 
 
 // Control
@@ -107,6 +116,13 @@ static void send_static_control(struct transport_tx *trans, struct link_device *
 
 }
 
+static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
+                             &num_wp_moved);
+  num_pnts = num_wp_moved;
+}
+
 #endif // PERIODIC_TELEMETRY
 
 static int out_of_segment_area(float x1, float y1, float x2, float y2, float d1, float d2)
@@ -161,6 +177,7 @@ void gvf_init(void)
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GVF, send_gvf);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATIC_CONTROL, send_static_control);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
 #endif
 }
 
@@ -275,6 +292,7 @@ void gvf_control_2D(float ke, float kn __attribute__((unused)), float e,
   float omega = omega_d + kn * (mr_x * md_y - mr_y * md_x);
 
   gvf_control.omega = omega;
+  
   // From gvf_common.h
   gvf_c_omega.omega  = omega; 
   gvf_c_info.kappa   = (nx*(H12*ny - nx*H22) + ny*(H21*nx - H11*ny))/powf(nx*nx + ny*ny,1.5);
@@ -464,11 +482,23 @@ bool gvf_line_wp_heading(uint8_t wp, float heading)
   return gvf_line_XY_heading(a, b, heading);
 }
 // Array of Lines
+
 bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2)
 {
+
 	// Create the points
 	gvf_trajectory.type = 2;
-	float x[GVF_N_LINES+1]; float y[GVF_N_LINES+1];
+	//num_wp_moved = 16;
+	
+	if (num_wp_moved != 0 ){
+	  num_pnts = num_wp_moved;
+	  //printf("num_wp_moved= %d\n", num_pnts);
+	}
+	else{
+	  num_pnts = GVF_N_LINES;
+	  //printf("GVF_N_LINES= %d\n", num_pnts);
+	}
+	float x[GVF_N_LINES+1]; float y[GVF_N_LINES+1]; //CAMBIAR PARA DEFINIRLO BIEN
 	x[0] = WaypointX(wp0); y[0] = WaypointY(wp0);
 	x[1] = WaypointX(wp1); y[1] = WaypointY(wp1);
 	x[2] = WaypointX(wp2); y[2] = WaypointY(wp2);
@@ -505,6 +535,7 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
     gvf_trajectory.p[5] = 0;
     gvf_plen_wps = 3;
     return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
+    
 }
 
 // ELLIPSE

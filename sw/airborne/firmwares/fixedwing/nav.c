@@ -524,6 +524,15 @@ static void send_survey(struct transport_tx *trans, struct link_device *dev)
                          &nav_survey_east, &nav_survey_north, &nav_survey_west, &nav_survey_south);
   }
 }
+
+
+uint8_t num_wp_moved;
+static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
+                             &num_wp_moved);
+}
+
 #endif
 
 /**
@@ -554,6 +563,7 @@ void nav_init(void)
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CIRCLE, send_circle);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_SEGMENT, send_segment);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_SURVEY, send_survey);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
 #endif
 
   // generated init function
@@ -589,8 +599,21 @@ void nav_parse_BLOCK(struct link_device *dev, struct transport_tx *trans, uint8_
   SEND_NAVIGATION(trans, dev);
 }
 
+
+
+void nav_parse_NUM_WAYPOINT_MOVED_DATALINK(uint8_t *buf)
+{
+
+  uint8_t num = DL_NUM_WAYPOINT_MOVED_DATALINK_num(buf);
+  printf("num = %d\n", num);
+  num_wp_moved = num;
+
+}
+
+
 void nav_parse_MOVE_WP(struct link_device *dev, struct transport_tx *trans, uint8_t *buf)
 {
+  printf("Hola");
   if (DL_MOVE_WP_ac_id(buf) != AC_ID) { return; }
   uint8_t wp_id = DL_MOVE_WP_wp_id(buf);
 

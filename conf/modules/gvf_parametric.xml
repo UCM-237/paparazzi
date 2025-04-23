@@ -18,7 +18,7 @@
           <dl_setting MAX="1.25" MIN="0.75" STEP="0.05" VAR="gvf_parametric_control.k_climb" shortname="k_climb" param="GVF_PARAMETRIC_CONTROL_KCLIMB"/>
           <dl_setting MAX="10" MIN="0.01" STEP="0.05" VAR="gvf_parametric_control.L" shortname="L" param="GVF_PARAMETRIC_CONTROL_L"/>
           <dl_setting MAX="1" MIN="0.001" STEP="0.005" VAR="gvf_parametric_control.beta" shortname="beta" param="GVF_PARAMETRIC_CONTROL_BETA"/>
-          <dl_setting MAX="1.5" MIN="0.5" STEP="0.01" VAR="gvf_parametric_control.k_psi" shortname="k_psi" param="GVF_PARAMETRIC_CONTROL_KPSI"/>
+          <dl_setting MAX="20.5" MIN="0.5" STEP="0.01" VAR="gvf_parametric_control.k_psi" shortname="k_psi" param="GVF_PARAMETRIC_CONTROL_KPSI"/>
         </dl_settings>
         <dl_settings NAME="2D_trefoil">
           <dl_setting MAX="0.01" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_trefoil_par.kx" shortname="2d_tre_kx" param="GVF_PARAMETRIC_2D_TREFOIL_KX"/>
@@ -57,12 +57,14 @@
           <dl_setting MAX="180" MIN="-180" STEP="1" VAR="gvf_parametric_3d_lissajous_par.dz" shortname="3d_lis_dz" param="GVF_PARAMETRIC_3D_LISSAJOUS_DZ"/>
           <dl_setting MAX="180" MIN="-180" STEP="1" VAR="gvf_parametric_3d_lissajous_par.alpha" shortname="3d_lis_alpha" param="GVF_PARAMETRIC_3D_LISSAJOUS_ALPHA"/>
         </dl_settings>
-
         <dl_settings NAME="2D_spline">
           <dl_setting MAX="0.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_splines_par.kx" shortname="2d_spl_kx" param="GVF_PARAMETRIC_2D_SPLINES_KX"/>
           <dl_setting MAX="0.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_splines_par.ky" shortname="2d_spl_ky" param="GVF_PARAMETRIC_2D_SPLINES_KY"/>
         </dl_settings>
-        
+        <dl_settings NAME="2D_bezier">
+          <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_bezier_par.kx" shortname="2d_bezier_kx" param="GVF_PARAMETRIC_2D_BEZIER_KX"/>
+          <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_2d_bezier_par.ky" shortname="2d_bezier_ky" param="GVF_PARAMETRIC_2D_BEZIER_KY"/>
+        </dl_settings>   
         
       </dl_settings>
     </dl_settings>

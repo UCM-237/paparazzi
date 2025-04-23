@@ -65,7 +65,6 @@ int gvf_parametric_plen_wps = 0;
 // Error signals array lenght
 int gvf_parametric_elen = 3;
 
-
 // Splines structs
 spline_t gvf_splines_2D_x[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
 spline_t gvf_splines_2D_y[GVF_PARAMETRIC_2D_SPLINES_N_SEG];
@@ -89,6 +88,7 @@ static void send_gvf_parametric(struct transport_tx *trans, struct link_device *
 
   float wb = gvf_parametric_control.w * gvf_parametric_control.beta;
 
+  // delta_T < 200 ?? Why, if delta_T > 200 ms do not send telemetry ??? That's why it send nothing.....?
   if (delta_T < 200) {
     gvf_parametric_splines_ctr = (gvf_parametric_splines_ctr + 1) % 3;
     pprz_msg_send_GVF_PARAMETRIC(trans, dev, AC_ID, &traj_type, &gvf_parametric_control.s, &wb, gvf_parametric_plen,
@@ -154,6 +154,7 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
   gvf_parametric_control.delta_T = now - gvf_parametric_t0;
   gvf_parametric_t0 = now;
 
+  //
   if (gvf_parametric_control.delta_T > 300) { // We need at least two iterations for Delta_T
     gvf_parametric_control.w = 0; // Reset w since we assume the algorithm starts
     return;
@@ -162,7 +163,6 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
   // Carrot position
   //desired_x = f1;
   //desired_y = f2;
-
 
   float L = gvf_parametric_control.L;
   float beta = gvf_parametric_control.beta * gvf_parametric_control.s;
@@ -245,10 +245,12 @@ void gvf_parametric_control_2D(float kx, float ky, float f1, float f2, float f1d
 
   // Ctrl purposes
   gvf_parametric_control.omega = heading_rate;
-  // From gvf_common.h
-  gvf_c_omega.omega = heading_rate; 
   
-
+  // From gvf_common.h TODO: implement d/dt of kppa and ori_err
+  gvf_c_omega.omega   = heading_rate; 
+  gvf_c_info.kappa    = (f1d*f2dd - f1dd*f2d)/powf(f1d*f1d + f2d*f2d, 1.5);
+  gvf_c_info.ori_err  = 1 - (Xh(0)*cosf(course) + Xh(1)*sinf(course));
+  
   // Virtual coordinate update, even if the vehicle is not in autonomous mode, the parameter w will get "closer" to
   // the vehicle. So it is not only okei but advisable to update it.
   gvf_parametric_control.w += w_dot * gvf_parametric_control.delta_T * 1e-3;
@@ -363,6 +365,7 @@ void gvf_parametric_control_3D(float kx, float ky, float kz, float f1, float f2,
 
   gvf_parametric_low_level_control_3D(heading_rate, climbing_rate);
 }
+#endif
 
 #endif 
 /** 2D TRAJECTORIES **/
@@ -409,6 +412,156 @@ bool gvf_parametric_2D_bezier_XY(void)
                             fydd);
   return true;
 }
+#endif
+
+#ifdef ROVER_FIRMWARE
+// 2D NATURAL CUBIC SPLINES 
+bool gvf_parametric_2D_splines_XY()
+{
+	gvf_parametric_trajectory.type = SPLINES_2D;
+	float fx, fy, fxd, fyd, fxdd, fydd;
+	gvf_parametric_2d_splines_info(gvf_splines_2D_x, gvf_splines_2D_y, &fx, &fy, &fxd, &fyd, &fxdd, &fydd);
+	gvf_parametric_control_2D(gvf_parametric_2d_splines_par.kx, gvf_parametric_2d_splines_par.ky, fx, fy, fxd, fyd, fxdd, fydd);
+	return true;
+}
+
+// TODO: Improve scalability (pass an array of wp and time breaks (t). N_segments => N-1 ctrl points + init points + end point)
+bool gvf_parametric_2D_splines_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, uint8_t wp7, uint8_t wp8,float t0, float t1, float t2, float t3, float t4, float t5, float t6, float t7, float t8)
+{
+	float x[GVF_PARAMETRIC_2D_SPLINES_N_SEG+1];
+	float y[GVF_PARAMETRIC_2D_SPLINES_N_SEG+1];
+	float t[GVF_PARAMETRIC_2D_SPLINES_N_SEG+1];
+	
+	x[0] = WaypointX(wp0);	x[1] = WaypointX(wp1);
+	x[2] = WaypointX(wp2);	x[3] = WaypointX(wp3);	
+	x[4] = WaypointX(wp4); x[5] = WaypointX(wp5);
+	x[6] = WaypointX(wp6);	x[7] = WaypointX(wp7);	
+	x[8] = WaypointX(wp8); 
+	
+	y[0] = WaypointY(wp0);	y[1] = WaypointY(wp1);
+	y[2] = WaypointY(wp2);	y[3] = WaypointY(wp3);	
+	y[4] = WaypointY(wp4);	y[5] = WaypointY(wp5);	
+	y[6] = WaypointY(wp6);	y[7] = WaypointY(wp7);
+	y[8] = WaypointY(wp8);
+	
+	
+	t[0] = t0; t[1] = t1; t[2] = t2; t[3] = t3; t[4] = t4;
+	t[5] = t5; t[6] = t6; t[7] = t7; t[8] = t8;
+	get_splines_from_ctrl_points(gvf_splines_2D_x, t, x);
+	get_splines_from_ctrl_points(gvf_splines_2D_y, t, y);
+	
+	// For the telemetry
+	gvf_parametric_trajectory.p_parametric[0] = x[0];
+	gvf_parametric_trajectory.p_parametric[1] = x[1];
+	gvf_parametric_trajectory.p_parametric[2] = x[2];
+	gvf_parametric_trajectory.p_parametric[3] = x[3];
+	gvf_parametric_trajectory.p_parametric[4] = x[4];
+	gvf_parametric_trajectory.p_parametric[5] = x[5];
+	gvf_parametric_trajectory.p_parametric[6] = x[6];
+	gvf_parametric_trajectory.p_parametric[7] = x[7];
+	gvf_parametric_trajectory.p_parametric[8] = x[8];
+	
+	gvf_parametric_trajectory.p_parametric[9] = y[0];
+	gvf_parametric_trajectory.p_parametric[10] = y[1];
+	gvf_parametric_trajectory.p_parametric[11] = y[2];
+	gvf_parametric_trajectory.p_parametric[12] = y[3];
+	gvf_parametric_trajectory.p_parametric[13] = y[4];
+	gvf_parametric_trajectory.p_parametric[14] = y[5];
+	gvf_parametric_trajectory.p_parametric[15] = y[6];
+	gvf_parametric_trajectory.p_parametric[16] = y[7];
+	gvf_parametric_trajectory.p_parametric[17] = y[8];
+	
+	gvf_parametric_trajectory.p_parametric[18] = t[0];
+	gvf_parametric_trajectory.p_parametric[19] = t[1];
+	gvf_parametric_trajectory.p_parametric[20] = t[2];
+	gvf_parametric_trajectory.p_parametric[21] = t[3];
+	gvf_parametric_trajectory.p_parametric[22] = t[4];
+	gvf_parametric_trajectory.p_parametric[23] = t[5];
+	gvf_parametric_trajectory.p_parametric[24] = t[6];
+	gvf_parametric_trajectory.p_parametric[25] = t[7];
+	gvf_parametric_trajectory.p_parametric[26] = t[8];
+	
+	gvf_parametric_plen = 27;
+	gvf_parametric_plen_wps = 0;
+	
+	// Restart the spline
+	if(gvf_parametric_control.w >= t8)
+		gvf_parametric_control.w = 0;
+	gvf_parametric_2D_splines_XY();
+	return true;
+}
+#endif
+
+#ifdef ROVER_FIRMWARE
+// 2D CUBIC BEZIER CURVE
+bool gvf_parametric_2D_bezier_XY(void)
+{
+	gvf_parametric_trajectory.type = BEZIER_2D;
+	float fx, fy, fxd, fyd, fxdd, fydd;
+	gvf_parametric_2d_bezier_splines_info(gvf_bezier_2D, &fx, &fy, &fxd, &fyd, &fxdd, &fydd);
+	gvf_parametric_control_2D(gvf_parametric_2d_bezier_par.kx, gvf_parametric_2d_bezier_par.ky, fx, fy, fxd, fyd, fxdd, fydd);
+	return true;
+}
+
+// TODO: Improve scalability (pass an array of wp)
+bool gvf_parametric_2D_bezier_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, uint8_t wp7, uint8_t wp8, uint8_t wp9,
+				  uint8_t wp10, uint8_t wp11, uint8_t wp12)
+{
+	float x[3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1];
+	float y[3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1];
+	
+	x[0]  = WaypointX(wp0);   x[1] = WaypointX(wp1);
+	x[2]  = WaypointX(wp2);   x[3] = WaypointX(wp3);	
+	x[4]  = WaypointX(wp4);   x[5] = WaypointX(wp5);
+	x[6]  = WaypointX(wp6);   x[7] = WaypointX(wp7);	
+	x[8]  = WaypointX(wp8);   x[9] = WaypointX(wp9);
+	x[10] = WaypointX(wp10);  x[11] = WaypointX(wp11);
+	x[12] = WaypointX(wp12);
+	
+	y[0]  = WaypointY(wp0);   y[1] = WaypointY(wp1);
+	y[2]  = WaypointY(wp2);   y[3] = WaypointY(wp3);	
+	y[4]  = WaypointY(wp4);   y[5] = WaypointY(wp5);	
+	y[6]  = WaypointY(wp6);   y[7] = WaypointY(wp7);
+	y[8]  = WaypointY(wp8);   y[9] = WaypointY(wp9);
+	y[10] = WaypointY(wp10);  y[11] = WaypointY(wp11);
+	y[12] = WaypointY(wp12);
+	
+	create_bezier_spline(gvf_bezier_2D, x, y);
+	
+	/* Send data piecewise. Some radio modules do not allow for a big data frame.*/
+	
+	// Send x points -> Indicate x with sign (+) in the first parameter
+	if(gvf_parametric_splines_ctr == 0){
+		gvf_parametric_trajectory.p_parametric[0] = -GVF_PARAMETRIC_2D_BEZIER_N_SEG; // send x (negative value)
+		for(int k = 0; k < 3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1; k++)
+			gvf_parametric_trajectory.p_parametric[k+1] = x[k];
+	}
+	// Send y points -> Indicate y with sign (-) in the first parameter
+	else if (gvf_parametric_splines_ctr == 1){
+		gvf_parametric_trajectory.p_parametric[0]  = GVF_PARAMETRIC_2D_BEZIER_N_SEG; // send y (positive value)
+		for(int k = 0; k < 3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1; k++)
+			gvf_parametric_trajectory.p_parametric[k+1] = y[k];
+	}
+	// send kx, ky, beta and anything else needed..
+	else{
+		gvf_parametric_trajectory.p_parametric[0] = 0.0; 
+		gvf_parametric_trajectory.p_parametric[1] = gvf_parametric_2d_bezier_par.kx;
+		gvf_parametric_trajectory.p_parametric[2] = gvf_parametric_2d_bezier_par.ky;
+		gvf_parametric_trajectory.p_parametric[3] = gvf_parametric_control.beta;
+	}
+	gvf_parametric_plen = 16;
+	gvf_parametric_plen_wps = 1;
+	
+	// restart the spline
+	if(gvf_parametric_control.w >= (float)GVF_PARAMETRIC_2D_BEZIER_N_SEG)
+		gvf_parametric_control.w = 0;
+	else if(gvf_parametric_control.w < 0)
+		gvf_parametric_control.w = 0;
+	gvf_parametric_2D_bezier_XY();
+	return true;
+}
+#endif
+
 
 /* @param first_wp is the first waypoint of the Bézier Spline
  * there should be 3*GVF_PARAMETRIC_2D_BEZIER_N_SEG+1 points
@@ -640,6 +793,4 @@ bool gvf_parametric_3D_lissajous_wp_center(uint8_t wp, float zo, float cx, float
   gvf_parametric_3D_lissajous_XYZ(waypoints[wp].x, waypoints[wp].y, zo, cx, cy, cz, wx, wy, wz, dx, dy, dz, alpha);
   return true;
 }
-
 #endif
-
