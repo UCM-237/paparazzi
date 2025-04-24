@@ -75,6 +75,9 @@ enum trajectories {
   ELLIPSE,
   SIN,
   LINE_ARRAY,
+  RHOMBOID,
+  SQUARE,
+  PNORM,
   NONE = 255,
 };
 
@@ -151,21 +154,121 @@ extern bool gvf_line_wp_heading(uint8_t wp, float heading);
 
 // Array of straight
 extern bool gvf_lines_array_wp(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6);
-extern bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2);
+extern bool gvf_lines_array_wp_v2(uint8_t wp0, float d1, float d2);
 // Ellipse
 extern bool gvf_ellipse_wp(uint8_t wp, float a, float b, float alpha);
 extern bool gvf_ellipse_XY(float x, float y, float a, float b, float alpha);
 
+/** @function gvf_rhomboid_wp
+ * @brief Function used to update parameters regarding type of trajectory. This
+ * function is called through the flight plan
+ * @Params:
+ * wp [IN]: Center of the rhomboid, obtained through the flight plan.
+ * r [IN]: "Radius" of the rhomboid.
+ * Returns: True if success/False otherwise
+ */
+extern bool gvf_rhomboid_wp(uint8_t wp, float r);
+
+/** @function gvf_rhomboid_XY
+ * @brief Function used to compute the control signal for the trajectory
+ * @Params:
+ * x [IN]: x component of the center of the rhomboid
+ * y [IN]: y component of the center of the rhomboid
+ * r [IN]: "Radius" of the rhomboid
+ * Returns: True if success/False otherwise
+ * TODO: The contents of this function could be called by gvf_rhomboid_wp. So
+ * this function is actually not necessary. Put its code in gvf_rhomboid_wp
+ */
+extern bool gvf_rhomboid_XY(float x, float y, float r);
+
+/** @function gvf_square_wp
+ * @brief Function used to update parameters regarding type of trajectory. This
+ * function is called through the flight plan
+ * @Params:
+ * wp [IN]: Center of the square, obtained through the flight plan.
+ * r [IN]: "Radius" of the square.
+ * Returns: True if success/False otherwise
+ */
+extern bool gvf_square_wp(uint8_t wp, float r);
+
+/** @function gvf_square_XY
+ * @brief Function used to compute the control signal for the trajectory
+ * @Params:
+ * x [IN]: x component of the center of the square
+ * y [IN]: y component of the center of the square
+ * r [IN]: "Radius" of the square
+ * Returns: True if success/False otherwise
+ * TODO: The contents of this function could be called by gvf_square_wp. So
+ * this function is actually not necessary. Put its code in gvf_square_wp
+ */
+extern bool gvf_square_XY(float x, float y, float r);
+
+/** @function gvf_pnorm_wp
+ * @brief Function used to update parameters regarding type of trajectory. This
+ * function is called through the flight plan
+ * @Params:
+ * wp [IN]: Center of the pnorm, obtained through the flight plan.
+ * r [IN]: "Radius" of the pnorm.
+ * Returns: True if success/False otherwise
+ */
+extern bool gvf_pnorm_wp(uint8_t wp, float r, float p);
+
+/** @function gvf_pnorm_XY
+ * @brief Function used to compute the control signal for the trajectory
+ * @Params:
+ * x [IN]: x component of the center of the pnorm
+ * y [IN]: y component of the center of the pnorm
+ * r [IN]: "Radius" of the pnorm
+ * Returns: True if success/False otherwise
+ * TODO: The contents of this function could be called by gvf_pnorm_wp. So
+ * this function is actually not necessary. Put its code in gvf_pnorm_wp
+ */
+extern bool gvf_pnorm_XY(float x, float y, float r, float p);
+
 // Sinusoidal
 extern bool gvf_sin_XY_alpha(float x, float y, float alpha, float w, float off, float A);
-extern bool gvf_sin_wp1_wp2(uint8_t wp1, uint8_t wp2, float w, float off,
-                            float A);
-extern bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off,
-                             float A);
-                             
+extern bool gvf_sin_wp1_wp2(uint8_t wp1, uint8_t wp2, float w, float off, float A);
+extern bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off, float A);
+
+/* TODO: The following functions shouldn't be in gvf.h since they are using Bézier
+ * curves, which are specifically defined in gvf_parametric_bare, and only work with
+ * that algorithms. They should be in gvf_parametric or in another folder
+ * regarding the capability of stopping at waypoints.
+ */
+
+/** @function bool dist_bool
+ * @brief function used to compute the distance to an stopping waypoint, and
+ * returning true if its inside a certain circle, updating the next point to stop.
+ * @Params
+ * x_ [IN] x position of the vehicle
+ * y_ [IN] y position of the vehicle .
+ * wp0 [IN] First point of the Bézier curve. This argument is passed
+ * through the flight plan
+ * @ Returns true if the vehicle is near (inside a
+ * circle of certain radius) the desired waypoint to stop. false otherwise
+ */
 extern bool dist_bool(float x_, float y_, uint8_t wp0);
+
+/** @function float dist_bool
+ * @brief function used to compute the distance to an stopping waypoint, and
+ * returning the distance.
+ * @Params
+ * x_ [IN] x position of the vehicle
+ * y_ [IN] y position of the vehicle .
+ * wp0 [IN] First point of the Bézier curve. This argument is passed
+ * through the flight plan
+ * @ Returns true if the vehicle is near (inside a
+ * circle of certain radius) the desired waypoint to stop. false otherwise
+ */
 extern float dist(float x_, float y_, uint8_t wp0);
-extern bool increase_bz_pointer(void);
+
+/** @function bool increase_bz_pointer
+ * @brief increases the pointer of a certain buffer that points to the next
+ * waypoint to stop in a Bézier curve.
+ * @Params None
+ * @Returns None
+ */
+extern void increase_bz_pointer(void);
 
 #endif // GVF_H
 

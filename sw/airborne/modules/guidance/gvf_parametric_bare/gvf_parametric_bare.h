@@ -29,16 +29,6 @@
 
 #define GVF_PARAMETRIC_BARE_GRAVITY 9.806
 
-/*! Default gain kroll for tuning the "coordinated turn" */
-#ifndef GVF_PARAMETRIC_BARE_CONTROL_KROLL
-#define GVF_PARAMETRIC_BARE_CONTROL_KROLL 1
-#endif
-
-/*! Default gain kclimb for tuning the climbing setting point */
-#ifndef GVF_PARAMETRIC_BARE_CONTROL_KCLIMB
-#define GVF_PARAMETRIC_BARE_CONTROL_KCLIMB 1
-#endif
-
 /*! Default scale for the error signals */
 #ifndef GVF_PARAMETRIC_BARE_CONTROL_L
 #define GVF_PARAMETRIC_BARE_CONTROL_L 0.1
@@ -63,78 +53,112 @@
 #include "std.h"
 
 /** @typedef gvf_parametric_bare_con
-* @brief Control parameters for the GVF_PARAMETRIC
-* @param w Virtual coordinate from the parametrization of the trajectory
-* @param delta_T Time between iterations needed for integrating w
-* @param s Defines the direction to be tracked. It takes the values -1 or 1.
-* @param k_roll Gain for tuning the coordinated turn.
-* @param k_climb Gain for tuning the climbing setting point.
-* @param k_psi Gain for tuning the heading setting point
-* @param beta Variable to scale down w
+* @brief Control parameters for the GVF_PARAMETRIC.
+* @field w Virtual coordinate from the parametrization of the trajectory.
+* @field delta_T Time between iterations needed for integrating w.
+* @field s Defines the direction to be tracked. It takes the values -1 or 1.
+* @field k_psi Gain for tuning the control signal gain.
+* @field beta Gain for tuning the tangential component of the guiding vector field.
 */
 typedef struct {
   float w;
   float delta_T;
   int8_t s;
-  float k_roll;
-  float k_climb;
   float k_psi;
   float L;
   float beta;
 } gvf_parametric_bare_con;
 
+// Struct containing all control parameters
 extern gvf_parametric_bare_con gvf_parametric_bare_control;
 
-// Parameters for the trajectories
+// Enum relating the trajectories with their number
 enum trajectories_parametric_bare {
   BEZIER_2D_BARE = 3,
   QUINTIC_BEZIER_2D_BARE = 4,
   NONE_PARAMETRIC_BARE = 255,
 };
 
+/** @typedef struct gvf_parametric_bare_tra
+ * @brief Struct containing the parameters of the trajectory
+ * @field type Enum indicating the trajectory type
+ * @field p_parametric Array for the trajectory parameters
+ * @field phi_errors Array containing the errors to the desired trajectory
+ */
 typedef struct {
   enum trajectories_parametric_bare type;
   float p_parametric[16];
   float phi_errors[3];
 } gvf_parametric_bare_tra;
 
+// Struct containing the trajectory parameters
 extern gvf_parametric_bare_tra gvf_parametric_bare_trajectory;
 
-// Bezier struct
+// Struct of type bezier holding the Bézier points
 extern bare_bezier_t gvf_bezier_2D_bare[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG];
 
-// Init function
+/** @function void gvf_parametric_bare_init
+ *  @brief Function initializing parameters for gvf parametric bare
+ *  @param None
+ *  @return None
+ */
 extern void gvf_parametric_bare_init(void);
 
-// Control functions
+/** @function void gvf_parametric_bare_set_direction
+ *  @brief Function to change the guiding vector field direction
+ *  @param s: Parameter indicating the direction of the guiding vector field (+-1)
+ *  @returns None
+ */
 extern void gvf_parametric_bare_set_direction(int8_t s);
-extern void gvf_parametric_bare_control_2D(float, float, float, float, float, float, float, float);
-extern void gvf_parametric_bare_control_3D(float, float, float, float, float, float, float, float, float,
-                                      float, float, float);
 
-// 2D Trefoil
-extern bool gvf_parametric_bare_2D_trefoil_XY(float, float, float, float, float, float, float);
-extern bool gvf_parametric_bare_2D_trefoil_wp(uint8_t, float, float, float, float, float);
+/** @function void gvf_parametric_bare_control_2D
+ *  @brief Function used to compute the guiding vector field and control signal
+ *  @params:
+ *  kx,ky Gains used for tuning the vertical component of the guiding vector field
+ *  f1,f2 Components of the 2D trajectory evaluated at the virtual coordinate
+ *  f1d, f2d Components of the derivative of the 2D trajectory evaluated at the virtual coordinate
+ *  f1dd, f2dd Components of the second derivative of the 2D trajectory evaluated at the virtual coordinate
+ *  @returns None
+ */
+extern void gvf_parametric_bare_control_2D(float kx, float ky,
+                                           float f1, float f2,
+                                           float f1d, float f2d,
+                                           float f1dd, float f2dd);
 
-// 2D CUBIC BEZIER
-extern bool gvf_parametric_bare_2D_bezier_wp(uint8_t);
+/************ 2D THIRD ORDER BEZIER WITH C^2 CONTINUITY AT CONTROL POINTS ******/
+/** @function bool gvf_parametric_bare_2D_bezier_wp
+ *  @brief Function used to construct the third order Bézier curves and
+ *  preparing the buffers to send them through telemetry.
+ *  @param wp0: First point defined in the flight plan of the Bézier Curve
+ *  @returns true if successful, false otherwise
+ */
+extern bool gvf_parametric_bare_2D_bezier_wp(uint8_t wp0);
+
+/** @function bool gvf_parametric_bare_2D_bezier_XY
+ *  @brief Function used to obtain the curve and its derivatives evaluated, and
+ *  computes the control signal for the third order Bézier curves.
+ *  @param None
+ *  @returns true if successful, false otherwise
+ */
 extern bool gvf_parametric_bare_2D_bezier_XY(void);
 
-// 2D QUINTIC BEZIER
-extern bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t);
+/************ 2D FIFTH ORDER BEZIER WITH C^2 CONTINUITY AT CONTROL POINTS ******/
+
+/** @function bool gvf_parametric_bare_2D_quintic_bezier_wp
+ *  @brief Function used to construct the fifth order Bézier curves and
+ *  preparing the buffers to send them through telemetry.
+ *  @param wp0: First point defined in the flight plan of the Bézier Curve
+ *  @returns true if successful, false otherwise
+ */
+extern bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t wp0);
+
+/** @function bool gvf_parametric_bare_2D_quintic_bezier_XY
+ *  @brief Function used to obtain the curve and its derivatives evaluated, and
+ *  computes the control signal for the fifth order Bézier curves with C^2
+ *  continuity
+ *  @param None
+ *  @returns true if successful, false otherwise
+ */
 extern bool gvf_parametric_bare_2D_quintic_bezier_XY(void);
-
-// 3D Ellipse
-extern bool gvf_parametric_bare_3D_ellipse_XYZ(float, float, float, float, float, float);
-extern bool gvf_parametric_bare_3D_ellipse_wp(uint8_t, float, float, float, float);
-extern bool gvf_parametric_bare_3D_ellipse_wp_delta(uint8_t, float, float, float, float);
-
-// 3D Lissajous
-extern bool gvf_parametric_bare_3D_lissajous_XYZ(float, float, float, float, float, float, float, float, float, float, float,
-    float, float);
-extern bool gvf_parametric_bare_3D_lissajous_wp_center(uint8_t, float, float, float, float, float, float, float, float,
-    float, float, float);
-
-
 
 #endif // GVF_PARAMETRIC_H

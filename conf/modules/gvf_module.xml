@@ -61,6 +61,22 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
           <dl_setting MAX="6.2" MIN="0" STEP="0.002" VAR="gvf_sin_par.off" shortname="sin_off" param="GVF_SIN_OFF"/>
           <dl_setting MAX="100" MIN="0" STEP="1" VAR="gvf_sin_par.A" shortname="sin_amplitude" param="GVF_SIN_A"/>
         </dl_settings>
+        <dl_settings NAME="rhomboid">
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_rhomboid_par.ke" shortname="rom_ke" param="GVF_rhomboid_KE"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_rhomboid_par.kn" shortname="rom_kn" param="GVF_rhomboid_KN"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_rhomboid_par.r"  shortname="rom_r"  param="GVF_rhomboid_R"/>
+        </dl_settings>
+        <dl_settings NAME="square">
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_square_par.ke" shortname="square_ke" param="GVF_square_KE"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_square_par.kn" shortname="square_kn" param="GVF_square_KN"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_square_par.r"  shortname="square_r"  param="GVF_square_R"/>
+        </dl_settings>
+        <dl_settings NAME="lpnorm">
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_pnorm_par.ke" shortname="pnorm_ke" param="GVF_pnorm_KE"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_pnorm_par.kn" shortname="pnorm_kn" param="GVF_pnorm_KN"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_pnorm_par.r"  shortname="pnorm_r"  param="GVF_pnorm_R"/>
+          <dl_setting MAX="10" MIN="0.0" STEP="0.01" VAR="gvf_pnorm_par.p"  shortname="pnorm_p"  param="GVF_pnorm_P"/>   
+        </dl_settings>
       </dl_settings>
     </dl_settings>
   </settings>
@@ -75,6 +91,9 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
      <file name="trajectories/gvf_line.h"/>
      <file name="trajectories/gvf_sin.h"/>
      <file name="trajectories/gvf_ellipse.h"/>
+     <file name="trajectories/gvf_rhomboid.h"/>
+     <file name="trajectories/gvf_square.h"/>
+     <file name="trajectories/gvf_pnorm.h"/>
      <file name="nav/nav_survey_polygon_gvf.h"/>
    </header>
 
@@ -86,6 +105,9 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
      <file name="trajectories/gvf_line.c"/>
      <file name="trajectories/gvf_sin.c"/>
      <file name="trajectories/gvf_ellipse.c"/>
+     <file name="trajectories/gvf_rhomboid.c"/>
+     <file name="trajectories/gvf_square.c"/>
+     <file name="trajectories/gvf_pnorm.c"/>
      <file name="nav/nav_survey_polygon_gvf.c"/>
    </makefile>
    
@@ -102,6 +124,9 @@ For more details we refer to https://wiki.paparazziuav.org/wiki/Module/guidance_
      <file name="gvf_low_level_control.c"/>
      <file name="trajectories/gvf_line.c"/>
      <file name="trajectories/gvf_sin.c"/>
+     <file name="trajectories/gvf_rhomboid.c"/>
+     <file name="trajectories/gvf_square.c"/>
+     <file name="trajectories/gvf_pnorm.c"/>
      <file name="trajectories/gvf_ellipse.c"/>
      <!--file name="nav/nav_survey_polygon_gvf.c"/-->
    </makefile>

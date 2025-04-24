@@ -26,46 +26,59 @@
 #include "std.h"
 
  /** @typedef gvf_common_omega
-
 * @brief Horizontal control signal for both gvf
 * @param omega is the horizontal control signal
 */
 
 
- typedef struct{ 	
- 	float omega;
+ typedef struct{
+  float omega;
  } gvf_common_omega;
  
-extern gvf_common_omega gvf_c_omega;
 
- /** @typedef gvf_common_params
-
+/** @typedef gvf_common_params
 * @brief Different parameters obtained from gvfs. dot means d/dt
 * @param kappa is the curve's curvature
 * @param ori_err is the orientation error
-* #param ori_err_dot is the derivative of the orientation error
+* @param ori_err_dot is the derivative of the orientation error
 */
 
-typedef struct{	
-	float kappa;
-	float kappa_dot;
-	float ori_err;
-	float ori_err_dot;
+typedef struct{
+  float kappa;
+  float kappa_dot;
+  float ori_err;
+  float ori_err_dot;
 } gvf_common_params;
 
+/** @typedef struct gvf_common_stop_at_wp
+ * @brief struct with the parameters needed to stop at a certain waypoint
+ * @param stay_still Indicates if the vehicle has stopped
+ * @param stop_at_wp indicates if the vehicle must stop at the wp
+ * @param wait_time indicates how much time must the vehicle remain still
+ * @param distance_stop is the radius of a circle centered at the desired waypoint
+ * to stop. If the vehicle is inside that circle it stops.
+ * @param pxd,pyd x and y coordinates of the desired waypoint to stop.
+ */
 typedef struct{
-	int   stay_still;
-	int   stop_at_wp;
-	uint32_t wait_time;
-	float distance_stop;
-        float pxd;
-	float pyd;
-	uint8_t next_wp;
+  int stay_still;
+  int stop_at_wp;
+  uint32_t wait_time;
+  float distance_stop;
+  float pxd;
+  float pyd;
+  uint8_t next_wp;
 } gvf_common_stop_at_wp;
  
+// Struct with the control signal information
+extern gvf_common_omega gvf_c_omega;
+
+// Struct with the common parameters for gvfs
 extern gvf_common_params gvf_c_info;
+
+// Struct with the common parameters to stop at a wp
 extern gvf_common_stop_at_wp gvf_c_stopwp;
-/* @ brief Variable to keep the current cpu time in gvf calls */
+
+// Variable to keep the current cpu time in gvf calls
 extern uint32_t gvf_c_t0;
  
  #endif // GVF_COMMON_H
