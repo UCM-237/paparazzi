@@ -45,6 +45,15 @@ typedef struct {
 
 extern gvf_squr_par gvf_square_par;
 
+/** @function void gvf_square_info
+ * @brief Function that computes the error to the desired path, its gradient and its
+ * Hessian
+ * @params:
+ * phi [OUT] Error to the desired trajectory
+ * grad [OUT] Gradient of the error to the desired trajectory
+ * hess [OUT] Hessian of the error to the desired trajectory
+ * @Returns None
+ */
 extern void gvf_square_info(float *phi, struct gvf_grad *, struct gvf_Hess *);
 
 #endif // GVF_square_H

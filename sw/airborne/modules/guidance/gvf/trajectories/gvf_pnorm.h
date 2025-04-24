@@ -32,11 +32,11 @@
 #include "modules/guidance/gvf/gvf.h"
 
 /** @typedef gvf_squr_par
-* @brief Parameters for the GVF rhomboid trajectory
+* @brief Parameters for the GVF pnorm trajectory
 * @param ke Gain defining how agressive is the vector field
 * @param kn Gain for making converge the vehicle to the vector field
 * @param r Maximum side length of the pnorm
-* @param p The l-p norm
+* @param p The \ell_p norm
 */
 typedef struct {
   float ke;
@@ -47,6 +47,15 @@ typedef struct {
 
 extern gvf_lpnorm_par gvf_pnorm_par;
 
-extern void gvf_pnorm_info(float *phi, struct gvf_grad *, struct gvf_Hess *);
+/** @function void gvf_pnorm_info
+ * @brief Function that computes the error to the desired path, its gradient and its
+ * Hessian
+ * @params:
+ * phi [OUT] Error to the desired trajectory
+ * grad [OUT] Gradient of the error to the desired trajectory
+ * hess [OUT] Hessian of the error to the desired trajectory
+ * @Returns None
+ */
+extern void gvf_pnorm_info(float *phi, struct gvf_grad *grad, struct gvf_Hess *hess);
 
 #endif // GVF_pnorm_H

@@ -23,11 +23,11 @@
 /** @file gvf_romboid.h
  *
  *  Guidance algorithm based on vector fields
- *  2D romboid trajectory
+ *  2D rhomboid trajectory
  */
 
-#ifndef GVF_ROMBOID_H
-#define GVF_ROMBOID_H
+#ifndef GVF_RHOMBOID_H
+#define GVF_RHOMBOID_H
 
 #include "modules/guidance/gvf/gvf.h"
 
@@ -35,9 +35,7 @@
 * @brief Parameters for the GVF rhomboid trajectory
 * @param ke Gain defining how agressive is the vector field
 * @param kn Gain for making converge the vehicle to the vector field
-* @param a First axis of the romboid in meters
-* @param b Second axis of the romboid in meters
-* @param alpha Orientation of the romboid in rads
+* @param r "Radius" of the rhomboid
 */
 typedef struct {
   float ke;
@@ -45,8 +43,17 @@ typedef struct {
   float r;
 } gvf_romb_par;
 
-extern gvf_romb_par gvf_romboid_par;
+extern gvf_romb_par gvf_rhomboid_par;
 
+/** @function void gvf_romboid_info
+ * @brief Function that computes the error to the desired path, its gradient and its
+ * Hessian
+ * @params:
+ * phi [OUT] Error to the desired trajectory
+ * grad [OUT] Gradient of the error to the desired trajectory
+ * hess [OUT] Hessian of the error to the desired trajectory
+ * @Returns None
+ */
 extern void gvf_romboid_info(float *phi, struct gvf_grad *, struct gvf_Hess *);
 
 #endif // GVF_romboid_H

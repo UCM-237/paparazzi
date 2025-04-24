@@ -28,7 +28,7 @@
 
 
 #include "modules/nav/common_nav.h"
-#include "gvf_romboid.h"
+#include "gvf_rhomboid.h"
 #include "generated/airframe.h"
 
 /*! Default gain ke for the romboid trajectory */
@@ -46,11 +46,9 @@
 #define GVF_romboid_R 6
 #endif
 
-gvf_romb_par gvf_romboid_par = {GVF_romboid_KE, GVF_romboid_KN,
-                               GVF_romboid_R};
+gvf_romb_par gvf_rhomboid_par = {GVF_romboid_KE, GVF_romboid_KN, GVF_romboid_R};
 
-void gvf_romboid_info(float *phi, struct gvf_grad *grad,
-                      struct gvf_Hess *hess)
+void gvf_romboid_info(float *phi, struct gvf_grad *grad, struct gvf_Hess *hess)
 {
 
   struct EnuCoor_f *p = stateGetPositionEnu_f();
@@ -60,7 +58,7 @@ void gvf_romboid_info(float *phi, struct gvf_grad *grad,
   float wy = gvf_trajectory.p[1];
 
   // Phi(x,y)
-  *phi = fabs(px - wx) + fabs(py - wy) - gvf_romboid_par.r;
+  *phi = fabs(px - wx) + fabs(py - wy) - gvf_rhomboid_par.r;
 
   // grad Phi
   float g1, g2;

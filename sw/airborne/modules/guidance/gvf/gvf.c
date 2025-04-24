@@ -21,13 +21,14 @@
  */
 
 #include <math.h>
+#include <stdbool.h>
 #include "std.h"
 
 #include "modules/guidance/gvf/gvf.h"
 #include "modules/guidance/gvf/gvf_low_level_control.h"
 #include "modules/guidance/gvf/trajectories/gvf_ellipse.h"
 #include "modules/guidance/gvf/trajectories/gvf_line.h"
-#include "modules/guidance/gvf/trajectories/gvf_romboid.h"
+#include "modules/guidance/gvf/trajectories/gvf_rhomboid.h"
 #include "modules/guidance/gvf/trajectories/gvf_square.h"
 #include "modules/guidance/gvf/trajectories/gvf_pnorm.h"
 #include "modules/guidance/gvf/trajectories/gvf_sin.h"
@@ -468,47 +469,56 @@ bool gvf_line_wp_heading(uint8_t wp, float heading)
 }
 
 // Array of Lines
-bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4, uint8_t wp5, uint8_t wp6, float d1, float d2)
+bool gvf_lines_array_wp_v2(uint8_t wp0, float d1, float d2)
 {
-	// Create the points
-	gvf_trajectory.type = 2;
-	float x[GVF_N_LINES+1]; float y[GVF_N_LINES+1];
-	x[0] = WaypointX(wp0); y[0] = WaypointY(wp0);
-	x[1] = WaypointX(wp1); y[1] = WaypointY(wp1);
-	x[2] = WaypointX(wp2); y[2] = WaypointY(wp2);
-	x[3] = WaypointX(wp3); y[3] = WaypointY(wp3);
-	x[4] = WaypointX(wp4); y[4] = WaypointY(wp4);
-	x[5] = WaypointX(wp5); y[5] = WaypointY(wp5);
-	x[6] = WaypointX(wp6); y[6] = WaypointY(wp6);
-	for(int k = 0; k < GVF_N_LINES; k++)
-	{
-		gvf_lines_array[k].p1x = x[k];
-		gvf_lines_array[k].p1y = y[k];
-		gvf_lines_array[k].p2x = x[k+1];
-		gvf_lines_array[k].p2y = y[k+1];
-	}
-	struct EnuCoor_f *p = stateGetPositionEnu_f();
- 	float px = p->x;
-	float py = p->y;
-	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
-	if((dist <= gvf_c_stopwp.distance_stop)){
-		if(!gvf_c_stopwp.stop_at_wp){
-			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
-			}		
-		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
-			gvf_c_stopwp.stay_still = 1;
-			}
-		}
-  	float x1 = gvf_lines_array[gvf_control.which_line].p1x;
-   	float y1 = gvf_lines_array[gvf_control.which_line].p1y;
-   	float x2 = gvf_lines_array[gvf_control.which_line].p2x;
-    float y2 = gvf_lines_array[gvf_control.which_line].p2y;
-    gvf_trajectory.p[3] = x2;
-    gvf_trajectory.p[4] = y2;
-    gvf_trajectory.p[5] = 0;
-    gvf_plen_wps = 3;
-    return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
+  // Create the points
+  gvf_trajectory.type = 2;
+  float x[GVF_N_LINES+1]; float y[GVF_N_LINES+1];
+
+  // Obtain the waypoints of the lines
+  for(int k = 0; k < GVF_N_LINES; k++)
+  {
+    x[k] = WaypointX(wp0+k);
+    y[k] = WaypointY(wp0+k);
+  }
+  // Save them in the struct
+  for(int k = 0; k < GVF_N_LINES; k++)
+  {
+    gvf_lines_array[k].p1x = x[k];
+    gvf_lines_array[k].p1y = y[k];
+    gvf_lines_array[k].p2x = x[k+1];
+    gvf_lines_array[k].p2y = y[k+1];
+  }
+
+  // Obtain position of the vehicle
+  struct EnuCoor_f *p = stateGetPositionEnu_f();
+  float px = p->x;
+  float py = p->y;
+
+  // Distance to the desired waypoint
+  float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
+
+  if((dist <= gvf_c_stopwp.distance_stop))
+  {
+    if(!gvf_c_stopwp.stop_at_wp)
+    {
+      gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+    }
+    if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still)
+    {
+      gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+      gvf_c_stopwp.stay_still = 1;
+    }
+  }
+  float x1 = gvf_lines_array[gvf_control.which_line].p1x;
+  float y1 = gvf_lines_array[gvf_control.which_line].p1y;
+  float x2 = gvf_lines_array[gvf_control.which_line].p2x;
+  float y2 = gvf_lines_array[gvf_control.which_line].p2y;
+  gvf_trajectory.p[3] = x2;
+  gvf_trajectory.p[4] = y2;
+  gvf_trajectory.p[5] = 0;
+  gvf_plen_wps = 3;
+  return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
 }
 
 // ELLIPSE
@@ -561,14 +571,13 @@ bool gvf_ellipse_wp(uint8_t wp, float a, float b, float alpha)
   return true;
 }
 
-// ROMBOID
-
-bool gvf_romboid_XY(float x, float y, float r)
+// RHOMBOID
+bool gvf_rhomboid_XY(float x, float y, float r)
 {
   float e;
   struct gvf_grad grad_romboid;
   struct gvf_Hess Hess_romboid;
-  gvf_trajectory.type = ROMBOID;
+  gvf_trajectory.type = RHOMBOID;
   gvf_trajectory.p[0] = x;
   gvf_trajectory.p[1] = y;
   gvf_trajectory.p[2] = r;
@@ -576,22 +585,22 @@ bool gvf_romboid_XY(float x, float y, float r)
   gvf_plen_wps = 0;
   
   gvf_romboid_info(&e, &grad_romboid, &Hess_romboid);
-  gvf_control.ke = gvf_romboid_par.ke;
-  gvf_control_2D(gvf_romboid_par.ke, gvf_romboid_par.kn, e, &grad_romboid, &Hess_romboid);
+  gvf_control.ke = gvf_rhomboid_par.ke;
+  gvf_control_2D(gvf_rhomboid_par.ke, gvf_rhomboid_par.kn, e, &grad_romboid, &Hess_romboid);
   
   gvf_control.error = e;
   return true;
 }
 
-bool gvf_romboid_wp(uint8_t wp, float r)
+bool gvf_rhomboid_wp(uint8_t wp, float r)
 {
   gvf_trajectory.p[3] = wp;
   gvf_plen_wps = 1;
-  gvf_romboid_XY(WaypointX(wp), WaypointY(wp), r);
+  gvf_rhomboid_XY(WaypointX(wp), WaypointY(wp), r);
   return true;
 }
 
-// Square
+// SQUARE
 bool gvf_square_XY(float x, float y, float r)
 {
   float e;
@@ -620,9 +629,9 @@ bool gvf_square_wp(uint8_t wp, float r)
   return true;
 }
 
-// pnorm
-
+// PNORM
 bool gvf_pnorm_XY(float x, float y, float r, float p){
+
   float e;
   struct gvf_grad grad_pnorm;
   struct gvf_Hess Hess_pnorm;
@@ -649,6 +658,7 @@ bool gvf_pnorm_wp(uint8_t wp, float r, float p){
   gvf_pnorm_XY(WaypointX(wp), WaypointY(wp), r, p);
   return true;
 }
+
 // SINUSOIDAL (if w = 0 and off = 0, then we just have the straight line case)
 
 bool gvf_sin_XY_alpha(float a, float b, float alpha, float w, float off, float A)
@@ -715,82 +725,111 @@ bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off, float A)
   return true;
 }
 
+
+// Related to stop at Bézier points.
+/* TODO: The following functions shouldn't be in gvf.c since they are using Bézier
+ * curves, which are specifically defined in gvf_parametric_bare, and only work with
+ * that algorithms. They should be in gvf_parametric or in another folder
+ * regarding the capability of stopping at waypoints.
+ */
 bool dist_bool(float x_, float y_, uint8_t wp0){
 
-	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
-	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
-	for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
-	  x[k] = WaypointX(wp0+k);
-	  y[k] = WaypointY(wp0+k);
-	}
-	
-	float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-	
-	x_bz[0]=x[0]; y_bz[0]=y[0];
-	x_bz[1]=x[4]; y_bz[1]=y[4];
-	x_bz[2]=x[7]; y_bz[2]=y[7];
-	x_bz[3]=x[11]; y_bz[3]=y[11];
-	
+  float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+  float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+  for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++)
+  {
+    x[k] = WaypointX(wp0+k);
+    y[k] = WaypointY(wp0+k);
+  }
+
+  float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+  float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+
+  x_bz[0]=x[0]; y_bz[0]=y[0];
+  x_bz[1]=x[4]; y_bz[1]=y[4];
+  x_bz[2]=x[7]; y_bz[2]=y[7];
+  x_bz[3]=x[11]; y_bz[3]=y[11];
+
   
   float px = x_;
   float py = y_;
   float dist = sqrtf( powf(px-x_bz[gvf_c_stopwp.next_wp],2) + powf(py-y_bz[gvf_c_stopwp.next_wp],2));
-  if(dist <= gvf_c_stopwp.distance_stop){	
-  	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-  		gvf_c_stopwp.stay_still = 1;
-  		gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp]; 
-  		gvf_c_stopwp.pyd = y_bz[gvf_c_stopwp.next_wp];
-  		return true;
-  	}
-  	
+  if(dist <= gvf_c_stopwp.distance_stop)
+  {
+    if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still)
+    {
+      gvf_c_stopwp.stay_still = 1;
+      gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp];
+      gvf_c_stopwp.pyd = y_bz[gvf_c_stopwp.next_wp];
+      return true;
+    }
   } 
   return false;
 }
 
 float dist(float x_, float y_, uint8_t wp0){
-	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
-	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
-	for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
-	  x[k] = WaypointX(wp0+k);
-	  y[k] = WaypointY(wp0+k);
-	}
-	
-	float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-	
-	x_bz[0]=x[0]; y_bz[0]=y[0];
-	x_bz[1]=x[4]; y_bz[1]=y[4];
-	x_bz[2]=x[7]; y_bz[2]=y[7];
-	x_bz[3]=x[11]; y_bz[3]=y[11];
-	
-	bz_stop_wp.bz0x=x_bz[0];
-	bz_stop_wp.bz0y=y_bz[0];
-	bz_stop_wp.bz4x=x_bz[1];
-	bz_stop_wp.bz4y=y_bz[1];
-	bz_stop_wp.bz7x=x_bz[2];
-	bz_stop_wp.bz7y=y_bz[2];
-	bz_stop_wp.bz11x=x_bz[3];
-	bz_stop_wp.bz11y=y_bz[3];  
+
+  /* TODO: This function is too specific. It should be replaced with a more
+   * general approach. Right now it uses the macro GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG
+   * but it is hard-coded for three segments.
+   */
+
+  // Obtain the Bézier control points.
+  float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+  float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+
+  for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++)
+  {
+    x[k] = WaypointX(wp0+k);
+    y[k] = WaypointY(wp0+k);
+  }
+
+  // Array with the points where the vehicle must stop
+  float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+  float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+
+  // It must stop at the waypoints.
+  x_bz[0]=x[0]; y_bz[0]=y[0];
+  x_bz[1]=x[4]; y_bz[1]=y[4];
+  x_bz[2]=x[7]; y_bz[2]=y[7];
+  x_bz[3]=x[11]; y_bz[3]=y[11];
+
+  bz_stop_wp.bz0x = x_bz[0];
+  bz_stop_wp.bz0y = y_bz[0];
+  bz_stop_wp.bz4x = x_bz[1];
+  bz_stop_wp.bz4y = y_bz[1];
+  bz_stop_wp.bz7x = x_bz[2];
+  bz_stop_wp.bz7y = y_bz[2];
+  bz_stop_wp.bz11x = x_bz[3];
+  bz_stop_wp.bz11y = y_bz[3];
   float px = x_;
   float py = y_;
   float dist = sqrtf( powf(px-x_bz[gvf_c_stopwp.next_wp],2) + powf(py-y_bz[gvf_c_stopwp.next_wp],2));
-  dist_WP=dist;
+  dist_WP = dist;
 
   gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp]; 
   gvf_c_stopwp.pyd = y_bz[gvf_c_stopwp.next_wp];
-  if((dist <= gvf_c_stopwp.distance_stop)){	
-  	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-  		gvf_c_stopwp.stay_still = 1;
-  		return dist;
-  	}
+  if((dist <= gvf_c_stopwp.distance_stop))
+  {
+    if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still)
+    {
+      gvf_c_stopwp.stay_still = 1;
+      return dist;
+    }
   } 
   return dist;
-  }
-  
-  bool increase_bz_pointer(void){
+}
+
+void increase_bz_pointer(void){
+  // Increase Bézier pointer
   gvf_c_stopwp.next_wp++;
-  if (gvf_c_stopwp.next_wp>3) 
-  	gvf_c_stopwp.next_wp=0;
-  return false;
+
+  /* TODO: Check if this is correct. The previous magic number "3" has been
+   * replaced by the number of segments. The other two functions relating Bézier
+   * stop at waypoints must be updated.
+   */
+  if(gvf_c_stopwp.next_wp > GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG)
+  {
+    gvf_c_stopwp.next_wp = 0;
   }
+}

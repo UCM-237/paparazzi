@@ -53,40 +53,41 @@
 
 
 gvf_lpnorm_par gvf_pnorm_par = {GVF_pnorm_KE, GVF_pnorm_KN,
-                               GVF_pnorm_R, GVF_pnorm_P};
+                                GVF_pnorm_R, GVF_pnorm_P};
 
-void gvf_pnorm_info(float *phi, struct gvf_grad *grad,
-                      struct gvf_Hess *hess)
+void gvf_pnorm_info(float *phi, struct gvf_grad *grad, struct gvf_Hess *hess)
 {
-
+  // Position of the vehicle
   struct EnuCoor_f *p = stateGetPositionEnu_f();
   float px = p->x;
   float py = p->y;
+
+  // Center of the pnorm
   float wx = gvf_trajectory.p[0];
   float wy = gvf_trajectory.p[1];
 
-  // It works for p < 2, why it does not work for p > 2????
-
-  // Phi(x,y) 
+  // Componentes of the pnorm \phi(\xi) = ||\xi||_p
   float dx = powf(fabs(px-wx),gvf_pnorm_par.p);
   float dy = powf(fabs(py-wy),gvf_pnorm_par.p);
   float dr = powf(dx + dy, 1.0/gvf_pnorm_par.p);
+
+  // Sign function
+  //float sign1 = (px-wx >= 0) ? 1 : -1;
+  //float sign2 = (py-wy >= 0) ? 1 : -1;
+  float g1, g2;
+
+  // \phi: Error to the desired curve
   *phi = powf(dr, gvf_pnorm_par.p) - powf(gvf_pnorm_par.r,gvf_pnorm_par.p);
 
-  // grad Phi
-  float sign1 = (px-wx >= 0) ? 1 : -1;
-  float sign2 = (py-wy >= 0) ? 1 : -1;
-
-  float g1, g2;
+  // grad \phi: Gradient of the error
   //g1 = powf( fabs(px-wx)/dr, gvf_pnorm_par.p - 1.0) * sign1;
   //g2 = powf( fabs(py-wy)/dr, gvf_pnorm_par.p - 1.0) * sign2;
-  g1 = powf( fabs(px-wx), gvf_pnorm_par.p - 2.0) * (px - wx);
-  g2 = powf( fabs(py-wy), gvf_pnorm_par.p - 2.0) * (py - wy);
   grad->nx = g1;
   grad->ny = g2;
+  g1 = powf( fabs(px-wx), gvf_pnorm_par.p - 2.0) * (px - wx);
+  g2 = powf( fabs(py-wy), gvf_pnorm_par.p - 2.0) * (py - wy);
 
-  // Hessian Phi
-  // Maybe the Hessian?? for p > 2 ??
+  // Hessian \phi: TODO: Check Heassian for p >= 2:
   hess->H11 = gvf_pnorm_par.p * (gvf_pnorm_par.p - 1.0) * powf(fabs(px - wx), gvf_pnorm_par.p - 2.0);
   hess->H12 = 0;
   hess->H21 = 0;

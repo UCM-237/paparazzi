@@ -46,11 +46,9 @@
 #define GVF_square_R 6
 #endif
 
-gvf_squr_par gvf_square_par = {GVF_square_KE, GVF_square_KN,
-                               GVF_square_R};
+gvf_squr_par gvf_square_par = {GVF_square_KE, GVF_square_KN, GVF_square_R};
 
-void gvf_square_info(float *phi, struct gvf_grad *grad,
-                      struct gvf_Hess *hess)
+void gvf_square_info(float *phi, struct gvf_grad *grad, struct gvf_Hess *hess)
 {
 
   struct EnuCoor_f *p = stateGetPositionEnu_f();
@@ -67,15 +65,18 @@ void gvf_square_info(float *phi, struct gvf_grad *grad,
   float g1, g2;
   g1 = (px - wx >= 0) ? 1 : -1;
   g2 = (py - wy >= 0) ? 1 : -1;
-  if(fabs(px-wx) > fabs(py-wy)){
+  if(fabs(px-wx) > fabs(py-wy))
+  {
     grad->nx = g1;
     grad->ny = 0;
   }
-  else if(fabs(px-wx) < fabs(py-wy)){
+  else if(fabs(px-wx) < fabs(py-wy))
+  {
     grad->nx = 0;
     grad->ny = g2;
   }
-  else{
+  else
+  {
     grad->nx = g1;
     grad->ny = g2;
   }

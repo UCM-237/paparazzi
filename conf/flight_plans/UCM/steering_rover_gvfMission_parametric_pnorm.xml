@@ -71,7 +71,7 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_rhomboid" strip_icon="oval.png">
-      <call fun="gvf_romboid_wp(WP_RHOMBOID, gvf_romboid_par.r)"/>
+      <call fun="gvf_rhomboid_wp(WP_RHOMBOID, gvf_rhomboid_par.r)"/>
     </block>
     <block name="gvf_square" strip_icon="oval.png">
       <call fun="gvf_square_wp(WP_SQUARE, gvf_square_par.r)"/>
