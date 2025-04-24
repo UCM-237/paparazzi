@@ -34,9 +34,6 @@
 #include "autopilot.h"
 
 
-// Used for computing the time lapse delta_T
-uint32_t gvf_parametric_bare_t0 = 0;
-
 // Used for Bézier curves splines telemetru
 uint32_t gvf_parametric_bare_splines_ctr = 0;
 
@@ -63,7 +60,7 @@ static void send_gvf_parametric_bare(struct transport_tx *trans, struct link_dev
   uint8_t traj_type = (uint8_t)gvf_parametric_bare_trajectory.type;
 
   uint32_t now = get_sys_time_msec();
-  uint32_t delta_T = now - gvf_parametric_bare_t0;
+  uint32_t delta_T = now - gvf_c_t0;
 
   float wb = gvf_parametric_bare_control.w * gvf_parametric_bare_control.beta;
 
@@ -78,7 +75,7 @@ static void send_gvf_parametric_bare(struct transport_tx *trans, struct link_dev
 static void send_circle_parametric(struct transport_tx *trans, struct link_device *dev)
 {
   uint32_t now = get_sys_time_msec();
-  uint32_t delta_T = now - gvf_parametric_bare_t0;
+  uint32_t delta_T = now - gvf_c_t0;
 
   /*
   if (delta_T < 200)
@@ -160,8 +157,8 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   uint32_t now = get_sys_time_msec();
 
   // Compute the time elapsed between two gvf calls
-  gvf_parametric_bare_control.delta_T = now - gvf_parametric_bare_t0;
-  gvf_parametric_bare_t0 = now;
+  gvf_parametric_bare_control.delta_T = now - gvf_c_t0;
+  gvf_c_t0 = now;
 
   if (gvf_parametric_bare_control.delta_T > 300)
   {

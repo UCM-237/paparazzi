@@ -77,6 +77,9 @@ extern gvf_common_params gvf_c_info;
 
 // Struct with the common parameters to stop at a wp
 extern gvf_common_stop_at_wp gvf_c_stopwp;
+
+// Variable to keep the current cpu time in gvf calls
+extern uint32_t gvf_c_t0;
  
  #endif // GVF_COMMON_H
 
