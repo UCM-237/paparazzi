@@ -34,7 +34,7 @@
 #include "autopilot.h"
 
 
-// Used for Bézier curves splines telemetru
+// Used for Bézier curves splines telemetry
 uint32_t gvf_parametric_bare_splines_ctr = 0;
 
 // GVF control parameters
@@ -155,16 +155,15 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
 
   // Obtain time now. TODO: Incorporate the changes made in pull-request.
   uint32_t now = get_sys_time_msec();
-
-  // Compute the time elapsed between two gvf calls
   gvf_parametric_bare_control.delta_T = now - gvf_c_t0;
   gvf_c_t0 = now;
 
+  // We need at least two iterations for Delta_T
   if (gvf_parametric_bare_control.delta_T > 300)
   {
-    // Reset w since we assume the algorithm starts
-    gvf_parametric_bare_control.w = 0;
-    return;
+  /* Reset w since we assume the algorithm starts */
+  gvf_parametric_bare_control.w = 0;
+  return;
   }
 
   // Carrot position

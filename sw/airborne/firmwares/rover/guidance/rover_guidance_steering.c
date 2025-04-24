@@ -394,8 +394,9 @@ bool rover_guidance_bearing_static_ctrl(void)
   guidance_control.cmd.speed = 0.0;
   guidance_control.cmd.delta  = 0.0;
   //guidance_control.throttle = BoundThrottle(0.0);
+
+  /* Obtain current cpu time when in static control */
   gvf_c_t0 = get_sys_time_msec();
-  
   return true;
 }
 
