@@ -1,28 +1,28 @@
-<!-- Same as Pradolongo, but with the origin in Campillo -->
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+<!-- Este plan de vuelo es para hacer pruebas en Guajaraz a distancias cortas (para probar el el control y control estatico sobre todo) -->
 
-<flight_plan alt="660" ground_alt="650" lat0="40.3209150" lon0="-3.5100712" max_dist_from_home="1600" name="Campillo Test" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="39.7940259" lon0="-4.0809211" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
-    <waypoint name="HOME" x="0" y="0"/>
-    <waypoint name="STDBY" lat="40.3209437" lon="-3.5096997"/>
-    <waypoint name="ELLIPSE" lat="40.3208690" lon="-3.5086590"/>
-    <waypoint name="P1" lat="40.3201290" lon="-3.5091919"/>
-    <waypoint name="P2" lat="40.3215860" lon="-3.5092290"/>
-    <waypoint name="BZ0" x="240.0" y="-60.0"/>
-    <waypoint name="BZ1" x="223.7" y="-32.3"/>
-    <waypoint name="BZ2" x="180.5" y="-28.0"/>
-    <waypoint name="BZ3" x="165.3" y="-46.5"/>
-    <waypoint name="BZ4" x="138.0" y="-79.3"/>
-    <waypoint name="BZ5" x="116.6" y="-83.6"/>
-    <waypoint name="BZ6" x="95.8" y="-86.9"/>
-    <waypoint name="BZ7" x="77.2" y="-77.3"/>
-    <waypoint name="BZ8" x="75.7" y="-59.7"/>
-    <waypoint name="BZ9" x="44.9" y="-66.1"/>
-    <waypoint name="BZ10" x="55.7" y="-97.0"/>
-    <waypoint name="BZ11" x="83.8" y="-112.3"/>
+    <waypoint name="HOME"    x="0" y="0"/>
+    <waypoint name="STDBY"   x="-55" y="20"/>
+    <waypoint name="ELLIPSE" x="-70" y="20"/>
+    <waypoint name="P1"      x="-50" y="0"/>
+    <waypoint name="P2"      x="-300" y="0"/>
+    <waypoint lat="39.7940240" lon="-4.0811780" name="BZ0"/> <!-- wP/-->
+    <waypoint lat="39.7941839" lon="-4.0810930" name="BZ1"/>
+    <waypoint lat="39.7943159" lon="-4.0811770" name="BZ2"/>
+    <waypoint lat="39.7944050" lon="-4.0812750" name="BZ3"/>
+    <waypoint lat="39.7944639" lon="-4.0815070" name="BZ4"/> <!-- wP/-->
+    <waypoint lat="39.7943050" lon="-4.0815380" name="BZ5"/>
+    <waypoint lat="39.7940580" lon="-4.0815670" name="BZ6"/>
+    <waypoint lat="39.7939070" lon="-4.0816359" name="BZ7"/> <!-- wP/-->
+    <waypoint lat="39.7940869" lon="-4.0818069" name="BZ8"/>
+    <waypoint lat="39.7943530" lon="-4.0817629" name="BZ9"/>
+    <waypoint lat="39.7944769" lon="-4.0819170" name="BZ10"/>
+    <waypoint lat="39.7944550" lon="-4.0816900" name="BZ11"/> <!-- wP/-->
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -31,15 +31,13 @@
     <waypoint name="_N2" x="796.4" y="-865.4"/>
     <waypoint name="_N3" x="-908.7" y="-865.4"/>
     <waypoint name="_N4" x="-908.7" y="1254.9"/>
-    <waypoint name="L0" lat="40.3209449" lon="-3.5094740"/>
-    <waypoint name="L1" lat="40.3209689" lon="-3.5078862"/>
-    <waypoint name="L2" lat="40.3209666" lon="-3.5077648"/>
-    <waypoint name="L3" lat="40.3209674" lon="-3.5076630"/>
-    <waypoint name="L4" lat="40.3209661" lon="-3.5075641"/>
-    <waypoint name="L5" lat="40.3209695" lon="-3.5074385"/>
-    <waypoint name="L6" lat="40.3209693" lon="-3.5073186"/>
-    <!-- sonda -->
-    <waypoint name="_P1" x="6000" y="200"/>
+    <waypoint lat="39.7944769" lon="-4.0818651" name="L0"/>
+    <waypoint lat="39.7941489" lon="-4.0818719" name="L1"/>
+    <waypoint lat="39.7945768" lon="-4.0824400" name="L2"/>
+    <waypoint lat="39.7943540" lon="-4.0830730" name="L3"/>
+    <waypoint lat="39.7948449" lon="-4.0831279" name="L4"/>
+    <waypoint lat="39.7941879" lon="-4.0825310" name="L5"/>
+    <waypoint lat="39.7945479" lon="-4.0819640" name="L6"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">
@@ -77,7 +75,7 @@
     <block name="ellipse_wp" strip_icon="oval.png">
       <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-      <exception cond="(12.1 > PowerVoltage()) @AND (GpsFixValid())" deroute="line_to_HOME"/>
+      <!-- <exception cond="(12.1 > PowerVoltage()) @AND (GpsFixValid())" deroute="line_to_HOME"/> -->
     </block>
     <block name="line_P1_P2" strip_icon="line.png">
       <call fun="gvf_line_wp1_wp2(WP_P1, WP_P2)"/>
@@ -93,38 +91,25 @@
     </block>
     <block name="line_array" strip_icon="line.png">
       <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, gvf_segment_par.d1, gvf_segment_par.d2)"/>
-      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="dist(GetPosX(), GetPosY(), WP_L0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
     </block>
     <block name="gvf_bezier_bare">
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_quintic_bezier_bare">
+      <!-- <go wp="BZ0"/> -->
       <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
-      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
+      <exception cond="dist_quintic(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="static_control">
       <set var="gvf_c_stopwp.stay_still" value="1"/>
-      <call_once fun=" increase_bz_pointer()"/>
+      <call_once fun="increase_bz_pointer()"/>
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
       <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="gvf_quintic_bezier_bare"/>
     </block>
-
-
-    <!-- ########################## TEST SONDA ############################ -->
-    <block name="Mision_Prueba_Sonda">
-      <go wp="P1"/>
-      <call_once fun="send_measure_msg(WP__P1)"/>
-
-      <while cond="serial_response == 0">
-          <stay wp="P1"/>
-      </while>
-
-      <go wp="P2"/>
-    </block>
-
   </blocks>
 </flight_plan>
