@@ -1,0 +1,83 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+
+<flight_plan alt="660" ground_alt="650" lat0="40.4513595" lon0="-3.7290189" max_dist_from_home="2500" name="Rover Steering" security_height="0.3">
+  <header>
+
+</header>
+  <waypoints>
+    <waypoint name="HOME" x="0.0" y="0.0"/>
+    <waypoint name="STDBY" x="-1.2" y="-14.4"/>
+    <waypoint name="ELLIPSE" x="-2.7" y="-10.6"/>
+    <waypoint name="RHOMBOID" x="-4.7" y="-10.6"/>
+    <waypoint name="pNorm" x="5.7" y="-10.6"/>
+    <waypoint name="SQUARE" x="-6" y="10"/>
+    <waypoint name="P1" x="-4.4" y="-12.8"/>
+    <waypoint name="P2" x="1.6" y="-13.1"/>
+    <waypoint name="_S1" x="3" y="4"/>
+    <waypoint name="_S2" x="3" y="-4"/>
+    <waypoint name="_S3" x="-3" y="-4"/>
+    <waypoint name="_S4" x="-3" y="4"/>
+    <waypoint name="_N1" x="600" y="600"/>
+    <waypoint name="_N2" x="600" y="-600"/>
+    <waypoint name="_N3" x="-600" y="-600"/>
+    <waypoint name="_N4" x="-600" y="600"/>
+  </waypoints>
+  <sectors>
+    <sector color="red" name="Net">
+      <corner name="_N1"/>
+      <corner name="_N2"/>
+      <corner name="_N3"/>
+      <corner name="_N4"/>
+    </sector>
+  </sectors>
+  <variables>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="aa"/>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="bb"/>
+  </variables>
+  <modules>
+    <module name="gvf_module"/>
+  </modules>
+  <blocks>
+    <block name="Wait GPS" strip_icon="gps.png">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+    </block>
+    <block name="Geo init" strip_icon="googleearth.png">
+      <while cond="LessThan(NavBlockTime(), 10)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+    </block>
+    <block name="Start Engine" strip_icon="on.png">
+      <while cond="LessThan(NavBlockTime(), 1)"/>
+      <call_once fun="autopilot_set_motors_on(TRUE)"/>
+    </block>
+    <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      <call fun="gvf_ellipse_wp(WP_STDBY, 3, 3, 0)"/>
+    </block>
+    <block name="line_to_HOME" strip_icon="home_drop.png">
+      <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="ellipse_wp" strip_icon="oval.png">
+      <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="line_P1_P2" strip_icon="line.png">
+      <call fun="gvf_line_wp1_wp2(WP_P1, WP_P2)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="segment_turn_P1_P2" strip_icon="line.png">
+      <call fun="gvf_segment_loop_wp1_wp2(WP_P1, WP_P2, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="gvf_rhomboid" strip_icon="oval.png">
+      <call fun="gvf_rhomboid_wp(WP_RHOMBOID, gvf_rhomboid_par.r)"/>
+    </block>
+    <block name="gvf_square" strip_icon="oval.png">
+      <call fun="gvf_square_wp(WP_SQUARE, gvf_square_par.r)"/>
+    </block>
+    <block name="gvf_pnorm" strip_icon="oval.png">
+      <call fun="gvf_pnorm_wp(WP_pNorm, gvf_pnorm_par.r, gvf_pnorm_par.p)"/>
+    </block>
+  </blocks>
+</flight_plan>

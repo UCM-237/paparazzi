@@ -9,6 +9,8 @@
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="STDBY" x="-1.2" y="-14.4"/>
     <waypoint name="ELLIPSE" x="-2.7" y="-10.6"/>
+    <waypoint name="RHOMBOID" x="-4.7" y="-10.6"/>
+    <waypoint name="SQUARE" x = "-6" y ="10"/>  
     <waypoint name="P1" x="-4.4" y="-12.8"/>
     <waypoint name="P2" x="1.6" y="-13.1"/>
     
@@ -30,6 +32,7 @@
     
     <!-- Absolute -->
     
+    <!--
     <waypoint name="BZ0" lon="-3.7271761" lat="40.4507189"/>
     <waypoint name="BZ1" lon="-3.7272071" lat="40.4508400"/>
     <waypoint name="BZ2" lon="-3.7271479" lat="40.4508690"/>
@@ -43,7 +46,7 @@
     <waypoint name="BZ10" lon="-3.7271761" lat="40.4508559"/>
     <waypoint name="BZ11" lon="-3.7271590" lat="40.4507678"/>
     <waypoint name="BZ12" lon="-3.7271550" lat="40.4507289"/>
-    
+    -->
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -102,13 +105,29 @@
       <call fun="gvf_segment_loop_wp1_wp2(WP_P1, WP_P2, gvf_segment_par.d1, gvf_segment_par.d2)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
+    <!--
     <block name="sin_p1_p2" strip_icon="line_drop.png">
       <call fun="gvf_sin_wp1_wp2(WP_P1, WP_P2, gvf_sin_par.w, gvf_sin_par.off, gvf_sin_par.A)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
+    -->
+    <block name="gvf_rhomboid" strip_icon="oval.png">
+      <call fun="gvf_romboid_wp(WP_RHOMBOID, gvf_romboid_par.r)"/>
+    </block>
+    
+    <block name="gvf_square" strip_icon="oval.png">
+      <call fun="gvf_square_wp(WP_SQUARE, gvf_square_par.r)"/>
+    </block>
+    
+    <block name="gvf_pnorm" strip_icon="oval.png">
+      <call fun="gvf_pnorm_wp(WP_SQUARE, gvf_pnorm_par.r, gvf_pnorm_par.p)"/>
+    </block>
+    
+    <!--
     <block name="gvf_bezier">
       <call fun="gvf_parametric_2D_bezier_wp(WP_BZ0, WP_BZ1, WP_BZ2,WP_BZ3,WP_BZ4, WP_BZ5, WP_BZ6, WP_BZ7, WP_BZ8, WP_BZ9, WP_BZ10, WP_BZ11, WP_BZ12)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
+    -->
   </blocks>
 </flight_plan>
