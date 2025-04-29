@@ -30,15 +30,16 @@
 #ifndef INS_SLAM_H
 #define INS_SLAM_H
 
-extern struct InsSlam ins_slam;
-
 struct InsSlam {
   bool enable;
   float min_distance;
   float max_distance;
   float max_distance_wall;
   float alpha;
+  struct FloatVect2 gps_bias;
 };
+
+extern struct InsSlam ins_slam;
 
 extern void ins_update_lidar(const float distance, const float angle);
 

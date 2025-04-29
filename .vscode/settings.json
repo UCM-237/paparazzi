@@ -39,7 +39,11 @@
         "regex": "c",
         "pprz_geodetic_float.h": "c",
         "waypoints.h": "c",
-        "bitset": "c"
+        "bitset": "c",
+        "pprz_algebra.h": "c",
+        "pprz_random.h": "c",
+        "pprz_geodetic_int.h": "c",
+        "cmath": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

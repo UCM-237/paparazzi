@@ -25,6 +25,7 @@
 
 
 #include "lidar_correction.h"
+#include "modules/lidar/tfmini.h"
 #include "modules/ins/ins_int.h"
 // #include "modules/nav/waypoints.h"
 
@@ -53,12 +54,17 @@ float distance_to_wall(float theta, const struct FloatVect2 *P, const struct Flo
   float t = ((A->y - B->y) * (A->x - P->x) - (A->x - B->x) * (A->y - P->y)) / denom;
   float s = (cosf(theta) * (A->y - P->y) - sinf(theta) * (A->x - P->x)) / denom;
 
+  // Telemetria
+  nps_lidar.t = t;
+  nps_lidar.s = s;
+  nps_lidar.denom = denom;
+
   // Verificar si la intersección es válida
   if (t> 0.0f && s >= 0.0f && s <= 1.0f) {
     return t;
-} else {
+  } else {
     return 0;
-}
+  }
 }
 
 
@@ -129,23 +135,23 @@ void init_walls(void) {
   wall_system.wall_count = 0; // Por si acaso
 
   /* ==================== PISTA DE PÁDEL ==================== */
-  // struct Wall *padel_south = &wall_system.walls[wall_system.wall_count++];
-  // padel_south->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.451263), RadOfDeg(-3.729174), 650.0};
-  // padel_south->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.451234), RadOfDeg(-3.729169), 650.0};
-  // padel_south->count = 2;
+  struct Wall *padel_south = &wall_system.walls[wall_system.wall_count++];
+  padel_south->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.4512650), RadOfDeg(-3.7291591), 650.0};
+  padel_south->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.4512050), RadOfDeg(-3.7291535), 650.0};
+  padel_south->count = 2;
 
   struct Wall *padel_northwest = &wall_system.walls[wall_system.wall_count++];
   padel_northwest->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.4512037), RadOfDeg(-3.7291532), 650.0}; // Esquina interior
   padel_northwest->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.4512084), RadOfDeg(-3.7291015), 650.0}; 
   padel_northwest->points_wgs84[2] = (struct LlaCoor_f){RadOfDeg(40.4512295), RadOfDeg(-3.7289073), 650.0}; // NE
   padel_northwest->count = 3;
-  padel_northwest->converted = false;
+  padel_northwest->converted = false; // Esto se puede quitar
 
   /* ==================== GRADAS ==================== */ 
-  // struct Wall *gradas_west = &wall_system.walls[wall_system.wall_count++];
-  // gradas_west->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.451918), RadOfDeg(-3.729198), 650.0}; 
-  // gradas_west->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.452028), RadOfDeg(-3.728153), 650.0}; 
-  // gradas_west->count = 2;
+  struct Wall *gradas_west = &wall_system.walls[wall_system.wall_count++];
+  gradas_west->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.451918), RadOfDeg(-3.729198), 650.0}; 
+  gradas_west->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.452028), RadOfDeg(-3.728153), 650.0}; 
+  gradas_west->count = 2;
 
 
   wall_system.converted_to_ltp = false;

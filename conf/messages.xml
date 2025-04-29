@@ -1755,7 +1755,15 @@
     <!-- 188 is free -->
     <!-- 189 is free -->
     <!-- 190 is free -->
-    <!-- 191 is free -->
+
+    <message name="NPS_LIDAR" id="191">
+      <field name="distance" type="float" unit="m"/>
+      <field name="angle"    type="float" unit="deg"/>
+      <field name="pos"      type="float[2]" format="%.2f" unit="m"/>
+      <field name="t"        type="float"/>
+      <field name="s"        type="float"/>
+      <field name="denom"    type="float"/>
+    </message>
     
     <message name="SLAM" id="192">
       <field name="OFFSET"            type="float[2]" format="%.2f" unit="m"/>

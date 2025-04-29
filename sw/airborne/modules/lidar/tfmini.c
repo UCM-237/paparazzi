@@ -41,6 +41,7 @@
 #ifdef USE_NPS
 #include "nps_autopilot.h"
 #include "slam/lidar_correction.h"
+struct NPS_Lidar nps_lidar;
 #endif
 
 #define LIDAR_MIN_RANGE 0.1
@@ -80,6 +81,21 @@ static void tfmini_send_lidar(struct transport_tx *trans, struct link_device *de
                       &status);
 }
 
+#ifdef USE_NPS
+
+static void tfmini_send_nps_lidar(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_NPS_LIDAR(trans, dev, AC_ID,
+                      &nps_lidar.distance,
+                      &tf_servo.ang,
+                      &nps_lidar.pos,
+                      &nps_lidar.t,
+                      &nps_lidar.s,
+                      &nps_lidar.denom);
+}
+
+#endif
+
 #endif
 
 /**
@@ -101,6 +117,9 @@ void tfmini_init(void)
 
   #if PERIODIC_TELEMETRY
    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_LIDAR, tfmini_send_lidar);
+   #ifdef USE_NPS
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NPS_LIDAR, tfmini_send_nps_lidar);
+   #endif
   #endif
 }
 
@@ -109,18 +128,18 @@ void tfmini_init(void)
 void sim_overwrite_lidar(){
   uint32_t now_ts = get_sys_time_usec();
 
+  if (!ins_int.ltp_initialized) return;
+
   // Pasar la posicion GPS a coordenadas NED
-  struct LlaCoor_i gps_nps = {RadOfDeg(gps.lla_pos.lat),
-                              RadOfDeg(gps.lla_pos.lon),
-                              0.0f};
+  struct LlaCoor_i gps_nps = gps.lla_pos;
 
   struct FloatVect2 pos = {0.0f, 0.0f};
-  struct NedCoor_f ned = {0.0f, 0.0f, 0.0f};
-  ned_of_lla_point_f(&ned, stateGetNedOrigin_f(), &gps_nps);  // Voy a probar temporalmente con el INS
-  // pos.x = ned.x;
-  // pos.y = ned.y;
-  pos = (struct FloatVect2){stateGetPositionNed_f()->x, stateGetPositionNed_f()->y};
-  float theta = M_PI/2-(stateGetNedToBodyEulers_f()->psi)-tf_servo.ang;
+  struct NedCoor_i ned = {0.0f, 0.0f, 0.0f};
+  ned_of_lla_point_i(&ned, stateGetNedOrigin_i(), &gps.lla_pos);
+  pos.x = (float) (ned.y/100.0f);
+  pos.y = (float) (ned.x/100.0f);
+  // pos = (struct FloatVect2){stateGetPositionNed_f()->y, stateGetPositionNed_f()->x};
+  float theta = M_PI/2-(stateGetNedToBodyEulers_f()->psi)-tf_servo.ang*M_PI/180;
 
   float min_distance = FLT_MAX;
 
@@ -139,7 +158,12 @@ void sim_overwrite_lidar(){
   }
 
   // Almacena ese dato en la variable tfmini.distance
-  if (min_distance == FLT_MAX){
+  nps_lidar.pos = (struct FloatVect2) pos;
+  // DEBUG
+  nps_lidar.pos.x = (float) (ned.y/100.0f);
+  nps_lidar.pos.y = (float) (ned.x/100.0f);
+  nps_lidar.distance = min_distance;
+  if (min_distance == FLT_MAX || min_distance > LIDAR_MAX_RANGE){
     min_distance = 0;
   }
   

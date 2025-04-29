@@ -29,6 +29,7 @@
 
 #include "std.h"
 #include "mcu_periph/i2c.h"
+#include "math/pprz_algebra_float.h"
 
 enum TFMiniParseStatus {
   TFMINI_INITIALIZE,
@@ -65,6 +66,16 @@ struct TFMiniServo {
   float ang;
   bool dir;
 };
+
+struct NPS_Lidar {
+  float distance;
+  float t;
+  float s;
+  float denom;
+  struct FloatVect2 pos;
+};
+
+extern struct NPS_Lidar nps_lidar;
 
 #define PWM2ANGLE(pwm) (((pwm) + MAX_PPRZ) * 90 / MAX_PPRZ) - 90 
 
