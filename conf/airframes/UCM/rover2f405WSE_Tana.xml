@@ -20,7 +20,8 @@
       <module name="radio_control" type="ppm"/>
       <module name="fdm"           type="rover"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
-      <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <!-- <define name="NPS_BYPASS_INS"  value="TRUE"/> -->
+      <define name="NPS_BYPASS_LIDAR"  value="TRUE"/>
     </target>    
     
     <!-- Same board module as matek_f765_wing but without OSD -->
@@ -38,7 +39,7 @@
 
 
     <!-- Pos estimated with Kalman Filter -->
-    <!--<module name="ins"/> --> 
+    <!-- <module name="ins"/>  -->
     <!-- <module name="ins_kf"/> -->
     <!-- <module name="ins" type="ekf"/> -->
 
@@ -47,8 +48,7 @@
 
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
-      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.5"/>
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
    <module name="telemetry" type="xbee_api">

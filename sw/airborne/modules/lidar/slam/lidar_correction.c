@@ -21,14 +21,12 @@
 
 // ------------------------------------
 
-
-// TODO ESTO ESTA SIN REVISAR NI PROBAR, ME SIRVE PARA TERMINAR LA ESTRUCTURA GENERAL DEL CODIGO
-// Y VER QUE FUNCIONA
+// En teoria ya funciona, ver si los resultados tienen sentido.
 
 
 #include "lidar_correction.h"
 #include "modules/ins/ins_int.h"
-#include "modules/nav/waypoints.h"
+// #include "modules/nav/waypoints.h"
 
 #include "math/pprz_algebra.h"
 #include <math.h>
@@ -38,7 +36,32 @@
 
 struct WallSystem wall_system;  // Sistema de paredes global
 
- 
+
+// Calcula la distancia desde un punto P a una pared definida por los puntos A y B
+// teniendo en cuenta la orientación theta.
+float distance_to_wall(float theta, const struct FloatVect2 *P, const struct FloatVect2 *A, 
+  const struct FloatVect2 *B) {
+
+  float denom = (B->x - A->x) * sinf(theta) - (B->y - A->y) * cosf(theta);
+
+  // Si el denominador es 0, las rectas son paralelas
+  if (fabsf(denom) < 1e-6f) {
+      return 0;
+  }
+
+  // Calcular t (distancia) y s (parámetro de la pared)
+  float t = ((A->y - B->y) * (A->x - P->x) - (A->x - B->x) * (A->y - P->y)) / denom;
+  float s = (cosf(theta) * (A->y - P->y) - sinf(theta) * (A->x - P->x)) / denom;
+
+  // Verificar si la intersección es válida
+  if (t> 0.0f && s >= 0.0f && s <= 1.0f) {
+    return t;
+} else {
+    return 0;
+}
+}
+
+
 
 // Calcula la distancia de un punto P a un segmento AB y devuelve el punto C más cercano
 static float distance_to_segment(const struct FloatVect2 *P, const struct FloatVect2 *A, 
@@ -80,12 +103,14 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
       struct FloatVect2 p2 = wall->points_ltp[p+1];
       
       // Calcular distancia al segmento de línea
-      // p1 y p2 son los extremos de la pared. El resultado se almacena en nearest_point
-      float distance = distance_to_segment(obstacle_pos, &p1, &p2, nearest_point);
+      // p1 y p2 son los extremos de la pared. El resultado se almacena en aux_point
+      struct FloatVect2 aux_point = {0.0f, 0.0f};
+      float distance = distance_to_segment(obstacle_pos, &p1, &p2, &aux_point);
       
       if (distance < min_distance) {
         min_distance = distance;
-        // waypoint_move_xy_i(16, POS_BFP_OF_REAL(p1.x), POS_BFP_OF_REAL(p1.y));
+        *nearest_point = aux_point;
+        // waypoint_move_xy_i(16, POS_BFP_OF_REAL(p1.x), POS_BFP_OF_REAL(p1.y));  // Esto sobrecarga el Xbee, no usar
       }
     }
   }
@@ -104,22 +129,23 @@ void init_walls(void) {
   wall_system.wall_count = 0; // Por si acaso
 
   /* ==================== PISTA DE PÁDEL ==================== */
-  struct Wall *padel_south = &wall_system.walls[wall_system.wall_count++];
-  padel_south->points_wgs84[0] = (struct LlaCoor_f){40.451263, -3.729174, 0.0};
-  padel_south->points_wgs84[1] = (struct LlaCoor_f){40.451234, -3.729169, 0.0};
-  padel_south->count = 2;
+  // struct Wall *padel_south = &wall_system.walls[wall_system.wall_count++];
+  // padel_south->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.451263), RadOfDeg(-3.729174), 650.0};
+  // padel_south->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.451234), RadOfDeg(-3.729169), 650.0};
+  // padel_south->count = 2;
 
   struct Wall *padel_northwest = &wall_system.walls[wall_system.wall_count++];
-  padel_northwest->points_wgs84[0] = (struct LlaCoor_f){40.451197, -3.729123, 0.0}; // Esquina interior
-  padel_northwest->points_wgs84[1] = (struct LlaCoor_f){40.451212, -3.728983, 0.0}; 
-  padel_northwest->points_wgs84[2] = (struct LlaCoor_f){40.451221, -3.728912, 0.0}; // NE
+  padel_northwest->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.4512037), RadOfDeg(-3.7291532), 650.0}; // Esquina interior
+  padel_northwest->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.4512084), RadOfDeg(-3.7291015), 650.0}; 
+  padel_northwest->points_wgs84[2] = (struct LlaCoor_f){RadOfDeg(40.4512295), RadOfDeg(-3.7289073), 650.0}; // NE
   padel_northwest->count = 3;
+  padel_northwest->converted = false;
 
   /* ==================== GRADAS ==================== */ 
-  struct Wall *gradas_west = &wall_system.walls[wall_system.wall_count++];
-  gradas_west->points_wgs84[0] = (struct LlaCoor_f){40.451918, -3.729198, 0.0}; 
-  gradas_west->points_wgs84[1] = (struct LlaCoor_f){40.452028, -3.728153, 0.0}; 
-  gradas_west->count = 2;
+  // struct Wall *gradas_west = &wall_system.walls[wall_system.wall_count++];
+  // gradas_west->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.451918), RadOfDeg(-3.729198), 650.0}; 
+  // gradas_west->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.452028), RadOfDeg(-3.728153), 650.0}; 
+  // gradas_west->count = 2;
 
 
   wall_system.converted_to_ltp = false;
@@ -130,19 +156,15 @@ void init_walls(void) {
 void convert_walls_to_ltp(void) {
   if (wall_system.converted_to_ltp || !ins_int.ltp_initialized) return;
 
-  struct LtpDef_f *ned_origin = stateGetNedOrigin_f();
-
   for (int w = 0; w < wall_system.wall_count; w++) {
     for (int p = 0; p < wall_system.walls[w].count; p++) {
-      struct NedCoor_f ned = {0.0f, 0.0f, 0.0f};
-      ned_of_lla_point_f(&ned, ned_origin, &wall_system.walls[w].points_wgs84[p]);
+        struct NedCoor_f ned = {0.0f, 0.0f, 0.0f};
+        ned_of_lla_point_f(&ned, stateGetNedOrigin_f(), &wall_system.walls[w].points_wgs84[p]);
 
-      wall_system.walls[w].points_ltp[p].x = ned.x; 
-      wall_system.walls[w].points_ltp[p].y = ned.y;
-
-      wall_system.walls[w].points_ltp[p].x = ned_origin->lla.lat; 
-      wall_system.walls[w].points_ltp[p].y = ned_origin->lla.lon;
+        wall_system.walls[w].points_ltp[p].x = ned.y; 
+        wall_system.walls[w].points_ltp[p].y = ned.x;
     }
+    wall_system.walls[w].converted = true;
   }
   wall_system.converted_to_ltp = true;
 }

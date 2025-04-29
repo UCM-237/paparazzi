@@ -56,6 +56,7 @@
 struct NpsAutopilot nps_autopilot;
 bool nps_bypass_ahrs;
 bool nps_bypass_ins;
+bool nps_bypass_lidar;
 
 #ifndef NPS_BYPASS_AHRS
 #define NPS_BYPASS_AHRS FALSE
@@ -78,6 +79,7 @@ void nps_autopilot_init(enum NpsRadioControlType type_rc, int num_rc_script, cha
 
   nps_bypass_ahrs = NPS_BYPASS_AHRS;
   nps_bypass_ins = NPS_BYPASS_INS;
+  nps_bypass_lidar = NPS_BYPASS_LIDAR;
 
   modules_mcu_init();
   main_ap_init();

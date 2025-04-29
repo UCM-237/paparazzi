@@ -1758,12 +1758,11 @@
     <!-- 191 is free -->
     
     <message name="SLAM" id="192">
-      <field name="offset_x" type="float" unit="m"/>
-      <field name="offset_y" type="float" unit="m"/>
-      <field name="GPS_offset_x" type="float" unit="m"/>
-      <field name="GPS_offset_y" type="float" unit="m"/>
-      <field name="nearest_point_x" type="float" unit="m"/>
-      <field name="nearest_point_y" type="float" unit="m"/>
+      <field name="OFFSET"            type="float[2]" format="%.2f" unit="m"/>
+      <field name="GPS_OFFSET"        type="float[2]" format="%.2f" unit="m"/>
+      <field name="NEAREST_POINT"     type="float[2]" format="%.2f" unit="m"/>
+      <field name="MEASURED_OBSTACLE" type="float[2]" format="%.2f" unit="m"/>
+      <field name="wall_converted" type="uint8" unit="bool" values="FALSE|TRUE"/>
     </message>
 
     <message name="AHRS_LKF" id="193">

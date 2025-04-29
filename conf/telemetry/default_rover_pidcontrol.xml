@@ -43,6 +43,7 @@
 
       <!-- El Lidar habra que quitarlo o ver que hacer con el. Esto es para depurar -->
       <message name="LIDAR"                  period="0.2"/>
+      <message name="SLAM"                   period="0.2"/>
       <message name="ROVER_CTRL"             period="1.0"/>
       <!-- <message name="ACTUATORS"	             period="0.50"/> -->
 

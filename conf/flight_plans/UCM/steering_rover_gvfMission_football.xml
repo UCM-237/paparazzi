@@ -2,7 +2,7 @@
 
 <!-- Coordenadas antiguas = 40.4514297, -3.7290253 -->
 
-<flight_plan alt="660" ground_alt="650" lat0="40.451235" lon0="-3.729049" max_dist_from_home="2500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.4512624" lon0="-3.7289666" max_dist_from_home="2500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>

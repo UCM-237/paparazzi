@@ -36,7 +36,10 @@
         "*.tcc": "c",
         "istream": "c",
         "ostream": "c",
-        "regex": "c"
+        "regex": "c",
+        "pprz_geodetic_float.h": "c",
+        "waypoints.h": "c",
+        "bitset": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

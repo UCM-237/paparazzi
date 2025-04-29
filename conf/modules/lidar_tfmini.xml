@@ -34,7 +34,7 @@
   <event fun="tfmini_event()"/>
  
 
-  <makefile>
+  <makefile target="ap|nps">
     <!-- Configure default UART port and baudrate -->
     <configure name="TFMINI_PORT" default="UART3" case="upper|lower"/>
     <configure name="TFMINI_BAUD" default="B115200"/>
@@ -50,9 +50,9 @@
     <define name="TFMINI_COMPENSATE_ROTATION" value="$(TFMINI_COMPENSATE_ROTATION)"/>
     <file name="tfmini.c"/>
   </makefile>
-  <!--makefile target="nps">
-    <define name="USE_SONAR" value="1"/--><!-- in NPS use a virtual sonar to simulate lidar measurements -->
-  <!--/makefile-->
+  <!-- <makefile target="nps">
+    <define name="USE_NPS_SONAR" value="1"/>
+  </makefile> -->
 </module>
 
 

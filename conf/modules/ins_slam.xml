@@ -3,7 +3,7 @@
 <module name="ins_slam" dir="ins" task="estimation">
   <doc>
     <description>
-      INS with Extended Kalman Filter
+      INS with SLAM Correction
     </description>
     <define name="USE_INS_NAV_INIT" value="TRUE|FALSE" description="Initialize the origin of the local coordinate system from flight plan. (Default: TRUE)"/>
     <define name="INS_INT_BARO_ID" value="BARO_BOARD_SENDER_ID" description="The ABI sender id of the baro to use"/>
@@ -26,7 +26,7 @@
   </settings>
 
   <dep>
-    <depends>@imu,@gps,@sonar|@position|@velocity</depends>
+    <depends>@imu,@gps|@position|@velocity</depends>
     <provides>ins</provides>
   </dep>
   <header>
@@ -35,7 +35,7 @@
     <file name="lidar_correction.h" dir="modules/lidar/slam"/>
   </header>
   <init fun="ins_int_init()"/>
-  <makefile target="ap">
+  <makefile target="ap|nps">
     <define name="INS_TYPE_H" value="modules/ins/ins_int.h" type="string"/>
     <define name="USE_INS_SLAM" value="TRUE"/>
     <file name="ins.c"/>

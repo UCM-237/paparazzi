@@ -38,6 +38,11 @@
 // Test
 #include "firmwares/rotorcraft/autopilot_static.h"
 
+#ifdef USE_NPS
+#include "nps_autopilot.h"
+#include "slam/lidar_correction.h"
+#endif
+
 #define LIDAR_MIN_RANGE 0.1
 #define LIDAR_MAX_RANGE 12.0
 
@@ -99,15 +104,70 @@ void tfmini_init(void)
   #endif
 }
 
+
+// Simulated Lidar Measurement
+void sim_overwrite_lidar(){
+  uint32_t now_ts = get_sys_time_usec();
+
+  // Pasar la posicion GPS a coordenadas NED
+  struct LlaCoor_i gps_nps = {RadOfDeg(gps.lla_pos.lat),
+                              RadOfDeg(gps.lla_pos.lon),
+                              0.0f};
+
+  struct FloatVect2 pos = {0.0f, 0.0f};
+  struct NedCoor_f ned = {0.0f, 0.0f, 0.0f};
+  ned_of_lla_point_f(&ned, stateGetNedOrigin_f(), &gps_nps);  // Voy a probar temporalmente con el INS
+  // pos.x = ned.x;
+  // pos.y = ned.y;
+  pos = (struct FloatVect2){stateGetPositionNed_f()->x, stateGetPositionNed_f()->y};
+  float theta = M_PI/2-(stateGetNedToBodyEulers_f()->psi)-tf_servo.ang;
+
+  float min_distance = FLT_MAX;
+
+  // Recorre el array de paredes y almacenar la distancia minima (!= 0)
+  for (uint8_t w = 0; w < wall_system.wall_count; w++) {
+    struct Wall *wall = &wall_system.walls[w];
+    for (uint8_t p = 0; p < wall->count - 1; p++) {
+      struct FloatVect2 p1 = wall->points_ltp[p];
+      struct FloatVect2 p2 = wall->points_ltp[p+1];
+      float distance = distance_to_wall(theta, &pos, &p1, &p2);
+      // distance = fabs(distance);
+      if (distance < min_distance && distance > 0) {
+        min_distance = distance;
+      }
+    }
+  }
+
+  // Almacena ese dato en la variable tfmini.distance
+  if (min_distance == FLT_MAX){
+    min_distance = 0;
+  }
+  
+  tfmini.distance = min_distance;
+
+  // send message (if requested)
+  if (tfmini.update_agl) {
+    AbiSendMsgLIDAR_SERVO(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance, tf_servo.ang);
+  }
+}
+
+
 /**
  * Lidar event function
  * Receive bytes from the UART port and parse them
  */
 void tfmini_event(void)
 {
-  while (tfmini.parse_status != TFMINI_INITIALIZE && tfmini.device->char_available(tfmini.device->periph)) {
-    tfmini_parse(tfmini.device->get_byte(tfmini.device->periph));
+
+  #ifdef USE_NPS
+  if (nps_bypass_lidar) {
+    sim_overwrite_lidar();
   }
+  #else
+    while (tfmini.parse_status != TFMINI_INITIALIZE && tfmini.device->char_available(tfmini.device->periph)) {
+      tfmini_parse(tfmini.device->get_byte(tfmini.device->periph));
+    }
+  #endif
 }
 
 /**
@@ -235,13 +295,6 @@ void tfmini_servo(){
     }
     tf_servo.ang = PWM2ANGLE(tf_servo.pos);
   }
-
-  // TEST DE EVASION BASICA DE OBSTACULOS. Si hay obstaculo, se pone en modo manual
-  // if((tfmini.distance < LIDAR_MAX_RANGE) && (tfmini.distance > LIDAR_MIN_RANGE)){
-  //   if (tfmini.distance < 0.2){
-  //     autopilot.mode = 0;   // Este es manual (no estoy seguro de donde los define, creo que en el xml)
-  //   } 
-  // }
 }
 
 
