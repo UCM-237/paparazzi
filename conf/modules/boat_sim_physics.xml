@@ -1,0 +1,32 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="boat_sim_physics" dir="../../sw/simulator/nps">
+  <doc>
+    <description>
+      Parámetros físicos del modelo de barco en simulación (NPS).
+    </description>
+  </doc>
+
+  <settings name="nps_fdm_CYANOA">
+    <dl_settings>
+      <dl_settings NAME="boat_sim_physics">
+        <dl_settings NAME="mu">
+          <!-- Ajuste de contantes para el control de bearing (w -> torque formato de comando) -->
+          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="mu_params.mu_x_sim" shortname="mu_x"/>
+          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="mu_params.mu_y_sim" shortname="mu_y"/>
+          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="mu_params.mu_w_sim" shortname="mu_w"/>
+        </dl_settings>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+
+  <header>
+    <file name="nps_fdm.h"/>
+  </header>
+
+  <init fun="mu_params_init()"/>
+  <makefile target="sim|nps" firmware="rover">
+    <!--<file name="nps_fdm_CYANOA.c" dir="../../sw/simulator/nps"/>-->
+  </makefile>
+</module>
+

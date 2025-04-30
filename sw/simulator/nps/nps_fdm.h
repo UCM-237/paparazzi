@@ -143,4 +143,26 @@ extern void nps_fdm_set_temperature(double temp, double h);
 } /* extern "C" */
 #endif
 
+#ifndef MU_PARAMS_H
+#define MU_PARAMS_H
+
+
+
+typedef struct MuParams {
+    float mu_x_sim;
+    float mu_y_sim;
+    float mu_w_sim;
+};
+
+extern struct MuParams mu_params;
+
+// Funciones para configurar los parámetros de mu
+extern void mu_params_init(void);
+
+#endif /* MU_PARAMS_H */
+
+
 #endif /* NPS_FDM */
+
+
+

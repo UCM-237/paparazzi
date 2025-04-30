@@ -89,7 +89,13 @@
     </module>
     <module name="guidance" type="boat">
     	<define name="BOAT_SPEED_KF" value="1000"/>
-      <define name="BOAT_BEARING_KF" value="1000"/>
+      <define name="BOAT_BEARING_KF" value="-10000"/>
+    </module>
+    
+    <module name="boat_sim_physics">
+    	<define name="mu_x" value="1"/> 
+      <define name="mu_y" value="1"/>
+      <define name="mu_z" value="1"/>
     </module>
 
 		

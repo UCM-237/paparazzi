@@ -56,17 +56,13 @@ static struct EnuCoor_d rover_pos;
 static struct EnuCoor_d rover_vel;
 static struct EnuCoor_d rover_acc;
 
-/** Physical model parameters **/
-static float mu_x = 1;
-static float mu_y = 2;
-static float mu_w = 4;
+
 
 /** NPS FDM rover init ***************************/
 void nps_fdm_init(double dt)
 {
   fdm.init_dt = dt; // (1 / simulation freq)
-  fdm.curr_dt = dt; // ¿Configurable from GCS? Originalmente estaba puesto 0.0001
-  fdm.time = dt;
+  fdm.curr_dt = dt; // ¿Configurable from GCS? Es posible, sería añadirlo en el xml donde se ajustan también los rozamientos
 
   fdm.on_ground = TRUE;
 
@@ -79,8 +75,22 @@ void nps_fdm_init(double dt)
   fdm.phi_d = 0;
   fdm.ltpprz_to_body_eulers.psi = 0.0;
   
+  /** Physical model parameters **/
   init_ltp();
 }
+
+
+struct MuParams mu_params = {0.0f, 0.0f, 0.0f};  // Valores predeterminados
+
+// Función para inicializar los parámetros
+void mu_params_init(void) {
+    // Valores predeterminados en caso de que el XML no lo configure
+    mu_params.mu_x_sim = 1;
+    mu_params.mu_y_sim = 1;
+    mu_params.mu_w_sim = 1;
+}
+
+
 
 void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int commands_nb __attribute__((unused)))
 { 
@@ -108,12 +118,15 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   double fa = (commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT])/2;
   double a = cos(phi);
   double b = sin(phi);
+  double n_x = 0;
+  double n_y = 0;
   //printf("psi ltp %f\n psi ltpprz %f\n", fdm.ltp_to_body_eulers.psi, fdm.ltpprz_to_body_eulers.psi);
   // Setting accelerations
-  rover_acc.x = fa * a - (pow(a,2)*mu_x*rover_vel.x +  pow(b,2)*mu_y*rover_vel.x + a*b*rover_vel.y*(mu_x-mu_y));
-  rover_acc.y = fa * b - (pow(b,2)*mu_x*rover_vel.y +  pow(a,2)*mu_x*rover_vel.y + a*b*rover_vel.x*(mu_x-mu_y));
+  rover_acc.x = fa * a - (pow(a,2)*mu_params.mu_x_sim*(rover_vel.x-n_x) +  pow(b,2)*mu_params.mu_y_sim*(rover_vel.x-n_x) + a*b*(rover_vel.y-n_y)*(mu_params.mu_x_sim-mu_params.mu_y_sim));
+  rover_acc.y = fa * b - (pow(b,2)*mu_params.mu_x_sim*(rover_vel.y-n_y) +  pow(a,2)*mu_params.mu_x_sim*(rover_vel.y-n_y) + a*b*(rover_vel.x-n_x)*(mu_params.mu_x_sim-mu_params.mu_y_sim));
+  // No se ha añadido η, este término hace referencia a resistencias o correcciones del modelo. 
   //printf("phi_d %f\n", fdm.phi_d);
-  double phi_dd = tau - mu_w*fdm.phi_d; //aceleracion angular
+  double phi_dd = tau - mu_params.mu_w_sim*fdm.phi_d; //aceleracion angular
   //printf("Throttle izq = %f\n Throttle dch = %f\n",commands[COMMAND_MLEFT]-commands[COMMAND_MRIGHT]);
   //printf("Tau = %f\n fa = %f\n", tau, fa);
   
@@ -121,7 +134,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   rover_vel.x += rover_acc.x * fdm.curr_dt;
   rover_vel.y += rover_acc.y * fdm.curr_dt;
   fdm.phi_d  += phi_dd*fdm.curr_dt;
-  
+  //printf("Velocidad x = %f      Velocidad y = %f\n", rover_vel.x, rover_vel.y);
   // Positions
   rover_pos.x += rover_vel.x * fdm.curr_dt;
   rover_pos.y += rover_vel.y * fdm.curr_dt;

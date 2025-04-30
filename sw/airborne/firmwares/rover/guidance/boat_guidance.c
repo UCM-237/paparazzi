@@ -267,7 +267,7 @@ void boat_guidance_steering_obtain_setpoint(void)
 	
 	// Setpoint to zero if rover must stay still
 	if((gvf_c_stopwp.stay_still) && (!reset_time)){
-		guidance_control.cmd.speed = 0;
+		//guidance_control.cmd.speed = 0;
 		rover_time = get_sys_time_msec();
 		reset_time = 1;
 	}

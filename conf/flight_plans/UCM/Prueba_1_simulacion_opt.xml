@@ -8,11 +8,11 @@
   
   
   <waypoints>
-    <waypoint x="-140.5" y="46.2" name="L0"/>
-    <waypoint x="-184.1" y="74.0" name="L1"/>
-    <waypoint x="-297.4" y="45.6" name="L2"/>
-    <waypoint x="-276.0" y="-110.1" name="L3"/>
-    <waypoint x="-236.5" y="-343.8" name="L4"/>
+    <waypoint x="-31.5" y="7.6" name="L0"/>
+    <waypoint x="-52.6" y="19.1" name="L1"/>
+    <waypoint x="-80.5" y="-1.9" name="L2"/>
+    <waypoint x="-82.1" y="-28.4" name="L3"/>
+    <waypoint x="-133.1" y="-81.7" name="L4"/>
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="STDBY" x="-100.3" y="161.3"/>
     <waypoint name="ELLIPSE" x="-69.5" y="82.6"/>

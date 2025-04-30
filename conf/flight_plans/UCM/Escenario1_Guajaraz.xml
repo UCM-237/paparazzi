@@ -1,0 +1,70 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+
+<flight_plan alt="660" ground_alt="650" lat0="39.793977" lon0="-4.081265" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
+  <header>
+
+</header>
+  <waypoints>
+    <waypoint name="HOME" x="0" y="0"/>
+    <waypoint name="GCS" lat="39.793977" lon="-4.081265"/>
+    <waypoint name="STDBY" x="333.9" y="620.6"/>
+    <waypoint name="ELLIPSE" x="296.3" y="624.4"/>
+    <waypoint lat="39.794245" lon="-4.082670" name="P0"/>
+    <waypoint lat="39.796117" lon="-4.086135" name="Mn1"/>
+    <waypoint lat="39.794500" lon="-4.088183" name="Mn2"/>
+    <waypoint lat="39.793111" lon="-4.086484" name="Mn3"/>
+    <waypoint name="_N1" x="796.4" y="1254.9"/>
+    <waypoint name="_N2" x="796.4" y="-865.4"/>
+    <waypoint name="_N3" x="-908.7" y="-865.4"/>
+    <waypoint name="_N4" x="-908.7" y="1254.9"/>
+  </waypoints>
+  <sectors>
+    <sector color="red" name="Net">
+      <corner name="_N1"/>
+      <corner name="_N2"/>
+      <corner name="_N3"/>
+      <corner name="_N4"/>
+    </sector>
+  </sectors>
+  <variables>
+    <variable init="5.0" max="20.0" min="1.0" step="1.0" var="a_stb"/>
+    <variable init="5.0" max="20.0" min="1.0" step="1.0" var="b_stb"/>
+  </variables>
+  <blocks>
+    <block name="Wait GPS" strip_icon="gps.png">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+    </block>
+    <block name="Geo init" strip_icon="googleearth.png">
+      <while cond="LessThan(NavBlockTime(), 10)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+    </block>
+    <block name="Start Engine" strip_icon="on.png">
+      <while cond="LessThan(NavBlockTime(), 1)"/>
+      <call_once fun="autopilot_set_motors_on(TRUE)"/>
+    </block>
+    <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      <call fun="gvf_ellipse_wp(WP_STDBY, a_stb, b_stb, 0)"/>
+    </block>
+    <block name="line_to_HOME" strip_icon="home_drop.png">
+      <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="ellipse_wp" strip_icon="oval.png">
+      <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="(12.1 > PowerVoltage()) @AND (GpsFixValid())" deroute="line_to_HOME"/>
+    </block>
+    <block name="go">
+      <go wp="P0"/>
+    </block>
+    <block name="line_array_v3_Mn" strip_icon="line.png">
+      <call fun="gvf_lines_array_wp_v3(WP_P0, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="go_p0">
+      <go from="GCS" hmode="route" wp="P0"/>
+    </block>
+  </blocks>
+</flight_plan>

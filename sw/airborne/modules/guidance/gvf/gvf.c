@@ -34,7 +34,7 @@
 #include "autopilot.h"
 #include "../gvf_common.h"
 
-
+#include "../../../firmwares/rover/guidance/boat_guidance.h"
 
 
 
@@ -487,7 +487,7 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 {
 
 	// Create the points
-	gvf_trajectory.type = 2;
+	gvf_trajectory.type = LINE_ARRAY;
 	//num_wp_moved = 16;
 	
 	if (num_wp_moved != 0 ){
@@ -506,6 +506,10 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 	x[4] = WaypointX(wp4); y[4] = WaypointY(wp4);
 	x[5] = WaypointX(wp5); y[5] = WaypointY(wp5);
 	x[6] = WaypointX(wp6); y[6] = WaypointY(wp6);
+	
+	float last_point_x = x[num_pnts-1];
+	float last_point_y = y[num_pnts-1];
+	//printf("num_pnts = %d", num_pnts);
 	for(int k = 0; k < GVF_N_LINES; k++)
 	{
 		gvf_lines_array[k].p1x = x[k];
@@ -517,12 +521,79 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
  	float px = p->x;
 	float py = p->y;
 	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
+	
+	if (gvf_lines_array[gvf_control.which_line].p1x == last_point_x && gvf_lines_array[gvf_control.which_line].p1y == last_point_y){
+	  printf("Static control");
+	  guidance_control.cmd.speed = 0;
+	  boat_guidance_bearing_static_ctrl();
+	  
+	}
+	
 	if((dist <= gvf_c_stopwp.distance_stop)){
 		if(!gvf_c_stopwp.stop_at_wp){
 			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
 			}		
 		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
 			gvf_control.which_line = (gvf_control.which_line + 1) % GVF_N_LINES;
+			gvf_c_stopwp.stay_still = 1;
+			}
+		}
+  	float x1 = gvf_lines_array[gvf_control.which_line].p1x;
+   	float y1 = gvf_lines_array[gvf_control.which_line].p1y;
+   	float x2 = gvf_lines_array[gvf_control.which_line].p2x;
+    float y2 = gvf_lines_array[gvf_control.which_line].p2y;
+    gvf_trajectory.p[3] = x2;
+    gvf_trajectory.p[4] = y2;
+    gvf_trajectory.p[5] = 0;
+    gvf_plen_wps = 3;
+    return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
+    
+}
+
+
+
+bool gvf_lines_array_wp_v3(uint8_t wp0, float d1, float d2)
+{
+
+	// Create the points
+	gvf_trajectory.type = LINE_ARRAY;
+	
+	if (num_wp_moved != 0 ){
+	  num_pnts = num_wp_moved;
+	  //printf("num_wp_moved= %d\n", num_pnts);
+	}
+	else{
+	  num_pnts = GVF_N_LINES;
+	  //printf("GVF_N_LINES= %d\n", num_pnts);
+	}
+
+	float x[GVF_N_LINES];
+	float y[GVF_N_LINES];
+	
+	for(int k = 0; k < num_pnts; k++){
+	  x[k] = WaypointX(wp0+k);
+	  y[k] = WaypointY(wp0+k);
+	}
+	//printf("num_pnts = %d", num_pnts);
+	for(int k = 0; k < num_pnts-1; k++)
+	{
+		gvf_lines_array[k].p1x = x[k];
+		gvf_lines_array[k].p1y = y[k];
+		gvf_lines_array[k].p2x = x[k+1];
+		gvf_lines_array[k].p2y = y[k+1];
+	}
+
+	struct EnuCoor_f *p = stateGetPositionEnu_f();
+ 	float px = p->x;
+	float py = p->y;
+	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
+	
+	if((dist <= gvf_c_stopwp.distance_stop)){
+		if(!gvf_c_stopwp.stop_at_wp){
+			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
+			}		
+		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
 			gvf_c_stopwp.stay_still = 1;
 			}
 		}

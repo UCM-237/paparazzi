@@ -1,11 +1,17 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
-
 <flight_plan alt="660" ground_alt="650" lat0="39.7947346" lon0="-4.0836999" max_dist_from_home="1600" name="GSA 1 - Rotorcraft Multiflight (Portland)" security_height="0.3">
+  
+  
   <header>
-#include "autopilot.h"
+#include &quot;autopilot.h&quot;
 </header>
+  
+  
   <waypoints>
-    <waypoint name="HOME" x="0" y="0"/>
+    <waypoint x="-31.5" y="7.6" name="L0"/>
+    <waypoint x="-49.5" y="19.1" name="L1"/>
+    <waypoint x="-68.7" y="3.5" name="L2"/>
+    <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="STDBY" x="-100.3" y="161.3"/>
     <waypoint name="ELLIPSE" x="-69.5" y="82.6"/>
     <waypoint name="_N1" x="1002.3" y="1242.1"/>
@@ -63,64 +69,167 @@
     <waypoint name="L48" x="956.2" y="770.4"/>
     <waypoint name="L49" x="956.2" y="770.4"/>
     <waypoint name="L50" x="956.2" y="766.7"/>
-    <waypoint name="BZ0" x="-31.5" y="7.6"/>
-    <waypoint name="BZ1" x="-52.6" y="19.1"/>
-    <waypoint name="BZ2" x="-80.5" y="-1.9"/>
-    <waypoint name="BZ3" x="-82.1" y="-28.4"/>
-    <waypoint name="BZ4" x="-133.1" y="-81.7"/>
   </waypoints>
   <sectors>
+    
+    
     <sector color="red" name="Net">
+      
+      
       <corner name="_N1"/>
+      
+      
       <corner name="_N2"/>
+      
+      
       <corner name="_N3"/>
+      
+      
       <corner name="_N4"/>
+      
+    
     </sector>
+    
+  
   </sectors>
+  
+  
   <variables>
+    
+    
     <variable init="5.0" max="10.0" min="1.0" step="1.0" var="aa"/>
+    
+    
     <variable init="5.0" max="10.0" min="1.0" step="1.0" var="bb"/>
+    
+  
   </variables>
+  
+  
   <modules>
+    
+    
     <module name="gvf_module"/>
+    
+    
     <module name="gvf_parametric_bare"/>
+    
+  
   </modules>
+  
+  
   <blocks>
+    
+    
     <block name="Wait GPS" strip_icon="gps.png">
+      
+      
       <call_once fun="NavKillThrottle()"/>
+      
+      
       <while cond="!GpsFixValid()"/>
+      
+    
     </block>
+    
+    
     <block name="Geo init" strip_icon="googleearth.png">
+      
+      
       <while cond="LessThan(NavBlockTime(), 10)"/>
+      
+      
       <call_once fun="NavSetGroundReferenceHere()"/>
+      
+      
       <call_once fun="NavSetAltitudeReferenceHere()"/>
+      
+    
     </block>
+    
+    
     <block name="Start Engine" strip_icon="on.png">
+      
+      
       <while cond="LessThan(NavBlockTime(), 1)"/>
+      
+      
       <call_once fun="autopilot_set_motors_on(TRUE)"/>
+      
+    
     </block>
+    
+    
     <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      
+      
       <call fun="gvf_ellipse_wp(WP_STDBY, 3, 3, 0)"/>
+      
+    
     </block>
+    
+    
     <block name="line_to_HOME" strip_icon="home_drop.png">
+      
+      
       <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
+      
+      
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      
+    
     </block>
+    
+    
     <block name="ellipse_wp" strip_icon="oval.png">
+      
+      
       <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
+      
+      
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      
+    
     </block>
+    
+    
     <block name="gvf_bezier_bare">
+      
+      
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_L0)"/>
+      
+      
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      
+    
     </block>
+    
+    
     <block name="gvf_quintic_bezier_bare">
+      
+      
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_L0)"/>
+      
+      
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      
+    
     </block>
+    
+    
     <block name="line_array" strip_icon="line.png">
+      
+      
       <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      
+      
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      
+    
     </block>
+    
+  
   </blocks>
+  
+
 </flight_plan>
