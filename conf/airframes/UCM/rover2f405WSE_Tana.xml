@@ -51,7 +51,7 @@
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
-   <module name="telemetry" type="xbee_api">
+    <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>
     </module>
     

@@ -39,29 +39,23 @@ static struct FloatVect2 gps_offset = {0.0, 0.0};
 static struct FloatVect2 offset = {0.0, 0.0};
 static struct FloatVect2 nearest_point = {0.0, 0.0};
 static struct FloatVect2 obstacle = {0.0, 0.0};
+static uint32_t N_medidas = 0;
 
 static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 
 // Parámetros de corrección
 #define MIN_LIDAR_DISTANCE 0.1f
-#define MAX_LIDAR_DISTANCE 10.0f
+#define MAX_LIDAR_DISTANCE 5.0f
 #define MAX_WALL_DISTANCE 5.0f   // No se corrige si el obstáculo está muy lejos
 #define ALPHA 0.5f               // Factor de suavizado
+#define BETA 0.9f                // Factor de suavizado
 
+// Para NPS
 #define GPS_BIAS_X 0.5f
 #define GPS_BIAS_Y 0.5f
 
 
-struct InsSlam ins_slam = {
-    TRUE,
-    MIN_LIDAR_DISTANCE,
-    MAX_LIDAR_DISTANCE,
-    MAX_WALL_DISTANCE,
-    ALPHA,
-    GPS_BIAS_X,
-    GPS_BIAS_Y
-};
-
+struct InsSlam ins_slam;
 struct InsInt ins_int;
 struct FloatVector {
   float x;  ///< North
@@ -221,6 +215,18 @@ void ins_int_init(void)
   INT32_VECT3_ZERO(ins_int.ltp_speed);
   INT32_VECT3_ZERO(ins_int.ltp_accel);
 
+
+  ins_slam.enable = TRUE;
+  ins_slam.alpha = ALPHA;
+  ins_slam.beta = BETA;
+  ins_slam.max_distance = MAX_LIDAR_DISTANCE;
+  ins_slam.min_distance = MIN_LIDAR_DISTANCE;
+  ins_slam.max_distance_wall = MAX_WALL_DISTANCE;
+
+  ins_slam.gps_bias.x = GPS_BIAS_X;
+  ins_slam.gps_bias.y = GPS_BIAS_Y;
+
+
   #if PERIODIC_TELEMETRY
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS, send_ins);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
@@ -289,41 +295,6 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(body_accel.z);
   ins_int.ltp_speed.z = SPEED_BFP_OF_REAL(ang_vel->r);  // Esta es para poder ver el mensaje
 
-  // -------------------------------------------------------------
-  // De aqui ...
-
-  // if (counter_test > 5){
-
-  //   // Paparazzi mueve los puntos en ENU, pero la posicion se mueve en NED
-
-  //   struct NedCoor_i simulated_gps_pos = {100.0, 100.0, 0.0}; // cm
-  //   struct NedCoor_i simulated_gps_vel = {0.0, 0.0, 0.0};
-
-  //   // Aqui hace la correccion del offset
-  //   gps_offset = offset;
-  //   offset = (struct FloatVect2){0.0f, 0.0f};
-  
-  //   // TODO: Hay discrepancias usando ned y enu (de momento le doy la vuelta)
-  //   if(ins_slam.enable){
-  //     ins_int.ltp_pos.x = POS_BFP_OF_REAL(simulated_gps_pos.x/100.0f + gps_offset.x);
-  //     ins_int.ltp_pos.y = POS_BFP_OF_REAL(simulated_gps_pos.y/100.0f + gps_offset.y);
-  //   }
-  //   else{
-  //     INT32_VECT2_SCALE_2(ins_int.ltp_pos, simulated_gps_pos,
-  //                           INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
-  //   }
-  
-  //   INT32_VECT2_SCALE_2(ins_int.ltp_speed, simulated_gps_vel,
-  //     INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
-
-  // }
-  // else{
-  //   counter_test++;
-  // }
-
-  // ... a aqui va en el GPS (para depurar cuando no hay señal)
-  // -------------------------------------------------------------
-
   ins_ned_to_state();
 
   /* increment the propagation counter, while making sure it doesn't overflow */
@@ -379,14 +350,27 @@ void ins_int_update_gps(struct GpsState *gps_s)
 
   // Error en el GPS para NPS (para debug)
   #ifdef USE_NPS
-    gps_pos_cm_ned.x += ins_slam.gps_bias.x*fabs(rand_gaussian()*50/3); //*1*bias
-    gps_pos_cm_ned.y += ins_slam.gps_bias.y*fabs(rand_gaussian()*50/3); //*1*bias;
+    // gps_pos_cm_ned.x += ins_slam.gps_bias.x*fabs(rand_gaussian()*50/3); //*1*bias
+    // gps_pos_cm_ned.y += ins_slam.gps_bias.y*fabs(rand_gaussian()*50/3); //*1*bias;
+    gps_pos_cm_ned.x += ins_slam.gps_bias.x*100; // TEST mas sencillo, solo el offset
+    gps_pos_cm_ned.y += ins_slam.gps_bias.y*100; // TEST mas sencillo, solo el offset
   #endif
 
 
   // Aqui hace la correccion del offset
-  gps_offset = offset;
-  offset = (struct FloatVect2){0.0f, 0.0f};
+  if((offset.x == 0) && (offset.y == 0)){
+    float beta = (ins_slam.beta+99)/100;
+    gps_offset.x = gps_offset.x*beta;
+    gps_offset.y = gps_offset.y*beta;
+  }
+  else{
+    gps_offset.x += (offset.x-gps_offset.x)*ins_slam.alpha;
+    gps_offset.y += (offset.y-gps_offset.y)*ins_slam.alpha;
+    offset.x = 0;
+    offset.y = 0;
+    N_medidas = 0;
+  }
+  
 
   if(ins_slam.enable){
     ins_int.ltp_pos.x = POS_BFP_OF_REAL(gps_pos_cm_ned.x/100.0f + gps_offset.x);
@@ -401,8 +385,8 @@ void ins_int_update_gps(struct GpsState *gps_s)
     INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
 
   ins_ned_to_state();
-  waypoint_move_xy_i(16, POS_BFP_OF_REAL(obstacle.x), POS_BFP_OF_REAL(obstacle.y)); // DEBUG
-  waypoint_move_xy_i(15, POS_BFP_OF_REAL(nearest_point.x), POS_BFP_OF_REAL(nearest_point.y)); // DEBUG
+  // waypoint_move_xy_i(16, POS_BFP_OF_REAL(obstacle.x), POS_BFP_OF_REAL(obstacle.y)); // DEBUG
+  // waypoint_move_xy_i(15, POS_BFP_OF_REAL(nearest_point.x), POS_BFP_OF_REAL(nearest_point.y)); // DEBUG
 
   /* reset the counter to indicate we just had a measurement update */
   ins_int.propagation_cnt = 0;
@@ -447,9 +431,14 @@ void ins_update_lidar(float distance, float angle){
     return;
   } 
 
+  // Actualiza el offset y la posición
   float delta_x = nearest_point.x - obstacle.x;
   float delta_y = nearest_point.y - obstacle.y;
-  offset = (struct FloatVect2){delta_x, delta_y};
+
+  N_medidas++;
+  offset.x = (delta_x + (N_medidas - 1)*offset.x)/N_medidas;
+  offset.y = (delta_y + (N_medidas - 1)*offset.y)/N_medidas;
+
 
   // Cuando lo termine de depurar se puede borrar
   debug_point.x = nearest_point.x;

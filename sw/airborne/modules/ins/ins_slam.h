@@ -36,6 +36,7 @@ struct InsSlam {
   float max_distance;
   float max_distance_wall;
   float alpha;
+  float beta;
   struct FloatVect2 gps_bias;
 };
 

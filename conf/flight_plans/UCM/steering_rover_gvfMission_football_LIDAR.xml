@@ -2,7 +2,7 @@
 
 <!-- Coordenadas antiguas = 40.4514297, -3.7290253 -->
 
-<flight_plan alt="660" ground_alt="650" lat0="40.4512222" lon0="-3.7291357" max_dist_from_home="2500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.4512539" lon0="-3.7289867" max_dist_from_home="2500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
@@ -13,18 +13,18 @@
     <waypoint lat="40.4516215" lon="-3.7290142" name="P1" />
     <waypoint lat="40.4517065" lon="-3.7282202" name="P2"/>
 
-    <waypoint lat="40.4517963" lon="-3.7290841" name="BZ0"/>
-    <waypoint lat="40.4518250" lon="-3.7288936" name="BZ1"/>
-    <waypoint lat="40.4514675" lon="-3.7285783" name="BZ2"/>
-    <waypoint lat="40.4515199" lon="-3.7282520" name="BZ3"/>
-    <waypoint lat="40.4516299" lon="-3.7281441" name="BZ4"/>
-    <waypoint lat="40.4517970" lon="-3.7281540" name="BZ5"/>
-    <waypoint lat="40.4517969" lon="-3.7282879" name="BZ6"/>
-    <waypoint lat="40.4518929" lon="-3.7284450" name="BZ7"/>
-    <waypoint lat="40.4518000" lon="-3.7286070" name="BZ8"/>
-    <waypoint lat="40.4515949" lon="-3.7287011" name="BZ9"/>
-    <waypoint lat="40.4514450" lon="-3.7289630" name="BZ10"/>
-    <waypoint lat="40.4516670" lon="-3.7290740" name="BZ11"/>
+    <waypoint lat="40.4512839" lon="-3.7291430" name="BZ0"/>
+    <waypoint lat="40.4512658" lon="-3.7291490" name="BZ1"/>
+    <waypoint lat="40.4512540" lon="-3.7291490" name="BZ2"/>
+    <waypoint lat="40.4512369" lon="-3.7291470" name="BZ3"/>
+    <waypoint lat="40.4512190" lon="-3.7291490" name="BZ4"/>
+    <waypoint lat="40.4512190" lon="-3.7291200" name="BZ5"/>
+    <waypoint lat="40.4512140" lon="-3.7290560" name="BZ6"/>
+    <waypoint lat="40.4512190" lon="-3.7290051" name="BZ7"/>
+    <waypoint lat="40.4512378" lon="-3.7289799" name="BZ8"/>
+    <waypoint lat="40.4512980" lon="-3.7289949" name="BZ9"/>
+    <waypoint lat="40.4513050" lon="-3.7290239" name="BZ10"/>
+    <waypoint lat="40.4513050" lon="-3.7291041" name="BZ11"/>
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -94,7 +94,7 @@
     <block name="gvf_quintic_bezier_bare">
       <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
-      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
+      <!-- <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/> -->
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="static_control">
