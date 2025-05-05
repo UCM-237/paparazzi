@@ -9,7 +9,7 @@
   <waypoints>
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint lat="40.4515279" lon="-3.7289089" name="STDBY" />
-    <waypoint lat="40.4516655" lon="-3.7286186" name="ELLIPSE" />
+    <waypoint lat="40.4512609" lon="-3.7290940" name="ELLIPSE" />
     <waypoint lat="40.4516215" lon="-3.7290142" name="P1" />
     <waypoint lat="40.4517065" lon="-3.7282202" name="P2"/>
 

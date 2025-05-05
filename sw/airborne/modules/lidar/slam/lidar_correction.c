@@ -116,7 +116,6 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
       if (distance < min_distance) {
         min_distance = distance;
         *nearest_point = aux_point;
-        // waypoint_move_xy_i(16, POS_BFP_OF_REAL(p1.x), POS_BFP_OF_REAL(p1.y));  // Esto sobrecarga el Xbee, no usar
       }
     }
   }
@@ -127,7 +126,6 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
 
 
 // OBSTACULOS (ESTO HABRIA QUE PONERLO EN ALGUN MOMENTO EN UN XML)
-
 
 void init_walls(void) {
 
@@ -145,7 +143,16 @@ void init_walls(void) {
   padel_northwest->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.4512084), RadOfDeg(-3.7291015), 650.0}; 
   padel_northwest->points_wgs84[2] = (struct LlaCoor_f){RadOfDeg(40.4512295), RadOfDeg(-3.7289073), 650.0}; // NE
   padel_northwest->count = 3;
-  padel_northwest->converted = false; // Esto se puede quitar
+
+
+  /* ==================== TORRE ==================== */
+  struct Wall *tower = &wall_system.walls[wall_system.wall_count++];
+  tower->points_wgs84[0] = (struct LlaCoor_f){RadOfDeg(40.4513016), RadOfDeg(-3.7289494), 650.0};
+  tower->points_wgs84[1] = (struct LlaCoor_f){RadOfDeg(40.4513006), RadOfDeg(-3.7289645), 650.0}; 
+  tower->points_wgs84[2] = (struct LlaCoor_f){RadOfDeg(40.4513107), RadOfDeg(-3.7289655), 650.0};
+  tower->points_wgs84[3] = (struct LlaCoor_f){RadOfDeg(40.4513120), RadOfDeg(-3.7289500), 650.0};
+  tower->count = 4;
+
 
   /* ==================== GRADAS ==================== */ 
   struct Wall *gradas_west = &wall_system.walls[wall_system.wall_count++];

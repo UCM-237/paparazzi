@@ -48,7 +48,7 @@ static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 #define MAX_LIDAR_DISTANCE 5.0f
 #define MAX_WALL_DISTANCE 5.0f   // No se corrige si el obstáculo está muy lejos
 #define ALPHA 0.5f               // Factor de suavizado
-#define BETA 0.9f                // Factor de suavizado
+#define BETA 0.95f                // Factor de suavizado
 
 // Para NPS
 #define GPS_BIAS_X 0.5f
@@ -364,8 +364,13 @@ void ins_int_update_gps(struct GpsState *gps_s)
     gps_offset.y = gps_offset.y*beta;
   }
   else{
+    struct FloatVect2 alpha = {0.0f, 0.0f};
+
+    alpha.x = 0.01*ins_slam.alpha/(offset.x-gps_offset.x);
     gps_offset.x += (offset.x-gps_offset.x)*ins_slam.alpha;
+    alpha.y = 0.01*ins_slam.alpha/(offset.y-gps_offset.y);
     gps_offset.y += (offset.y-gps_offset.y)*ins_slam.alpha;
+
     offset.x = 0;
     offset.y = 0;
     N_medidas = 0;
