@@ -37,6 +37,7 @@
 #include <std.h>
 #include "state.h"
 #include "firmwares/rover/navigation.h"
+#define CBF_MAX_NEIGHBORS 10
 
 // Default number of neighbors per robot
 #ifndef CBF_MAX_NEIGHBORS

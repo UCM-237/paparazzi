@@ -1,5 +1,5 @@
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
-<!--Rover Avelino -->
+
 <airframe name="boat">
 
   <firmware name="rover"> 
@@ -11,6 +11,9 @@
       <module name="radio_control" type="sbus">
         <configure name="SBUS_PORT" value="UART2"/>
       </module>
+      <module name="serial" type="com">
+    	  <configure name="SERIAL_UART" value="UART5"/>
+      </module>
     </target>
     
     <target name="nps" board="pc">
@@ -18,6 +21,10 @@
       <module name="fdm"           type="rover"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <module name="telemetry_nps" dir="datalink" />
+       <!-- Multiple agents simulation -->
+      <!--configure name="MODEM_PORT_OUT" value="4250"/>
+      <configure name="MODEM_PORT_IN"  value="4251"/-->
     </target>    
     
     <!-- Same board module as matek_f765_wing but without OSD -->
@@ -25,16 +32,24 @@
     
     <module name="actuators" type="pwm"/>
 
+<!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
+
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART4"/>
+    	<configure name="GPS_PORT"  value="UART3"/>
     </module>
     <module name="gps_ubx_ucenter"/>
-    
-    
-    <module name="ins"/> <!-- Speed estimated from GPS -->
-    
+
+
+    <!-- Pos estimated with Kalman Filter -->
+    <!--module name="ins"/--> 
+    <!-- <module name="ins_kf"/> -->
+    <module name="ins" type="ekf"/>
+
+
+    <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
+      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.5"/>
     </module>
     
    <module name="telemetry" type="xbee_api">
@@ -42,11 +57,11 @@
     </module>
     
     <!-- Compass ublox m8n -->
+    <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
     <module name="mag_hmc58xx">
-    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C1"/>
+    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
-    	
     </module>
     
     
@@ -65,15 +80,19 @@
     <module name="gvf_parametric_bare">
       <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
     </module>
-    
-   <module name="gvf_cbf">
+    <!-- CBF module-->
+       <module name="gvf_cbf">
    <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
-       <define name="CBF_NEI_AC_IDS" value="{1,3,5,6}"/>
+       <define name="CBF_NEI_AC_IDS" value="{3,4,5,6}"/>
     </module>
+    
+    <module name="traffic_info"/>
+    
+    
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-    
+
     <!-- Obstacle grid -->
     <!--
     <module name="obstacle_rover">
@@ -100,12 +119,13 @@
     <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>
   </servos> 
   
   <!-- Low level commands (PWM signal) -->
   <commands>
     <axis name="THROTTLE"    failsafe_value="0"/>
-    <axis name="STEERING" failsafe_value="0"/>
+    <axis name="STEERING"    failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
@@ -118,6 +138,7 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
+    <set servo="MOTOR_LIDAR" value="tf_servo.pos"/>
   </command_laws>
 
 

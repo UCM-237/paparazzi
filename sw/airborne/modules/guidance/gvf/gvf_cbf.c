@@ -72,19 +72,21 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
 static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 {
   uint16_t n = 1;
+  char msg[50];
   if (cbf_control.n_neighborns > 0) { // n = 0 doesn't make sense
     n = cbf_control.n_neighborns;
   }
   
-  for (int i = 0; i < n; i++) {
-    cbf_telemetry.acs_available[i] = cbf_obs_tables[i].available;
-    if (cbf_obs_tables[i].ac_id!=0){
-    	pprz_msg_send_CBF_REC(trans, dev, AC_ID, &cbf_obs_tables[i].ac_id,&cbf_obs_tables[i].available,
-  				&cbf_obs_tables[i].t_last_msg,
+  for (int i = 0; i < cbf_control.n_neighborns ; i++) {
+    cbf_telemetry.acs_available[i] = cbf_obs_tables[i].available;    
+    if (cbf_obs_tables[i].ac_id>0 && cbf_obs_tables[i].ac_id<255){
+        	pprz_msg_send_CBF_REC(trans, dev, AC_ID, &cbf_obs_tables[i].ac_id,&(cbf_obs_tables[i].available),
+    				&cbf_obs_tables[i].t_last_msg,
   				&cbf_obs_tables[i].state.x,&cbf_obs_tables[i].state.y,
   				&cbf_obs_tables[i].state.vx,&cbf_obs_tables[i].state.vy);
-  				}
-}
+  	
+  	}
+	}
 }
 #endif // PERIODIC TELEMETRY
  
@@ -106,6 +108,7 @@ void cbf_init(void)
   cbf_control.n_neighborns=0;
  // Initilize the obstacles tables with the ac_id of the neighborns
   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
+  char msg[10];
   for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
     if (cbf_nei_ac_ids[i] > 0 && cbf_nei_ac_ids[i] < 255) {
       cbf_obs_tables[i].ac_id = cbf_nei_ac_ids[i];
@@ -115,9 +118,17 @@ void cbf_init(void)
     } 
     else {
       cbf_obs_tables[i].ac_id = 0;
+      cbf_telemetry.acs_id[i] =0;
     }
     cbf_obs_tables[i].available = 0;
     cbf_telemetry.acs_timeslost[i] = 0; // for telemetry
+    cbf_obs_tables[i].state.x=0.;
+    cbf_obs_tables[i].state.y=0.;
+    cbf_obs_tables[i].state.vx=0.;
+    cbf_obs_tables[i].state.vy=0.;
+    cbf_obs_tables[i].t_last_msg=0;
+    /*sprintf(msg," %u, %u",i, cbf_obs_tables[i].ac_id);
+    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("INIT OK"), "INIT OK");*/
   }
   cbf_ac_state.nei=cbf_control.n_neighborns;
   #if PERIODIC_TELEMETRY
@@ -132,24 +143,24 @@ void cbf_init(void)
 
 static void cbf_low_level_getState(void)
 {
-/*
+
   cbf_ac_state.x = stateGetPositionEnu_f()->x;
-  cbf_ac_state.y = stateGetPositionEnu_f()->y;*/
+  cbf_ac_state.y = stateGetPositionEnu_f()->y;
   cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
   // We assume that the course and psi
   // of the rover (steering wheel) are the same
     cbf_ac_state.course = 90 - stateGetNedToBodyEulers_f()->psi; // ENU course
     cbf_ac_state.vx = stateGetSpeedEnu_f()->x;
     cbf_ac_state.vy = stateGetSpeedEnu_f()->y;
-    cbf_ac_state.x=49;//QUITAR
-    cbf_ac_state.y=1;
+   
 }
 
 
 // Fill the i'th obstacle table with the info contained in the buffer  
 static void write_cbf_table(uint16_t i, uint8_t *buf) 
 {
-  char msg[50];
+  char msg[35];
+  if (i<CBF_MAX_NEIGHBORS){
   cbf_obs_tables[i].state.x = DL_CBF_STATE_x_enu(buf);
   cbf_obs_tables[i].state.y = DL_CBF_STATE_y_enu(buf);
   cbf_obs_tables[i].state.vx = DL_CBF_STATE_vx_enu(buf);
@@ -160,9 +171,9 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
   
   cbf_obs_tables[i].available = (uint8_t) 1;
   cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
-  /*sprintf(msg,"Rover %u, table pos i %u, x, %f, y, %f, av, %u",cbf_obs_tables[i].ac_id, i, cbf_obs_tables[i].state.x,cbf_obs_tables[i].state.y,cbf_obs_tables[i].available);
-  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);*/
-    
+  sprintf(msg,"Sender %u, Table pos %u",cbf_obs_tables[i].ac_id,i);
+  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
+  }  
 }
 
  void parseCBFTable(uint8_t *buf)
@@ -188,7 +199,6 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
   		cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
   		cbf_obs_tables[i].available = 1;
   		cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
-   
           return;
         }
 }
@@ -206,6 +216,7 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
           return;
         }
     }
+ 
   }
 }
 }
@@ -215,7 +226,7 @@ static void send_cbf_state_to_nei(void)
   struct pprzlink_msg msg;
   
   for (int i = 0; i < cbf_control.n_neighborns; i++){
-    if (cbf_obs_tables[i].ac_id != 0) { // send state to the ACs in CBF_NEI_AC_IDS
+    if (cbf_obs_tables[i].ac_id>0 && cbf_obs_tables[i].ac_id<255) { // send state to the ACs in CBF_NEI_AC_IDS
       msg.trans = &(DefaultChannel).trans_tx;
       msg.dev = &(DefaultDevice).device;
       msg.sender_id = AC_ID;
@@ -227,9 +238,9 @@ static void send_cbf_state_to_nei(void)
                                         &cbf_ac_state.vx, &cbf_ac_state.vy, 
                                         &cbf_ac_state.speed, &cbf_ac_state.course,
                                         &cbf_ac_state.uref);
-      char m[5];
-      sprintf(m,"%u",msg.receiver_id);
-      DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);
+      /*char m[10];
+      sprintf(m,"Enviado a %u",msg.receiver_id);
+      DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
      }
     }
 }
@@ -325,13 +336,14 @@ uint32_t now = get_sys_time_msec();
 void parse_CBF_STATE(uint8_t *buf)
 {
   int16_t sender_id = (int16_t) pprzlink_get_msg_sender_id(buf);
-  char *msg;
+  char msg[15];
   sprintf(msg,"Sender %u",sender_id);
   DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
-  for (uint16_t i = 0; i < cbf_control.n_neighborns; i++)
+  for (uint16_t i = 0; i < CBF_MAX_NEIGHBORS; i++){
     if (cbf_obs_tables[i].ac_id == sender_id) {
       write_cbf_table(i, buf);
       break;
+    }
     }
 }
 
