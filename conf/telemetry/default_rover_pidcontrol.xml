@@ -1,62 +1,56 @@
 <?xml version="1.0"?>
 <!DOCTYPE telemetry SYSTEM "telemetry.dtd">
 <telemetry>
-
-
   <process name="Main">
 
     <mode name="default" key_press="d">
     
-      
-      <message name="INFO_MSG"               period="0.45"/>
-      <message name="AUTOPILOT_VERSION"      period="11.1"/>
-      <message name="NAVIGATION"             period="1."/>
-      <message name="ATTITUDE"               period="0.5"/>
-      <message name="AIRSPEED"               period="1"/>
-      <message name="DESIRED"                period="5.05"/>
-      <message name="NAVIGATION_REF"         period="9."/>   
-      <message name="GPS_SOL"                period="2.0"/>
-      <message name="ROVER_STATUS"           period="1.5"/>
-      <message name="ROTORCRAFT_FP"          period="1.25"/> 
+      <message name="INFO_MSG"               period="1.0"/>
       <message name="ALIVE"                  period="2.7"/> 
-      <message name="DL_VALUE"               period="5.6"/> 
-      <message name="ROTORCRAFT_NAV_STATUS"  period="1.6"/>
-      <message name="CIRCLE"                 period="2.5"/> 
-      <message name="SEGMENT"                period="2.5"/> 
-      <message name="WP_MOVED"               period="2.3"/>
-      <message name="GPS_INT"                period="0.35"/> 
+      <message name="ATTITUDE"               period="0.5"/>
+      <message name="AUTOPILOT_VERSION"      period="11.1"/>
+      <message name="DATALINK_REPORT"        period="5.1"/>
+      <message name="ENERGY"                 period="8.5"/> 
       <message name="GPS"                    period="0.25"/>
+      <message name="GPS_INT"                period="0.35"/>
+      <message name="GPS_SOL"                period="2.0"/>
       <message name="INS"                    period="0.3"/> 
       <message name="INS_REF"                period="5.1"/>
-      <message name="ENERGY"                 period="4.5"/> 
-      <message name="DATALINK_REPORT"        period="5.1"/>
-      <message name="STATE_FILTER_STATUS"    period="3.2"/>
-      <message name="AIR_DATA"               period="1.9"/> 
-      <message name="SURVEY"                 period="2.5"/>
-      <message name="I2C_ERRORS"             period="5.1"/>
-      <message name="UART_ERRORS"            period="4.1"/>
-      
-      <message name="GVF_PARAMETRIC"         period="1.0"/>
-      <message name="STATIC_CONTROL" 	       period="1.0"/>
-      
-      <message name="GVF"                    period="1.0"/>
+      <message name="ROTORCRAFT_NAV_STATUS"  period="1.6"/>
+      <message name="ROVER_CTRL"             period="1.0"/>
+      <message name="ROVER_STATUS"           period="1.5"/>
+      <message name="WP_MOVED"               period="2.3"/>
+
+      <message name="CIRCLE"                 period="2.5"/> 
+      <message name="SEGMENT"                period="2.5"/> 
+      <message name="SERIAL_COM"	           period="8.0"/>
+
+      <message name="GVF"                    period="4.0"/>
+      <message name="GVF_PARAMETRIC"         period="2.0"/>
+
 
       <!-- El Lidar habra que quitarlo o ver que hacer con el. Esto es para depurar -->
       <message name="LIDAR"                  period="0.2"/>
       <message name="SLAM"                   period="0.2"/>
 
-      <!-- Este es solo para depurar NPS, hay que moverlo cuando me acuerde -->
-      <message name="NPS_LIDAR"                   period="0.2"/>
+      <!-- <message name="NPS_LIDAR"                   period="0.2"/> -->
+
+      <!-- <message name="NAVIGATION"             period="1."/> -->
+      <!-- <message name="AIRSPEED"               period="1"/> -->
+      <!-- <message name="DESIRED"                period="5.05"/> -->
+      <!-- <message name="NAVIGATION_REF"         period="9."/>    -->
       
+      <!-- <message name="ROTORCRAFT_FP"          period="1.25"/>  -->
+      <!-- <message name="DL_VALUE"               period="5.6"/>  -->
 
-
-      <message name="ROVER_CTRL"             period="1.0"/>
+      <!-- <message name="STATE_FILTER_STATUS"    period="3.2"/> -->
+      <!-- <message name="AIR_DATA"               period="1.9"/>  -->
+      <!-- <message name="SURVEY"                 period="2.5"/> -->
+      <!-- <message name="I2C_ERRORS"             period="5.1"/> -->
+      <!-- <message name="UART_ERRORS"            period="4.1"/> -->
+      <!-- <message name="STATIC_CONTROL" 	       period="1.0"/> -->   
       <!-- <message name="ACTUATORS"	             period="0.50"/> -->
-
-      <message name="SERIAL_COM"	           period="1.0"/>
       <!-- <message name="KALMAN_FILTER_STATUS"   period="5.0"/> -->
-      
-      <!--message name="OBSTACLE_GRID"	       period="3"/-->
       
       
     </mode>
@@ -108,7 +102,7 @@
       <message name="INS_REF"                period="5.1"/>
 
       <message name="LIDAR"                  period="0.05"/>
-      <message name="SLAM"                  period="0.5"/>
+      <message name="SLAM"                   period="0.5"/>
       <!--message name="OBSTACLE_GRID"	       period="3"/-->
       
     </mode>
