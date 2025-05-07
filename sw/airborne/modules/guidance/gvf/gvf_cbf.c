@@ -238,7 +238,7 @@ static void send_cbf_state_to_nei(void)
                                         &cbf_ac_state.vx, &cbf_ac_state.vy, 
                                         &cbf_ac_state.speed, &cbf_ac_state.course,
                                         &cbf_ac_state.uref);
-      /*char m[10];
+      /*char m[30];
       sprintf(m,"Enviado a %u",msg.receiver_id);
       DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
      }
