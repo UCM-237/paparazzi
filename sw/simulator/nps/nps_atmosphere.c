@@ -37,11 +37,11 @@
 #endif
 
 #ifndef NPS_WIND_DIR
-#define NPS_WIND_DIR 0
+#define NPS_WIND_DIR M_PI
 #endif
 
 #ifndef NPS_TURBULENCE_SEVERITY
-#define NPS_TURBULENCE_SEVERITY 0
+#define NPS_TURBULENCE_SEVERITY 0.3
 #endif
 
 #ifndef NPS_WORLD_ENV_UPDATE
@@ -58,11 +58,12 @@ void nps_atmosphere_init(void)
   nps_atmosphere_set_wind_dir(NPS_WIND_DIR);
   nps_atmosphere.turbulence_severity = NPS_TURBULENCE_SEVERITY;
   nps_atmosphere.last_world_env_req = 0.;
+  printf("VIENTOOOO v = %f", NPS_WIND_SPEED);
 }
 
 void nps_atmosphere_set_wind_speed(double speed)
 {
-  nps_atmosphere.wind_speed = speed;
+  nps_atmosphere.wind_speed = 10;
   /* recalc wind in north and east */
   nps_atmosphere.wind.x = -speed * sin(M_PI_2 - nps_atmosphere.wind_dir);
   nps_atmosphere.wind.y = -speed * cos(M_PI_2 - nps_atmosphere.wind_dir);

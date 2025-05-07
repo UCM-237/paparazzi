@@ -26,6 +26,8 @@
 
 #include "nps_electrical.h"
 #include "nps_fdm.h"
+#include "nps_main.h"
+
 #include "generated/airframe.h"
 #include "modules/energy/electrical.h"
 
@@ -34,7 +36,9 @@ struct NpsFdm fdm;
 
 static struct EnuCoor_d rover_vel;
 static struct LtpDef_d ltpdef;
-
+double Ah_0 = 30;
+double bat_status;
+double consumo_acum;
 double batery;
 void nps_electrical_init(void)
 {
@@ -44,37 +48,42 @@ void nps_electrical_init(void)
 #else
   nps_electrical.supply_voltage = 11.1;
 #endif
-batery = nps_electrical.supply_voltage;
+//batery = nps_electrical.supply_voltage;
+batery = 0;
 printf("Batería inicial = %f", batery);
 }
 
 void nps_electrical_run_step(double time __attribute__((unused)))
 {
 //--------IMPLEMENTACIÓN MODELO DE CONSUMO-----------------//
-
-  // Actualizar velocidad desde el simulador
-  rover_vel.x = fdm.ecef_ecef_vel.x; 
-  rover_vel.y = fdm.ecef_ecef_vel.y;  
-  //printf("Velocidad x electrical = %f      Velocidad y electrical = %f\n", rover_vel.x, rover_vel.y);
   // Calcular módulo de la velocidad
-  double speed = FLOAT_VECT2_NORM(rover_vel);
-
+  double *commands = nps_autopilot.commands;
   // Simulación de consumo de batería
+  double consumo_right = (16.242643*pow(commands[COMMAND_MRIGHT],2) + 0.085211*commands[COMMAND_MRIGHT] - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
+  double consumo_left = (16.242643*pow(commands[COMMAND_MLEFT],2) + 0.085211*commands[COMMAND_MLEFT] - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
   
-  double consumo = (16.242643*pow(throttle,2) + 0.085211*throttle - 1.491132) * time; // No me cuadra esta ecuación ya que si es el consumo a v=0 se estaría cargando la batería.
-  if (consumo < 0 ){
-    consumo = 0
+  if (consumo_right < 0){
+    consumo_right = 0.000000001;
   }
   
-  batery -= consumo;  // Restar el consumo de batería (asumiendo que es descarga)
+  if (consumo_left < 0){
+    consumo_left = 0.000000001;
+  }
+  
+  double consumo = consumo_right + consumo_left;
+  
+  consumo_acum += consumo;
+  bat_status = 100*(1-consumo_acum/Ah_0);
+  
+  electrical.vsupply = bat_status;
 
-  electrical.vsupply = batery;
-
+  batery += consumo;  // Restar el consumo de batería (asumiendo que es descarga)
   // Imprimir para depuración
   //printf("Bateria = %f\n", electrical.vsupply);
-  //printf("Consumo = %f\n", consumo);
-  //printf("time = %f\n", time);
-  //printf("velocidad = %f\n", speed);
+  //printf("Throttle_right = %f    Throttle_left = %F\n", commands[COMMAND_MRIGHT], commands[COMMAND_MLEFT]);
+  //printf("Consumo_right = %f    consumo_left = %F\n", consumo_right, consumo_left);
+  //printf("time = %f\n", fdm.init_dt);
+  
 }
 
 

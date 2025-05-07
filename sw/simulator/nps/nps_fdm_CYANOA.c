@@ -128,7 +128,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   // No se ha añadido η, este término hace referencia a resistencias o correcciones del modelo. 
   //printf("phi_d %f\n", fdm.phi_d);
   double phi_dd = tau - mu_params.mu_w_sim*fdm.phi_d; //aceleracion angular
-  //printf("Throttle izq = %f\n Throttle dch = %f\n",commands[COMMAND_MLEFT]-commands[COMMAND_MRIGHT]);
+  //printf("Throttle izq = %f\n Throttle dch = %f\n",commands[COMMAND_MLEFT], commands[COMMAND_MRIGHT]);
   //printf("Tau = %f\n fa = %f\n", tau, fa);
   // Velocities (EULER INTEGRATION)
   rover_vel.x += rover_acc.x * fdm.curr_dt;
