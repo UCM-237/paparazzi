@@ -62,6 +62,24 @@
 #warning "Construction constant BOAT_BEARING_KF for boat bearing ctrl not defined"
 #endif
 
+// Speed Controller PID
+#ifndef BOAT_KP
+#if USE_NPS
+#define BOAT_KP 1000
+#else
+#define BOAT_KP 10
+#endif
+#endif
+
+#ifndef BOAT_KI
+#if USE_NPS
+#define BOAT_KI 2000
+#else
+#define BOAT_KI 100
+#endif
+#endif
+
+
 // Check controller gains values (error if they are negative)
 #if (BOAT_KF_BEARING < 0) ||                   \
     (BOAT_KF_SPEED   < 0)

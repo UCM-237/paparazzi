@@ -18,9 +18,9 @@
         <dl_settings NAME="Speed control">
           <!-- Ajustar constantes para el control de velocidad (feed forward) -->
           <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="guidance_control.cmd.speed" shortname="boat_guidance_speed"/>
-          <dl_setting MAX="2000.0" MIN="0.0" STEP="1" VAR="guidance_control.kf_speed" shortname="kf"/>
-          <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.kp" shortname="kp"/>
-          <dl_setting MAX="1000.0" MIN="0.0" STEP="1" VAR="guidance_control.ki" shortname="ki"/>
+          <dl_setting MAX="10000.0" MIN="0.0" STEP="10" VAR="guidance_control.kf_speed" shortname="kf"/>
+          <dl_setting MAX="2000.0" MIN="0.0" STEP="10" VAR="guidance_control.kp" shortname="kp"/>
+          <dl_setting MAX="5000.0" MIN="0.0" STEP="10" VAR="guidance_control.ki" shortname="ki"/>
         </dl_settings>
         <dl_settings NAME="Static control">
         	<dl_setting MAX="1" MIN="0" STEP="1" VAR="guidance_control.use_dynamic_pos" shortname="use_dynamic_positioning"/>

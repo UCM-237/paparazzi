@@ -1,7 +1,7 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
-<!-- Este plan de vuelo es para hacer pruebas en Guajaraz a distancias cortas (para probar el el control y control estatico sobre todo) -->
+<!-- Este plan de vuelo es para hacer pruebas en Guajaraz a distancias cortas (para probar el control y el control estatico sobre todo) -->
 
-<flight_plan alt="660" ground_alt="650" lat0="39.7940259" lon0="-4.0809211" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="39.7939538" lon0="-4.0814169" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>

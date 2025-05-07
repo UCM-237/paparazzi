@@ -47,6 +47,7 @@ PRINT_CONFIG_VAR(MOV_AVG_M)
 
 // Guidance control main variables
 ctrl_t guidance_control;
+// float cmd_speed = 0;  // Save here the speed during the static ctrl
 
 static struct PID_f boat_pid;
 static float time_step;
@@ -79,7 +80,7 @@ static void send_boat_ctrl(struct transport_tx *trans, struct link_device *dev)
                     	    &guidance_control.kp,
                     	    &guidance_control.kf_bearing,				// Integral action
                     	    &guidance_control.kf_speed,                        // Prop action 
-                    	    &guidance_control.kf_bearing_static,
+                    	    &last_speed_cmd,
                     	    &speed_avg,				// Avg speed measured
                     	    &gvf_c_info.kappa);      // Curvature
 }
@@ -105,8 +106,8 @@ void boat_guidance_init(void)
 	guidance_control.kf_speed_static = -BOAT_SPEED_KF;
 	guidance_control.use_dynamic_pos = 1;
   guidance_control.speed_error = 0.0;
-  guidance_control.kp = 10;
-  guidance_control.ki = 100;
+  guidance_control.kp = BOAT_KP;
+  guidance_control.ki = BOAT_KI;
 
   init_pid_f(&boat_pid, guidance_control.kp, 0.f, guidance_control.ki, MAX_PPRZ*0.4); // Increased integral bounds
 
@@ -238,11 +239,18 @@ void boat_guidance_speed_ctrl(void) // Feed forward + Integral controler + Propo
   if (guidance_control.kp != boat_pid.g[0] || guidance_control.ki != boat_pid.g[2]) {
     set_gains_pid_f(&boat_pid, guidance_control.kp, 0.f, guidance_control.ki);
   }
-  if (guidance_control.cmd.speed != last_speed_cmd) {
+  // if (guidance_control.cmd.speed != last_speed_cmd) {
+  //   last_speed_cmd = guidance_control.cmd.speed;
+  // }
+
+	
+  if(guidance_control.cmd.speed == 0.f) {
+    reset_pid_f(&boat_pid);
+  }
+  else{
     last_speed_cmd = guidance_control.cmd.speed;
   }
-
-	boat_guidance_steering_obtain_setpoint();
+  boat_guidance_steering_obtain_setpoint();
 	
 	// Mov avg speed
 	speed_avg = speed_avg - mvg_avg[ptr_avg]/MOV_AVG_M;
@@ -267,9 +275,11 @@ void boat_guidance_steering_obtain_setpoint(void)
 	
 	// Setpoint to zero if rover must stay still
 	if((gvf_c_stopwp.stay_still) && (!reset_time)){
+    // last_speed_cmd = guidance_control.cmd.speed;
 		guidance_control.cmd.speed = 0;
 		rover_time = get_sys_time_msec();
 		reset_time = 1;
+    return;
 	}
 	else if((gvf_c_stopwp.stay_still) && (reset_time)){
 		if( (get_sys_time_msec() - rover_time) >= 1000*gvf_c_stopwp.wait_time){
@@ -277,6 +287,7 @@ void boat_guidance_steering_obtain_setpoint(void)
 			gvf_c_stopwp.stay_still = 0;
 		}	
 	}
+  guidance_control.cmd.speed = last_speed_cmd;  // Restore speed setpoint
 }
 
 
