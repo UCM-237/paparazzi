@@ -164,7 +164,7 @@ void nav_parse_NUM_WAYPOINT_MOVED_DATALINK(uint8_t *buf)
 {
 
   uint8_t num = DL_NUM_WAYPOINT_MOVED_DATALINK_num(buf);
-  printf("num = %d\n", num);
+  //printf("num = %d\n", num);
   num_wp_moved = num;
 
 }

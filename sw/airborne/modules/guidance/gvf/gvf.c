@@ -523,7 +523,7 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
 	
 	if (gvf_lines_array[gvf_control.which_line].p1x == last_point_x && gvf_lines_array[gvf_control.which_line].p1y == last_point_y){
-	  printf("Static control");
+	  //printf("Static control");
 	  guidance_control.cmd.speed = 0;
 	  boat_guidance_bearing_static_ctrl();
 	  

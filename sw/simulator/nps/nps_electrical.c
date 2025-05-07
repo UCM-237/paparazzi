@@ -25,11 +25,17 @@
  */
 
 #include "nps_electrical.h"
+#include "nps_fdm.h"
 #include "generated/airframe.h"
 #include "modules/energy/electrical.h"
 
 struct NpsElectrical nps_electrical;
+struct NpsFdm fdm;
 
+static struct EnuCoor_d rover_vel;
+static struct LtpDef_d ltpdef;
+
+double batery;
 void nps_electrical_init(void)
 {
 
@@ -38,11 +44,37 @@ void nps_electrical_init(void)
 #else
   nps_electrical.supply_voltage = 11.1;
 #endif
-
+batery = nps_electrical.supply_voltage;
+printf("Batería inicial = %f", batery);
 }
 
 void nps_electrical_run_step(double time __attribute__((unused)))
 {
-  // todo: auto-decrease bat voltage
-  electrical.vsupply = nps_electrical.supply_voltage;
+//--------IMPLEMENTACIÓN MODELO DE CONSUMO-----------------//
+
+  // Actualizar velocidad desde el simulador
+  rover_vel.x = fdm.ecef_ecef_vel.x; 
+  rover_vel.y = fdm.ecef_ecef_vel.y;  
+  //printf("Velocidad x electrical = %f      Velocidad y electrical = %f\n", rover_vel.x, rover_vel.y);
+  // Calcular módulo de la velocidad
+  double speed = FLOAT_VECT2_NORM(rover_vel);
+
+  // Simulación de consumo de batería
+  
+  double consumo = (16.242643*pow(throttle,2) + 0.085211*throttle - 1.491132) * time; // No me cuadra esta ecuación ya que si es el consumo a v=0 se estaría cargando la batería.
+  if (consumo < 0 ){
+    consumo = 0
+  }
+  
+  batery -= consumo;  // Restar el consumo de batería (asumiendo que es descarga)
+
+  electrical.vsupply = batery;
+
+  // Imprimir para depuración
+  //printf("Bateria = %f\n", electrical.vsupply);
+  //printf("Consumo = %f\n", consumo);
+  //printf("time = %f\n", time);
+  //printf("velocidad = %f\n", speed);
 }
+
+

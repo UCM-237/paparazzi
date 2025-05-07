@@ -50,7 +50,7 @@ static struct LtpDef_d ltpdef;
 
 // Static functions declaration
 static void init_ltp(void);
-
+double bat = 8.4;
 /** Physical model structures **/
 static struct EnuCoor_d rover_pos;
 static struct EnuCoor_d rover_vel;
@@ -107,7 +107,8 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   //    COMMAND_MRIGHT -> acceleration in right motor
   //    COMMAND_MLEFT -> acceleration in letf motor
   
-
+  //-----------IMPLEMENTACIÓN DEL MODELO FÍSICO-------------------//
+  
   /** Physical model for car-like robots .................. **/
   // From previous step...
   enu_of_ecef_point_d(&rover_pos, &ltpdef, &fdm.ecef_pos);
@@ -129,7 +130,6 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   double phi_dd = tau - mu_params.mu_w_sim*fdm.phi_d; //aceleracion angular
   //printf("Throttle izq = %f\n Throttle dch = %f\n",commands[COMMAND_MLEFT]-commands[COMMAND_MRIGHT]);
   //printf("Tau = %f\n fa = %f\n", tau, fa);
-  
   // Velocities (EULER INTEGRATION)
   rover_vel.x += rover_acc.x * fdm.curr_dt;
   rover_vel.y += rover_acc.y * fdm.curr_dt;
@@ -145,6 +145,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   
   //phi = M_PI/2;
   //printf("phi = %f\n", phi);
+  
   #else
   #warning "The physics of this rover are not yet implemented in nps_fdm_rover!!"
   #endif // STEERING ROVER PHYSICS
@@ -241,5 +242,4 @@ void nps_fdm_set_temperature(double temp __attribute__((unused)),
 }
 
 /**********************************************/
-// Modelo de consumo //
 

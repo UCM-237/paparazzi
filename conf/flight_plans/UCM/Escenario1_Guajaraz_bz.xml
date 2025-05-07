@@ -6,13 +6,21 @@
 </header>
   <waypoints>
     <waypoint name="HOME" x="0" y="0"/>
-    <waypoint name="GCS" lat="39.793977" lon="-4.081265"/>
+    <waypoint lat="39.793977" lon="-4.081265" name="GCS"/>
     <waypoint name="STDBY" x="333.9" y="620.6"/>
     <waypoint name="ELLIPSE" x="296.3" y="624.4"/>
     <waypoint lat="39.794245" lon="-4.082670" name="P0"/>
+    <waypoint name="_BZ0" x="-220.6" y="148.9"/>
+    <waypoint name="_BZ1" x="-301.3" y="224.9"/>
     <waypoint lat="39.796117" lon="-4.086135" name="Mn1"/>
+    <waypoint name="_BZ2" x="-551.3" y="255.1"/>
+    <waypoint name="_BZ3" x="-604.2" y="145.1"/>
     <waypoint lat="39.794500" lon="-4.088183" name="Mn2"/>
+    <waypoint name="_BZ4" x="-490.0" y="40.8"/>
+    <waypoint name="_BZ5" x="-450.9" y="-18.6"/>
     <waypoint lat="39.793111" lon="-4.086484" name="Mn3"/>
+    <waypoint name="_BZ6" x="-366.3" y="-106.5"/>
+    <waypoint name="_BZ7" x="-287.2" y="72.2"/>
     <waypoint lat="39.794245" lon="-4.082670" name="_Mn4"/>
     <waypoint name="_N1" x="796.4" y="1254.9"/>
     <waypoint name="_N2" x="796.4" y="-865.4"/>
@@ -55,13 +63,20 @@
     <block name="ellipse_wp" strip_icon="oval.png">
       <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-      <exception cond="(12.1 > PowerVoltage()) @AND (GpsFixValid())" deroute="line_to_HOME"/>
     </block>
     <block name="go">
       <go wp="P0"/>
     </block>
     <block name="line_array_v3_Mn" strip_icon="line.png">
       <call fun="gvf_lines_array_wp_v2(WP_HOME, WP_P0, WP_Mn1, WP_Mn2, WP_Mn3, WP_P0, WP_P0, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="gvf_bezier_bare">
+      <call fun="gvf_parametric_bare_2D_bezier_wp(WP_P0)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="gvf_quintic_bezier_bare">
+      <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_P0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="go_p0">
