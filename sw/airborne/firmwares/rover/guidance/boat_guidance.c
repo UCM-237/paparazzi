@@ -134,23 +134,34 @@ void boat_guidance_init(void)
 
 void boat_bound_cmds(void)
 {
- //Protejemos de la saturación, pero solo positiva... 
-  if (commands[COMMAND_MRIGHT] > MAX_PPRZ){
-   commands[COMMAND_MRIGHT] = MAX_PPRZ;
-   commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.throttle - guidance_control.bearing);///(guidance_control.throttle + guidance_control.bearing);
+
+  int32_t left = commands[COMMAND_MLEFT];
+  int32_t right = commands[COMMAND_MRIGHT];
+
+  if (abs(left) > MAX_PPRZ || abs(right) > MAX_PPRZ) {
+    // Calculamos el factor de escala necesario para llevar ambos motores dentro del límite
+    float scale_factor = (float)MAX_PPRZ / Max(abs(left), abs(right));
+    
+    // Aplicamos el escalado para mantener la relación diferencial
+    commands[COMMAND_MLEFT] = (int32_t)(left * scale_factor);
+    commands[COMMAND_MRIGHT] = (int32_t)(right * scale_factor);
   }
-  
-  if (commands[COMMAND_MLEFT] > MAX_PPRZ){
-   commands[COMMAND_MLEFT] = MAX_PPRZ;
-   commands[COMMAND_MRIGHT]  = MAX_PPRZ*(guidance_control.throttle + guidance_control.bearing);///(guidance_control.throttle - guidance_control.bearing);
-  }
+
+  // Display purposes
+  guidance_control.command[0] = commands[COMMAND_MLEFT];
+  guidance_control.command[1] = commands[COMMAND_MRIGHT];
 }
 
 /** RC guidance function **/
 void boat_guidance_read_rc(void){
 
-  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE];
-  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL];
+  // Multiply by 2 to maintain the same range as the NAV mode
+  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE]*2;
+  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL]*2;
+
+  // Display purposes
+  guidance_control.throttle = (float)guidance_control.rc_throttle;  // +- 19200
+  guidance_control.bearing  = (float)guidance_control.rc_bearing;   // +- 19200
   
   guidance_control.command[0] = (guidance_control.rc_throttle - guidance_control.rc_bearing)/2;
   guidance_control.command[1] = (guidance_control.rc_throttle + guidance_control.rc_bearing)/2;
@@ -233,7 +244,7 @@ bool boat_guidance_bearing_static_ctrl(void)
   return true;
 }
 
-void boat_guidance_speed_ctrl(void) // Feed forward + Integral controler + Propotional (PID)
+void boat_guidance_speed_ctrl(void) // Feed forward + Integral controller + Proportional (PID)
 { 
   // - Looking for setting update
   if (guidance_control.kp != boat_pid.g[0] || guidance_control.ki != boat_pid.g[2]) {
