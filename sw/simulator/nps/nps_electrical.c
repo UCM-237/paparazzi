@@ -28,6 +28,8 @@
 #include "nps_fdm.h"
 #include "nps_main.h"
 
+#include "autopilot.h"
+
 #include "generated/airframe.h"
 #include "modules/energy/electrical.h"
 
@@ -59,8 +61,8 @@ void nps_electrical_run_step(double time __attribute__((unused)))
   // Calcular módulo de la velocidad
   double *commands = nps_autopilot.commands;
   // Simulación de consumo de batería
-  double consumo_right = (16.242643*pow(commands[COMMAND_MRIGHT],2) + 0.085211*commands[COMMAND_MRIGHT] - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
-  double consumo_left = (16.242643*pow(commands[COMMAND_MLEFT],2) + 0.085211*commands[COMMAND_MLEFT] - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
+  double consumo_right = (16.242643*pow(commands[COMMAND_MRIGHT]/MAX_PPRZ,2) + 0.085211*commands[COMMAND_MRIGHT]/MAX_PPRZ - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
+  double consumo_left = (16.242643*pow(commands[COMMAND_MLEFT]/MAX_PPRZ,2) + 0.085211*commands[COMMAND_MLEFT]/MAX_PPRZ - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
   
   if (consumo_right < 0){
     consumo_right = 0.000000001;

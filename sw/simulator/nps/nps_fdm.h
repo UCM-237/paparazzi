@@ -126,6 +126,8 @@ struct NpsFdm {
   uint32_t num_engines;
   uint32_t eng_state[FG_NET_FDM_MAX_ENGINES];// Engine state (off, cranking, running)
   float rpm[FG_NET_FDM_MAX_ENGINES];       // Engine RPM rev/min
+  double n_x;
+  double n_y;
 
 };
 
@@ -133,6 +135,7 @@ extern struct NpsFdm fdm;
 
 extern void nps_fdm_init(double dt);
 extern void nps_fdm_run_step(bool launch, double *commands, int commands_nb);
+extern void update_environment_perturbations(double tiempo); 
 extern void nps_fdm_set_wind(double speed, double dir);
 extern void nps_fdm_set_wind_ned(double wind_north, double wind_east, double wind_down);
 extern void nps_fdm_set_turbulence(double wind_speed, int turbulence_severity);
@@ -143,26 +146,37 @@ extern void nps_fdm_set_temperature(double temp, double h);
 } /* extern "C" */
 #endif
 
-#ifndef MU_PARAMS_H
-#define MU_PARAMS_H
+#ifndef Physical_PARAMS_H
+#define Physical_PARAMS_H
 
 
 
-typedef struct MuParams {
+typedef struct PhysicalParams {
     float mu_x_sim;
     float mu_y_sim;
     float mu_w_sim;
+    float wind_north_base;
+    float wind_east_base;
+    float current_ampl_x;
+    float current_ampl_y;
+    float wind_ampl_x;
+    float wind_ampl_y;
+    float wind_x;
+    float wind_y;
+    float current_x;
+    float current_y;
+    
 };
 
-extern struct MuParams mu_params;
+extern struct PhysicalParams physical_params;
 
 // Funciones para configurar los parámetros de mu
-extern void mu_params_init(void);
+extern void physical_params_init(void);
 
-#endif /* MU_PARAMS_H */
+#endif /* Physical_PARAMS_H */
 
 
-#endif /* NPS_FDM */
+#endif /* Physical_PARAMS_H */
 
 
 

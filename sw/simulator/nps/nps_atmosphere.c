@@ -37,7 +37,7 @@
 #endif
 
 #ifndef NPS_WIND_DIR
-#define NPS_WIND_DIR M_PI
+#define NPS_WIND_DIR 0
 #endif
 
 #ifndef NPS_TURBULENCE_SEVERITY
@@ -58,7 +58,6 @@ void nps_atmosphere_init(void)
   nps_atmosphere_set_wind_dir(NPS_WIND_DIR);
   nps_atmosphere.turbulence_severity = NPS_TURBULENCE_SEVERITY;
   nps_atmosphere.last_world_env_req = 0.;
-  printf("VIENTOOOO v = %f", NPS_WIND_SPEED);
 }
 
 void nps_atmosphere_set_wind_speed(double speed)

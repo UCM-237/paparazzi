@@ -12,9 +12,15 @@
       <dl_settings NAME="boat_sim_physics">
         <dl_settings NAME="mu">
           <!-- Ajuste de contantes para el control de bearing (w -> torque formato de comando) -->
-          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="mu_params.mu_x_sim" shortname="mu_x"/>
-          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="mu_params.mu_y_sim" shortname="mu_y"/>
-          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="mu_params.mu_w_sim" shortname="mu_w"/>
+          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="physical_params.mu_x_sim" shortname="mu_x"/>
+          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="physical_params.mu_y_sim" shortname="mu_y"/>
+          <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="physical_params.mu_w_sim" shortname="mu_w"/>
+        </dl_settings>
+        <dl_settings NAME="disturbances">
+          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="physical_params.current_ampl_x" shortname="Amplitud corriente x"/>
+          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="physical_params.current_ampl_y" shortname="Amplitud corriente y"/>
+          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="physical_params.wind_ampl_x" shortname="Amplitud viento x"/>
+          <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="physical_params.wind_ampl_y" shortname="Amplitud viento y"/>
         </dl_settings>
       </dl_settings>
     </dl_settings>
@@ -24,7 +30,7 @@
     <file name="nps_fdm.h"/>
   </header>
 
-  <init fun="mu_params_init()"/>
+  <init fun="physical_params_init()"/>
   <makefile target="sim|nps" firmware="rover">
     <!--<file name="nps_fdm_CYANOA.c" dir="../../sw/simulator/nps"/>-->
   </makefile>

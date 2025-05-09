@@ -507,8 +507,8 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 	x[5] = WaypointX(wp5); y[5] = WaypointY(wp5);
 	x[6] = WaypointX(wp6); y[6] = WaypointY(wp6);
 	
-	float last_point_x = x[num_pnts-1];
-	float last_point_y = y[num_pnts-1];
+	float last_point_x = x[num_pnts];
+	float last_point_y = y[num_pnts];
 	//printf("num_pnts = %d", num_pnts);
 	for(int k = 0; k < GVF_N_LINES; k++)
 	{
@@ -521,10 +521,16 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
  	float px = p->x;
 	float py = p->y;
 	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
-	
+  if(dist <= gvf_c_stopwp.distance_stop){	
+  	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+  		gvf_c_stopwp.stay_still = 1;
+  		gvf_c_stopwp.pxd = gvf_lines_array[gvf_control.which_line].p2x; 
+  		gvf_c_stopwp.pyd = gvf_lines_array[gvf_control.which_line].p2y;
+  }
+  }
 	if (gvf_lines_array[gvf_control.which_line].p1x == last_point_x && gvf_lines_array[gvf_control.which_line].p1y == last_point_y){
 	  //printf("Static control");
-	  guidance_control.cmd.speed = 0;
+	  //guidance_control.cmd.speed = 0;
 	  boat_guidance_bearing_static_ctrl();
 	  
 	}

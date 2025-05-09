@@ -74,20 +74,40 @@ void nps_fdm_init(double dt)
   fdm.temperature = -1;
   fdm.phi_d = 0;
   fdm.ltpprz_to_body_eulers.psi = 0.0;
+  fdm.n_x = 0;
+  fdm.n_y = 0;
   
   /** Physical model parameters **/
   init_ltp();
 }
 
 
-struct MuParams mu_params = {0.0f, 0.0f, 0.0f};  // Valores predeterminados
+struct PhysicalParams physical_params = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };  // Valores predeterminados
 
-// Función para inicializar los parámetros
-void mu_params_init(void) {
-    // Valores predeterminados en caso de que el XML no lo configure
-    mu_params.mu_x_sim = 1;
-    mu_params.mu_y_sim = 1;
-    mu_params.mu_w_sim = 1;
+// Función para inicializar los parámetros de perturbación
+void physical_params_init(void) {
+  // Valores predeterminados en caso de que el XML no lo configure
+  physical_params.mu_x_sim = 1;
+  physical_params.mu_y_sim = 1;
+  physical_params.mu_w_sim = 1;
+     
+  // Variables para almacenar viento y marea base (configurables)
+  physical_params.wind_north_base = 0.50;
+  physical_params.wind_east_base = 0.50;
+
+  // Puedes definir amplitudes para viento y marea por separado
+  physical_params.current_ampl_x = 0.0;
+  physical_params.current_ampl_y = 0.00;
+
+  physical_params.wind_ampl_x = 0.0;
+  physical_params.wind_ampl_y = 0.0;
+
+  physical_params.wind_x = 0;
+  physical_params.wind_y = 0;
+  
+  physical_params.current_x = 0;
+  physical_params.current_y = 0;   
+    
 }
 
 
@@ -119,15 +139,14 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   double fa = (commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT])/2;
   double a = cos(phi);
   double b = sin(phi);
-  double n_x = 0;
-  double n_y = 0;
+  update_environment_perturbations(fdm.curr_dt);
   //printf("psi ltp %f\n psi ltpprz %f\n", fdm.ltp_to_body_eulers.psi, fdm.ltpprz_to_body_eulers.psi);
   // Setting accelerations
-  rover_acc.x = fa * a - (pow(a,2)*mu_params.mu_x_sim*(rover_vel.x-n_x) +  pow(b,2)*mu_params.mu_y_sim*(rover_vel.x-n_x) + a*b*(rover_vel.y-n_y)*(mu_params.mu_x_sim-mu_params.mu_y_sim));
-  rover_acc.y = fa * b - (pow(b,2)*mu_params.mu_x_sim*(rover_vel.y-n_y) +  pow(a,2)*mu_params.mu_x_sim*(rover_vel.y-n_y) + a*b*(rover_vel.x-n_x)*(mu_params.mu_x_sim-mu_params.mu_y_sim));
+  rover_acc.x = fa * a - (pow(a,2)*physical_params.mu_x_sim*(rover_vel.x-fdm.n_x) +  pow(b,2)*physical_params.mu_y_sim*(rover_vel.x-fdm.n_x) + a*b*(rover_vel.y-fdm.n_y)*(physical_params.mu_x_sim-physical_params.mu_y_sim));
+  rover_acc.y = fa * b - (pow(b,2)*physical_params.mu_x_sim*(rover_vel.y-fdm.n_y) +  pow(a,2)*physical_params.mu_x_sim*(rover_vel.y-fdm.n_y) + a*b*(rover_vel.x-fdm.n_x)*(physical_params.mu_x_sim-physical_params.mu_y_sim));
   // No se ha añadido η, este término hace referencia a resistencias o correcciones del modelo. 
   //printf("phi_d %f\n", fdm.phi_d);
-  double phi_dd = tau - mu_params.mu_w_sim*fdm.phi_d; //aceleracion angular
+  double phi_dd = tau - physical_params.mu_w_sim*fdm.phi_d; //aceleracion angular
   //printf("Throttle izq = %f\n Throttle dch = %f\n",commands[COMMAND_MLEFT], commands[COMMAND_MRIGHT]);
   //printf("Tau = %f\n fa = %f\n", tau, fa);
   // Velocities (EULER INTEGRATION)
@@ -220,6 +239,32 @@ static void init_ltp(void)
 
 /*****************************************************/
 // Atmosphere function (we don't need that features) //
+
+void update_environment_perturbations(double time) 
+{
+  //Calculamos los vientos
+  set_wind(time);
+  
+  //Calculamos las corrientes
+  set_current(time);
+
+  // Perturbación total del medio (componente este y norte)
+  fdm.n_x = physical_params.wind_x + physical_params.current_x;
+  fdm.n_y = physical_params.wind_y + physical_params.current_y;
+}
+
+void set_wind(double time)
+{
+  physical_params.wind_x = physical_params.wind_ampl_x * sin(0.2 * time);
+  physical_params.wind_y = physical_params.wind_ampl_y * cos(0.25 * time);
+}
+
+void set_current(double time)
+{
+  physical_params.current_x = physical_params.current_ampl_x * sin(2.0 * M_PI * time / (12.0 * 3600.0));
+  physical_params.current_y = physical_params.current_ampl_y * cos(2.0 * M_PI * time / (12.0 * 3600.0));
+}
+
 void nps_fdm_set_wind(double speed __attribute__((unused)),
                       double dir __attribute__((unused)))
 {

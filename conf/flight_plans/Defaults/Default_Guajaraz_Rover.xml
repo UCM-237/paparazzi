@@ -110,16 +110,22 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_quintic_bezier_bare">
+      <!-- <go wp="BZ0"/> -->
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_L0)"/>
+      <exception cond="dist(GetPosX(), GetPosY(), WP_L0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="line_array" strip_icon="line.png">
-
       <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, gvf_segment_par.d1, gvf_segment_par.d2)"/>
-
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
-    
+    <block name="static_control">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun="increase_bz_pointer()"/>
+      <call fun="boat_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
     
     <block name="line_array_v3" strip_icon="line.png">
 
