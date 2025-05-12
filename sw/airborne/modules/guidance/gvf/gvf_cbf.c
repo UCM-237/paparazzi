@@ -140,12 +140,18 @@ void cbf_init(void)
 
 //TODO Create the functions to fill in the table and to send the status to other robots
 // Thanks to Jesús Bautista
+/*struct UtmCoor_f {
+  float north; ///< in meters
+  float east; ///< in meters
+  float alt; ///< in meters (above WGS84 reference ellipsoid or above MSL)
+  uint8_t zone; ///< UTM zone number
+};*/
 
 static void cbf_low_level_getState(void)
 {
 
-  cbf_ac_state.x = stateGetPositionEnu_f()->x;
-  cbf_ac_state.y = stateGetPositionEnu_f()->y;
+  cbf_ac_state.x = stateGetPositionUtm_f()->north;
+  cbf_ac_state.y = stateGetPositionUtm_f()->east;
   cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
   // We assume that the course and psi
   // of the rover (steering wheel) are the same
