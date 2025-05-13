@@ -1766,11 +1766,11 @@
     </message>
     
     <message name="SLAM" id="192">
-      <field name="OFFSET"            type="float[2]" format="%.2f" unit="m"/>
-      <field name="GPS_OFFSET"        type="float[2]" format="%.2f" unit="m"/>
-      <field name="NEAREST_POINT"     type="float[2]" format="%.2f" unit="m"/>
-      <field name="MEASURED_OBSTACLE" type="float[2]" format="%.2f" unit="m"/>
-      <field name="wall_converted" type="uint8" unit="bool" values="FALSE|TRUE"/>
+      <field name="offset"            type="float[2]" format="%.2f" unit="m"/>
+      <field name="gps_offset"        type="float[2]" format="%.2f" unit="m"/>
+      <field name="nearest_point"     type="float[2]" format="%.2f" unit="m"/>
+      <field name="obstacle" type="float[2]" format="%.2f" unit="m"/>
+      <field name="wall_converted"    type="uint8" unit="bool" values="FALSE|TRUE"/>
     </message>
 
     <message name="AHRS_LKF" id="193">
@@ -1792,7 +1792,7 @@
       <field name="mz"    type="float" />
     </message>
 
-    <message name="KALMAN_FILTER_STATUS" id="194">
+    <message name="INS_EKF" id="194">
       <!-- <field name="X"       type="float[5]" format="%.2f"/> -->
       <field name="P_0"     type="float[5]" format="%.2f"/>
       <field name="P_1"     type="float[5]" format="%.2f"/>

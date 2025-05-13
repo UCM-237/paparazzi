@@ -28,6 +28,7 @@
 
   <header>
     <file name="tfmini.h"/>
+    <file name="lidar_correction.h" dir="modules/lidar/slam"/>
   </header>
   <init fun="tfmini_init()"/>
   <periodic fun="tfmini_servo()" freq="100" autorun="TRUE"/> 
@@ -49,10 +50,8 @@
     <define name="USE_TFMINI_AGL" value="$(USE_TFMINI_AGL)"/>
     <define name="TFMINI_COMPENSATE_ROTATION" value="$(TFMINI_COMPENSATE_ROTATION)"/>
     <file name="tfmini.c"/>
+    <file name="lidar_correction.c" dir="modules/lidar/slam"/>
   </makefile>
-  <!-- <makefile target="nps">
-    <define name="USE_NPS_SONAR" value="1"/>
-  </makefile> -->
 </module>
 
 

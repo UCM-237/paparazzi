@@ -45,6 +45,9 @@
 
     <module name="ins" type="slam"/>
 
+    <!-- UNTESTED -->
+    <!-- <module name="ins" type="slam_ekf"/> -->
+
 
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">

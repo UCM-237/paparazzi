@@ -65,6 +65,7 @@ struct FloatVector {
 
 
 #include "modules/core/abi.h"
+#include "modules/datalink/downlink.h"
 
 static abi_event lidar_ev;
 static void lidar_cb(uint8_t sender_id, uint32_t stamp, float distance, float angle);
@@ -148,6 +149,8 @@ PRINT_CONFIG_VAR(INS_INT_GPS_ID)
 static abi_event gps_ev;
 static void gps_cb(uint8_t sender_id, uint32_t stamp, struct GpsState *gps_s);
 
+static abi_event reset_ev;
+static void reset_cb(uint8_t sender_id, uint8_t flag);
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -240,10 +243,18 @@ void ins_int_init(void)
   AbiBindMsgIMU_ACCEL(INS_INT_IMU_ID, &accel_ev, accel_cb);
   AbiBindMsgGPS(INS_INT_GPS_ID, &gps_ev, gps_cb);
   AbiBindMsgLIDAR_SERVO(AGL_LIDAR_TFMINI_ID, &lidar_ev, lidar_cb);
+  AbiBindMsgINS_RESET(ABI_BROADCAST, &reset_ev, reset_cb);
 
 }
 
-static void ins_reset_local_origin(void)
+
+/*******************************************************************************
+ *                                                                             *
+ *  Reset functions (dont delete)                                              *
+ *                                                                             *
+ ******************************************************************************/
+
+static void reset_ref(void)
 {
   #if USE_GPS
     if (GpsFixValid()) {
@@ -267,6 +278,35 @@ static void ins_reset_local_origin(void)
     ins_int.vf_reset = true;
 }
 
+static void reset_vertical_ref(void)
+{
+#if USE_GPS
+  if (GpsFixValid()) {
+    struct LlaCoor_i lla_pos = lla_int_from_gps(&gps);
+    struct LlaCoor_i lla = {
+      .lat = stateGetLlaOrigin_i().lat,
+      .lon = stateGetLlaOrigin_i().lon,
+      .alt = lla_pos.alt
+    };
+    ltp_def_from_lla_i(&ins_int.ltp_def, &lla);
+    ins_int.ltp_def.hmsl = gps.hmsl;
+    stateSetLocalOrigin_i(MODULE_INS_SLAM_ID, &ins_int.ltp_def);
+  }
+#endif
+  ins_int.vf_reset = true;
+}
+
+static void reset_vertical_pos(void)
+{
+  ins_int.vf_reset = true;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ *  Sensor functions                                                           *
+ *                                                                             *
+ ******************************************************************************/
 
 void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 {
@@ -305,7 +345,6 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 }
 
 
-
 #if USE_GPS
 void ins_int_update_gps(struct GpsState *gps_s)
 {
@@ -318,7 +357,7 @@ void ins_int_update_gps(struct GpsState *gps_s)
   }
 
   if (!ins_int.ltp_initialized) {
-    ins_reset_local_origin();
+    reset_ref();
   }
 
   struct NedCoor_i gps_pos_cm_ned;
@@ -401,7 +440,6 @@ void ins_int_update_gps(struct GpsState *gps_s __attribute__((unused))) {}
 #endif /* USE_GPS */
 
 
-
 void ins_update_lidar(float distance, float angle){
 
   if (distance < ins_slam.min_distance || distance > ins_slam.max_distance) {
@@ -466,6 +504,14 @@ static void ins_ned_to_state(void)
   #endif
 }
 
+
+
+/*******************************************************************************
+ *                                                                             *
+ *  Callbacks                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
 static void accel_cb(uint8_t sender_id __attribute__((unused)),
                      uint32_t stamp, struct Int32Vect3 *accel)
 {
@@ -495,4 +541,22 @@ static void lidar_cb(uint8_t __attribute__((unused)) sender_id,
   ins_update_lidar(distance, angle);
 }
 
+
+static void reset_cb(uint8_t sender_id UNUSED, uint8_t flag)
+{
+  switch (flag) {
+    case INS_RESET_REF:
+      reset_ref();
+      break;
+    case INS_RESET_VERTICAL_REF:
+      reset_vertical_ref();
+      break;
+    case INS_RESET_VERTICAL_POS:
+      reset_vertical_pos();
+      break;
+    default:
+      // unsupported cases
+      break;
+  }
+}
 

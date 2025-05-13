@@ -66,6 +66,10 @@ bool nps_bypass_lidar;
 #define NPS_BYPASS_INS FALSE
 #endif
 
+#ifndef NPS_BYPASS_LIDAR
+#define NPS_BYPASS_LIDAR FALSE
+#endif
+
 #if INDI_RPM_FEEDBACK
 #error "INDI_RPM_FEEDBACK can not be used in simulation!"
 #endif

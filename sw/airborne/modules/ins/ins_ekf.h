@@ -20,36 +20,37 @@
  */
 
 /**
- * @file modules/ins/ins_int.h
+ * @file modules/ins/ins_ekf.h
  *
- * INS + SLAM Correction for the rovers using the TFMini Lidar.
+ * INS for the rovers using Extended Kalman Filter.
  *
  */
 
 
-#ifndef INS_SLAM_H
-#define INS_SLAM_H
-
-struct InsSlam {
-  bool enable;
-  float min_distance;
-  float max_distance;
-  float max_distance_wall;
-  float alpha;
-  float beta;
-  struct FloatVect2 gps_bias;
-};
-
-extern struct InsSlam ins_slam;
-
-extern void ins_update_lidar(const float distance, const float angle);
-
-#endif /* INS_SLAM_H */
-
-
-
-
-
-
-
-
+#ifdef USE_EKF_FILTER
+  #include "filters/extended_kalman_filter.h"
+  #ifndef KALMAN_FILTER_H
+    #define KALMAN_FILTER_H
+    extern bool enable_ekf_filter;
+    struct KalmanVariance {
+      float imu;
+      float pos;
+      float vel;
+      float att;
+    };
+    extern struct KalmanVariance kalman_variance;
+    extern struct extended_kalman_filter kalman_filter;
+    #ifndef R2_IMU
+      #define R2_IMU 25
+    #endif
+    #ifndef RP_GPS
+      #define RP_GPS 5 
+    #endif
+    #ifndef RV_GPS
+      #define RV_GPS 10
+    #endif
+    #ifndef RT
+      #define RT 10
+    #endif
+  #endif
+#endif

@@ -302,6 +302,8 @@ static void reset_cb(uint8_t sender_id UNUSED, uint8_t flag)
 {
   switch (flag) {
     case INS_RESET_REF:
+      ins_int.ltp_pos.z = POS_BFP_OF_REAL(100);
+      ins_ned_to_state();
       reset_ref();
       break;
     case INS_RESET_VERTICAL_REF:

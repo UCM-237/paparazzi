@@ -20,7 +20,7 @@
  */
 
 /**
- * @file modules/ins/ins_int.c
+ * @file modules/ins/ins_ekf.c
  *
  * INS for the rovers using Extended Kalman Filter.
  *
@@ -30,14 +30,11 @@
 
 #include "autopilot.h"
 #include "modules/ins/ins_int.h"
+#include "modules/ins/ins_ekf.h"
 
 // KALMAN FILTER ----------------------
+// #include "filters/jacobian.h"
 #include "filters/extended_kalman_filter.h"
-
-// #define R2_IMU 2.5E-4       // Varianza sobre la IMU
-// #define RP_GPS 0.005        // Varianza sobre la posición (REVISAR)
-// #define RV_GPS 0.01         // Varianza sobre la velocidad (REVISAR)
-// #define RT 0.01              // Varianza sobre la actitud
 
 #define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
@@ -130,6 +127,8 @@ PRINT_CONFIG_VAR(INS_INT_GPS_ID)
 static abi_event gps_ev;
 static void gps_cb(uint8_t sender_id, uint32_t stamp, struct GpsState *gps_s);
 
+static abi_event reset_ev;
+static void reset_cb(uint8_t sender_id, uint8_t flag);
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -158,9 +157,9 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
   }
 }
 
-static void send_kf_status(struct transport_tx *trans, struct link_device *dev)
+static void send_ins_ekf(struct transport_tx *trans, struct link_device *dev)
 {
-  pprz_msg_send_KALMAN_FILTER_STATUS(trans, dev, AC_ID,
+  pprz_msg_send_INS_EKF(trans, dev, AC_ID,
                     kalman_filter.X, kalman_filter.K2[1], kalman_filter.K2[2], kalman_filter.K2[3], kalman_filter.K2[4]);
 }
 
@@ -195,6 +194,10 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
   uint8_t m = 5; // Measurement Vector
 
   extended_kalman_filter_init(filter, n, c, m);
+
+  // You need to define this funcions in sw/airborne/filters/jacobian.c
+  filter->f = ekf_f;
+  filter->compute_F = ekf_compute_F;
 
   filter->n = n;
   filter->c = c;
@@ -247,7 +250,7 @@ void ins_int_init(void)
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS, send_ins);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_REF, send_ins_ref);
-    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_KALMAN_FILTER_STATUS, send_kf_status);
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_EKF, send_ins_ekf);
   #endif
 
   /*
@@ -255,10 +258,11 @@ void ins_int_init(void)
    */
   AbiBindMsgIMU_ACCEL(INS_INT_IMU_ID, &accel_ev, accel_cb);
   AbiBindMsgGPS(INS_INT_GPS_ID, &gps_ev, gps_cb);
+  AbiBindMsgINS_RESET(ABI_BROADCAST, &reset_ev, reset_cb);
 
 }
 
-void ins_reset_local_origin(void)
+static void reset_ref(void)
 {
   #if USE_GPS
     if (GpsFixValid()) {
@@ -282,25 +286,27 @@ void ins_reset_local_origin(void)
     ins_int.vf_reset = true;
 }
 
-void ins_reset_altitude_ref(void)
+
+static void reset_vertical_ref(void)
 {
-  #if USE_GPS
-    if (GpsFixValid()) {
-      struct LlaCoor_i lla_pos = lla_int_from_gps(&gps);
-      struct LlaCoor_i lla = {
-        .lat = state.ned_origin_i.lla.lat,
-        .lon = state.ned_origin_i.lla.lon,
-        .alt = lla_pos.alt
-      };
-      ltp_def_from_lla_i(&ins_int.ltp_def, &lla);
-      ins_int.ltp_def.hmsl = gps.hmsl;
-      stateSetLocalOrigin_i(MODULE_INS_EKF_ID, &ins_int.ltp_def);
-    }
-  #endif
+#if USE_GPS
+  if (GpsFixValid()) {
+    struct LlaCoor_i lla_pos = lla_int_from_gps(&gps);
+    struct LlaCoor_i lla = {
+      .lat = stateGetLlaOrigin_i().lat,
+      .lon = stateGetLlaOrigin_i().lon,
+      .alt = lla_pos.alt
+    };
+    ltp_def_from_lla_i(&ins_int.ltp_def, &lla);
+    ins_int.ltp_def.hmsl = gps.hmsl;
+    stateSetLocalOrigin_i(MODULE_INS_EKF_ID, &ins_int.ltp_def);
+  }
+#endif
   ins_int.vf_reset = true;
 }
 
-void ins_reset_vertical_pos(void)
+
+static void reset_vertical_pos(void)
 {
   ins_int.vf_reset = true;
 }
@@ -333,35 +339,6 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   ins_int.ltp_accel.z = ACCEL_BFP_OF_REAL(body_accel.z);
   ins_int.ltp_speed.z = SPEED_BFP_OF_REAL(ang_vel->r);  // Esta es para poder ver el mensaje
 
-  // -------------------------------------------------------------
-  // De aqui ...
-
-  // if (counter_test > 5){
-  //   float Y[5];
-  //   Y[0] = 40.0;
-  //   Y[1] = 55.0;
-  //   Y[2] = 0.0;
-  //   Y[3] = 0.0;
-  //   Y[4] = ahrs_dcm.ltp_to_body_euler.psi;
-
-  //   extended_kalman_filter_update(&kalman_filter, Y);
-
-  //   ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
-  //   ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
-  //   ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
-  //   ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
-  //   // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
-
-  //   counter_test = 0;
-
-  // }
-  // else{
-  //   counter_test++;
-  // }
-
-  // ... a aqui va en el GPS (para depurar cuando no hay señal)
-  // -------------------------------------------------------------
-
   ins_ned_to_state();
 
   /* increment the propagation counter, while making sure it doesn't overflow */
@@ -380,7 +357,7 @@ void ins_int_update_gps(struct GpsState *gps_s)
   }
 
   if (!ins_int.ltp_initialized) {
-    ins_reset_local_origin();
+    reset_ref();
   }
 
   struct NedCoor_i gps_pos_cm_ned;
@@ -476,6 +453,25 @@ static void gps_cb(uint8_t sender_id __attribute__((unused)),
                    struct GpsState *gps_s)
 {
   ins_int_update_gps(gps_s);
+}
+
+
+static void reset_cb(uint8_t sender_id UNUSED, uint8_t flag)
+{
+  switch (flag) {
+    case INS_RESET_REF:
+      reset_ref();
+      break;
+    case INS_RESET_VERTICAL_REF:
+      reset_vertical_ref();
+      break;
+    case INS_RESET_VERTICAL_POS:
+      reset_vertical_pos();
+      break;
+    default:
+      // unsupported cases
+      break;
+  }
 }
 
 

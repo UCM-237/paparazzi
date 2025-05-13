@@ -81,34 +81,6 @@ extern void ins_int_update_gps(struct GpsState *gps_s);
 #endif
 
 
-#ifdef USE_EKF_FILTER
-  #include "filters/extended_kalman_filter.h"
-  #ifndef KALMAN_FILTER_H
-    #define KALMAN_FILTER_H
-    extern bool enable_ekf_filter;
-    struct KalmanVariance {
-      float imu;
-      float pos;
-      float vel;
-      float att;
-    };
-    extern struct KalmanVariance kalman_variance;
-    extern struct extended_kalman_filter kalman_filter;
-    #ifndef R2_IMU
-      #define R2_IMU 25
-    #endif
-    #ifndef RP_GPS
-      #define RP_GPS 5 
-    #endif
-    #ifndef RV_GPS
-      #define RV_GPS 10
-    #endif
-    #ifndef RT
-      #define RT 10
-    #endif
-  #endif
-#endif
-// extern struct InsInt ins_int;
 
 
 

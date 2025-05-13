@@ -23,10 +23,11 @@
  * Extended Kalman Filter for the Rovers
  */
 
-#ifndef LINEAR_KALMAN_FILTER_H
-#define LINEAR_KALMAN_FILTER_H
+#ifndef EXTENDED_KALMAN_FILTER_H
+#define EXTENDED_KALMAN_FILTER_H
 
 #include "std.h"
+#include "filters/jacobian.h"
 
 // maximum size for the state vector
 #ifndef KF_MAX_STATE_SIZE
@@ -41,13 +42,17 @@
 // maximum size for the measurement vector
 #ifndef KF_MAX_MEAS_SIZE
 #define KF_MAX_MEAS_SIZE 6
+
+// function pointer types for the prediction and jacobian functions
+struct extended_kalman_filter;
+typedef void (*ekf_f_ptr)(struct extended_kalman_filter *filter, float *U, float dt);
+typedef void (*ekf_F_ptr)(struct extended_kalman_filter *filter, float *U, float dt);
+
+
 #endif
 
 struct extended_kalman_filter {
   // filled by user after calling init function
-  // float A[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< dynamic matrix
-  // float B[KF_MAX_STATE_SIZE][KF_MAX_CMD_SIZE];    ///< command matrix
-  // float C[KF_MAX_MEAS_SIZE][KF_MAX_STATE_SIZE];   ///< observation matrix
   float P[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< state covariance matrix
   float Q[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< proces covariance noise
   float R[KF_MAX_MEAS_SIZE][KF_MAX_MEAS_SIZE];    ///< measurement covariance noise
@@ -57,13 +62,17 @@ struct extended_kalman_filter {
   float X[KF_MAX_STATE_SIZE];                     ///< estimated state X
   float X_pred[KF_MAX_STATE_SIZE];                     ///< predicted state X
 
-  // Esto mas adelante estaria bien borrarlo para evitar gastar memoria a lo tonto
+  // Esto mas adelante estaria bien borrarlo para evitar gastar memoria
   // Ahora esta para depurar
   float K2[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  // Esta es para probar
 
   uint8_t n;  ///< state vector size (<= KF_MAX_STATE_SIZE)
   uint8_t c;  ///< command vector size (<= KF_MAX_CMD_SIZE)
   uint8_t m;  ///< measurement vector size (<= KF_MAX_MEAS_SIZE)
+
+  // Pointers to the functions that compute the prediction and jacobian
+  ekf_f_ptr f;
+  ekf_F_ptr compute_F;
 };
 
 /** Init all matrix and vectors to zero
@@ -97,9 +106,6 @@ extern void extended_kalman_filter_predict(struct extended_kalman_filter *filter
  * @param Y measurement vector
  */
 extern void extended_kalman_filter_update(struct extended_kalman_filter *filter, float *Y);
-
-extern void ekf_f(struct extended_kalman_filter *filter, float *U, float dt);
-extern void ekf_compute_F(struct extended_kalman_filter *filter, float *U, float dt);
 
 extern void init_filter(struct extended_kalman_filter *filter, float dt);
 extern void update_matrix(struct extended_kalman_filter *filter);

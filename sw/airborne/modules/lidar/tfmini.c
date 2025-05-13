@@ -124,7 +124,7 @@ void tfmini_init(void)
 }
 
 
-// Simulated Lidar Measurement
+// Simulated Lidar Measurement (mover a otro archivo ???)
 void sim_overwrite_lidar(){
   uint32_t now_ts = get_sys_time_usec();
 
