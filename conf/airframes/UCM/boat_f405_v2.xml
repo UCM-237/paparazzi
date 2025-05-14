@@ -27,7 +27,7 @@
       <module name="radio_control" type="ppm"/>
       <module name="fdm"           type="CYANOA"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
-      <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <!-- <define name="NPS_BYPASS_INS"  value="TRUE"/> -->
     </target>    
     
     <!-- Same board module as matek_f405_wind but without OSD -->
@@ -40,6 +40,7 @@
     </module>
     <module name="gps_ubx_ucenter"/>
     <module name="ins"/>
+    <!-- <module name="ins_ekf"/> -->
  
 
     <!-- Use magnetometers on ground, on fly and do not use gps for heading    -->
@@ -159,7 +160,7 @@
 		
 		
     <!-- Calibracion 25/04/2025 GUAJARAZ -->
-		<define name="IMU_MAG_CALIB" type="array">
+		<!-- <define name="IMU_MAG_CALIB" type="array">
 			<field type="struct">
 				<field name="abi_id" value="7"/>
 				<field name="calibrated" type="struct">
@@ -176,12 +177,12 @@
 		<define name="MAG_Z_NEUTRAL" value="1428"/>
 		<define name="MAG_X_SENS" value="1.536568709724108" integer="16"/>
 		<define name="MAG_Y_SENS" value="1.5028633583577604" integer="16"/>
-		<define name="MAG_Z_SENS" value="1.516927891132286" integer="16"/>
+		<define name="MAG_Z_SENS" value="1.516927891132286" integer="16"/> -->
 
 
 
-		<!-- Calibracion Campilo 10/04/25 -->
-		<!-- <define name="IMU_MAG_CALIB" type="array">
+		<!-- Calibracion Campillo 10/04/25 -->
+		<define name="IMU_MAG_CALIB" type="array">
 			<field type="struct">
 				<field name="abi_id" value="7"/>
 				<field name="calibrated" type="struct">
@@ -198,7 +199,7 @@
 		<define name="MAG_Z_NEUTRAL" value="1410"/>
 		<define name="MAG_X_SENS" value="1.562325385560543" integer="16"/>
 		<define name="MAG_Y_SENS" value="1.5491122704816889" integer="16"/>
-		<define name="MAG_Z_SENS" value="1.5560248710985949" integer="16"/> -->
+		<define name="MAG_Z_SENS" value="1.5560248710985949" integer="16"/>
 
 		
 		

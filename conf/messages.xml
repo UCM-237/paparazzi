@@ -1777,6 +1777,16 @@
       <field name="num_wp_moved" type="uint8"/>
      </message>
 
+    
+    <message name="SLAM" id="192">
+      <field name="offset"            type="float[2]" format="%.2f" unit="m"/>
+      <field name="gps_offset"        type="float[2]" format="%.2f" unit="m"/>
+      <field name="nearest_point"     type="float[2]" format="%.2f" unit="m"/>
+      <field name="obstacle"          type="float[2]" format="%.2f" unit="m"/>
+      <field name="wall_converted"    type="uint8" unit="bool" values="FALSE|TRUE"/>
+    </message>
+
+
     <message name="AHRS_LKF" id="193">
       <field name="phi"   type="float" unit="rad"   alt_unit="deg"   alt_unit_coef="57.29578" />
       <field name="theta" type="float" unit="rad"   alt_unit="deg"   alt_unit_coef="57.29578" />
@@ -1796,7 +1806,14 @@
       <field name="mz"    type="float" />
     </message>
 
-    <!-- 194 is free -->
+    <message name="INS_EKF" id="194">
+      <field name="X"     type="float[5]" format="%.2f"/>
+      <field name="INS"   type="float[5]" format="%.2f"/>
+      <field name="U"     type="float[5]" format="%.2f"/>
+      <field name="Y"     type="float[5]" format="%.2f"/>
+      <field name="P_4"   type="float[5]" format="%.2f"/>
+    </message>
+
     <!-- 195 is free -->
     <!-- 196 is free -->
 

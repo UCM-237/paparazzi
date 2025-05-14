@@ -207,6 +207,10 @@ void boat_guidance_bearing_GVF_ctrl(void)
 /* Static ctrl. Only works for GVF line array TODO: Improvements to work in any point */
 bool boat_guidance_bearing_static_ctrl(void)
 { 
+
+  // Avoid problems with the PID Wind-Up
+  reset_pid_f(&boat_pid);
+
 	// Current position of the boat
 	struct EnuCoor_f *p = stateGetPositionEnu_f();
   float px = p->x;
