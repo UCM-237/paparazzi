@@ -62,6 +62,32 @@
 #warning "Construction constant BOAT_BEARING_KF for boat bearing ctrl not defined"
 #endif
 
+// Speed Controller PID
+#ifndef BOAT_KP
+#if USE_NPS
+#define BOAT_KP 4000
+#else
+#define BOAT_KP 10
+#endif
+#endif
+
+#ifndef BOAT_KI
+#if USE_NPS
+#define BOAT_KI 2000
+#else
+#define BOAT_KI 100
+#endif
+#endif
+
+#ifndef BOAT_MAX_SUM
+#if USE_NPS
+#define BOAT_MAX_SUM MAX_PPRZ*0.8
+#else
+#define BOAT_MAX_SUM MAX_PPRZ*0.8
+#endif
+#endif
+
+
 // Check controller gains values (error if they are negative)
 #if (BOAT_KF_BEARING < 0) ||                   \
     (BOAT_KF_SPEED   < 0)
@@ -96,6 +122,10 @@ typedef struct {
   float speed_error;
   float kp;
   float ki;
+  float max_sum;  // Wind-Up
+
+  float kp_action;
+  float ki_action;
 
   int32_t command[2];
 

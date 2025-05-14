@@ -165,7 +165,9 @@ typedef struct PhysicalParams {
     float wind_y;
     float current_x;
     float current_y;
-    
+    float mass;
+    float motor_separation;
+    float motor_longitudinal_offset;
 };
 
 extern struct PhysicalParams physical_params;

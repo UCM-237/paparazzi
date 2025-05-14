@@ -40,7 +40,8 @@
         "navigation.h": "c",
         "stdint.h": "c",
         "modules.h": "c",
-        "gvf_ellipse.h": "c"
+        "gvf_ellipse.h": "c",
+        "gvf_common.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

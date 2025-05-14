@@ -57,6 +57,32 @@ static struct EnuCoor_d rover_vel;
 static struct EnuCoor_d rover_acc;
 
 
+/******************************************************/
+// Cálculo de la fuerza de los motores //
+double calculo_motor_izq (double throttle_izq)
+{
+  //printf("throttle izq = %f\n", throttle_izq);
+  double fuerza_motor_izq = (2.4277*pow(throttle_izq,3) + 0.4041*pow(throttle_izq,2) + 0.9662 * throttle_izq - 0.0004)*9.8/physical_params.mass;
+  //printf("fuerza_motor_izq = %f\n", fuerza_motor_izq);
+  if (throttle_izq == 0) 
+  {
+    fuerza_motor_izq = 0;
+  }
+  return fuerza_motor_izq;
+}
+
+double calculo_motor_dcho (double throttle_derecho)
+{
+  //printf("throttle dcho = %f\n", throttle_derecho*9600);
+  double fuerza_motor_dcho = (2.4277*pow(throttle_derecho,3) + 0.4041*pow(throttle_derecho,2) + 0.9662 * throttle_derecho - 0.0004)*9.8/physical_params.mass;
+  //printf("fuerza_motor_dcho = %f\n", fuerza_motor_dcho);
+  if (throttle_derecho == 0) 
+  {
+    fuerza_motor_dcho = 0;
+  }
+  return fuerza_motor_dcho;
+}
+
 
 /** NPS FDM rover init ***************************/
 void nps_fdm_init(double dt)
@@ -107,7 +133,10 @@ void physical_params_init(void) {
   
   physical_params.current_x = 0;
   physical_params.current_y = 0;   
-    
+  
+  physical_params.mass = 50; //Masa del barco = 50kg
+  physical_params.motor_separation = 0.1; //Separación lateral en metros
+  physical_params.motor_longitudinal_offset = 0.1; //Separación longitudinal en metros
 }
 
 
@@ -133,13 +162,32 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   // From previous step...
   enu_of_ecef_point_d(&rover_pos, &ltpdef, &fdm.ecef_pos);
   enu_of_ecef_vect_d(&rover_vel, &ltpdef, &fdm.ecef_ecef_vel);
-  double speed = FLOAT_VECT2_NORM(rover_vel);
+  
+  //Esta es la fuerza de los motores. La función está extraida de las especificaciones del motor
+  double f_right = calculo_motor_dcho(commands[COMMAND_MRIGHT]);
+  double f_left = calculo_motor_izq(commands[COMMAND_MLEFT]);
+
+  // Posiciones respecto al CM
+  double dx = physical_params.motor_separation / 2.0;
+  double l  = physical_params.motor_longitudinal_offset;
+  
   double phi = fdm.ltpprz_to_body_eulers.psi;
-  double tau = (-commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT])/2;
-  double fa = (commands[COMMAND_MRIGHT]+commands[COMMAND_MLEFT])/2;
+  //Vamos a calcular primero la fuerza de los motores
   double a = cos(phi);
   double b = sin(phi);
+
+  // Torque de cada motor: r x F = x*Fy - y*Fx
+  double tau_left  = (-dx) * f_left;
+  double tau_right = (dx) * f_right;
+
+  double speed = FLOAT_VECT2_NORM(rover_vel);
+  double tau = (tau_right + tau_left);
+  //double tau = (-f_right+f_left);
+  //printf("tau = %f\n", tau);
+  double fa = (f_right+f_left);
   update_environment_perturbations(fdm.curr_dt);
+  
+
   //printf("psi ltp %f\n psi ltpprz %f\n", fdm.ltp_to_body_eulers.psi, fdm.ltpprz_to_body_eulers.psi);
   // Setting accelerations
   rover_acc.x = fa * a - (pow(a,2)*physical_params.mu_x_sim*(rover_vel.x-fdm.n_x) +  pow(b,2)*physical_params.mu_y_sim*(rover_vel.x-fdm.n_x) + a*b*(rover_vel.y-fdm.n_y)*(physical_params.mu_x_sim-physical_params.mu_y_sim));
@@ -160,7 +208,7 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   phi += fdm.phi_d * fdm.curr_dt;
   
   // phi have to be contained in [-180º,180º). So:
-  phi = (phi > M_PI)? - 2*M_PI + phi : (phi < -M_PI)? 2*M_PI + phi : phi;
+  phi = (phi > M_PI)? - 2*M_PI + phi : (phi < -M_PI)? 2*M_PI + phi : phi; //NORMALIZACIÓN DE PHI ORIGINAL
   
   //phi = M_PI/2;
   //printf("phi = %f\n", phi);
@@ -235,7 +283,6 @@ static void init_ltp(void)
 #endif
 
 }
-
 
 /*****************************************************/
 // Atmosphere function (we don't need that features) //

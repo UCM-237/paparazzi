@@ -170,15 +170,15 @@ void gvf_init(void)
   // gvf_common.h
   gvf_c_stopwp.stay_still = 0;
   gvf_c_stopwp.stop_at_wp = 1;
-  gvf_c_stopwp.distance_stop = 2;
+  gvf_c_stopwp.distance_stop = 3;
   gvf_c_stopwp.wait_time = 15;
   
   gvf_c_stopwp.next_wp=0;
-#if PERIODIC_TELEMETRY
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GVF, send_gvf);
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATIC_CONTROL, send_static_control);
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
-#endif
+  #if PERIODIC_TELEMETRY
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GVF, send_gvf);
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATIC_CONTROL, send_static_control);
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
+  #endif
 }
 
 // GENERIC TRAJECTORY CONTROLLER
@@ -802,11 +802,55 @@ float dist(float x_, float y_, uint8_t wp0){
   	}
   } 
   return dist;
-  }
-  
-  bool increase_bz_pointer(void){
+}
+ 
+
+// Misma funcion que dist para bezier_quintic
+// TODO: Juntar todo y hacer una funcion generica
+float dist_quintic(float x_, float y_, uint8_t wp0){
+	float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
+	for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
+	  x[k] = WaypointX(wp0+k);
+	  y[k] = WaypointY(wp0+k);
+	}
+	
+	float x_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+	float y_bz[GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+	
+	x_bz[0]=x[0]; y_bz[0]=y[0];
+	x_bz[1]=x[5]; y_bz[1]=y[5];
+	x_bz[2]=x[8]; y_bz[2]=y[8];
+	x_bz[3]=x[11]; y_bz[3]=y[11];
+	
+	bz_stop_wp.bz0x=x_bz[0];
+	bz_stop_wp.bz0y=y_bz[0];
+	bz_stop_wp.bz4x=x_bz[1];
+	bz_stop_wp.bz4y=y_bz[1];
+	bz_stop_wp.bz7x=x_bz[2];
+	bz_stop_wp.bz7y=y_bz[2];
+	bz_stop_wp.bz11x=x_bz[3];
+	bz_stop_wp.bz11y=y_bz[3];  
+  float px = x_;
+  float py = y_;
+  float dist = sqrtf( powf(px-x_bz[gvf_c_stopwp.next_wp],2) + powf(py-y_bz[gvf_c_stopwp.next_wp],2));
+  dist_WP=dist;
+
+  gvf_c_stopwp.pxd = x_bz[gvf_c_stopwp.next_wp]; 
+  gvf_c_stopwp.pyd = y_bz[gvf_c_stopwp.next_wp];
+  if((dist <= gvf_c_stopwp.distance_stop)){	
+  	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+  		gvf_c_stopwp.stay_still = 1;
+  		return dist;
+  	}
+  } 
+  return dist;
+}
+
+
+bool increase_bz_pointer(void){
   gvf_c_stopwp.next_wp++;
   if (gvf_c_stopwp.next_wp>3) 
-  	gvf_c_stopwp.next_wp=0;
+    gvf_c_stopwp.next_wp=0;
   return false;
-  }
+}

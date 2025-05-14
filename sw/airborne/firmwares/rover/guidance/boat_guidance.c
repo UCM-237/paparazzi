@@ -47,6 +47,7 @@ PRINT_CONFIG_VAR(MOV_AVG_M)
 
 // Guidance control main variables
 ctrl_t guidance_control;
+// float cmd_speed = 0;  // Save here the speed during the static ctrl
 
 static struct PID_f boat_pid;
 static float time_step;
@@ -66,6 +67,7 @@ static float mvg_avg[MOV_AVG_M] = {0};
 static uint8_t dummy = 0;
 static void send_boat_ctrl(struct transport_tx *trans, struct link_device *dev)
 {
+  float reset = (float) reset_time;
   pprz_msg_send_BOAT_CTRL(trans, dev, AC_ID,
                     	    &guidance_control.cmd.speed,
                     	    &guidance_control.speed_error,
@@ -76,10 +78,10 @@ static void send_boat_ctrl(struct transport_tx *trans, struct link_device *dev)
                     	    &guidance_control.cmd.omega,
                     	    &guidance_control.kp,
                     	    &guidance_control.ki,
-                    	    &guidance_control.kp,
-                    	    &guidance_control.kf_bearing,				// Integral action
-                    	    &guidance_control.kf_speed,                        // Prop action 
-                    	    &guidance_control.kf_bearing_static,
+                    	    &guidance_control.max_sum,          // kd
+                    	    &guidance_control.ki_action,				// Integral action
+                    	    &guidance_control.kp_action,                        // Prop action 
+                    	    &last_speed_cmd,				// Der Action
                     	    &speed_avg,				// Avg speed measured
                     	    &gvf_c_info.kappa);      // Curvature
 }
@@ -105,10 +107,11 @@ void boat_guidance_init(void)
 	guidance_control.kf_speed_static = -BOAT_SPEED_KF;
 	guidance_control.use_dynamic_pos = 1;
   guidance_control.speed_error = 0.0;
-  guidance_control.kp = 10;
-  guidance_control.ki = 100;
+  guidance_control.kp = BOAT_KP;
+  guidance_control.ki = BOAT_KI;
+  guidance_control.max_sum = BOAT_MAX_SUM;
 
-  init_pid_f(&boat_pid, guidance_control.kp, 0.f, guidance_control.ki, MAX_PPRZ*0.4); // Increased integral bounds
+  init_pid_f(&boat_pid, guidance_control.kp, 0.f, guidance_control.ki, guidance_control.max_sum); // Increased integral bounds
 
 	// Mov avg init Speed and distance
 	float speed = stateGetHorizontalSpeedNorm_f();
@@ -133,23 +136,34 @@ void boat_guidance_init(void)
 
 void boat_bound_cmds(void)
 {
- //Protejemos de la saturación, pero solo positiva... 
-  if (commands[COMMAND_MRIGHT] > MAX_PPRZ){
-   commands[COMMAND_MRIGHT] = MAX_PPRZ;
-   commands[COMMAND_MLEFT]  = MAX_PPRZ*(guidance_control.throttle - guidance_control.bearing);///(guidance_control.throttle + guidance_control.bearing);
+
+  int32_t left = commands[COMMAND_MLEFT];
+  int32_t right = commands[COMMAND_MRIGHT];
+
+  if (abs(left) > MAX_PPRZ || abs(right) > MAX_PPRZ) {
+    // Calculamos el factor de escala necesario para llevar ambos motores dentro del límite
+    float scale_factor = (float)MAX_PPRZ / Max(abs(left), abs(right));
+    
+    // Aplicamos el escalado para mantener la relación diferencial
+    commands[COMMAND_MLEFT] = (int32_t)(left * scale_factor);
+    commands[COMMAND_MRIGHT] = (int32_t)(right * scale_factor);
   }
-  
-  if (commands[COMMAND_MLEFT] > MAX_PPRZ){
-   commands[COMMAND_MLEFT] = MAX_PPRZ;
-   commands[COMMAND_MRIGHT]  = MAX_PPRZ*(guidance_control.throttle + guidance_control.bearing);///(guidance_control.throttle - guidance_control.bearing);
-  }
+
+  // Display purposes
+  guidance_control.command[0] = commands[COMMAND_MLEFT];
+  guidance_control.command[1] = commands[COMMAND_MRIGHT];
 }
 
 /** RC guidance function **/
 void boat_guidance_read_rc(void){
 
-  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE];
-  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL];
+  // Multiply by 2 to maintain the same range as the NAV mode
+  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE]*2;
+  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL]*2;
+
+  // Display purposes
+  guidance_control.throttle = (float)guidance_control.rc_throttle;  // +- 19200
+  guidance_control.bearing  = (float)guidance_control.rc_bearing;   // +- 19200
   
   guidance_control.command[0] = (guidance_control.rc_throttle - guidance_control.rc_bearing)/2;
   guidance_control.command[1] = (guidance_control.rc_throttle + guidance_control.rc_bearing)/2;
@@ -232,17 +246,22 @@ bool boat_guidance_bearing_static_ctrl(void)
   return true;
 }
 
-void boat_guidance_speed_ctrl(void) // Feed forward + Integral controler + Propotional (PID)
+void boat_guidance_speed_ctrl(void) // Feed forward + Integral controller + Proportional (PID)
 { 
   // - Looking for setting update
   if (guidance_control.kp != boat_pid.g[0] || guidance_control.ki != boat_pid.g[2]) {
     set_gains_pid_f(&boat_pid, guidance_control.kp, 0.f, guidance_control.ki);
   }
-  if (guidance_control.cmd.speed != last_speed_cmd) {
-    last_speed_cmd = guidance_control.cmd.speed;
-  }
+  // if (guidance_control.cmd.speed != last_speed_cmd) {
+  //   last_speed_cmd = guidance_control.cmd.speed;
+  // }
 
-	boat_guidance_steering_obtain_setpoint();
+	
+  if(guidance_control.cmd.speed == 0.f) {
+    reset_pid_f(&boat_pid);
+  }
+  
+  boat_guidance_steering_obtain_setpoint();
 	
 	// Mov avg speed
 	speed_avg = speed_avg - mvg_avg[ptr_avg]/MOV_AVG_M;
@@ -256,24 +275,30 @@ void boat_guidance_speed_ctrl(void) // Feed forward + Integral controler + Propo
   // using moving average
   guidance_control.speed_error = guidance_control.cmd.speed - speed_avg;
   update_pid_f(&boat_pid, guidance_control.speed_error, time_step);
+
+  // Display purposes
+  guidance_control.kp_action = get_p_action(&boat_pid, guidance_control.speed_error);
+  guidance_control.ki_action = get_i_action(&boat_pid, guidance_control.speed_error, time_step);
   
   // - Set throttle
   guidance_control.throttle = BoundCmd(guidance_control.kf_speed * guidance_control.cmd.speed + get_pid_f(&boat_pid));
 }
 
-// Obtain setpoin
+// Obtain setpoint
 void boat_guidance_steering_obtain_setpoint(void)
 {
-	
 	// Setpoint to zero if rover must stay still
 	if((gvf_c_stopwp.stay_still) && (!reset_time)){
-		//guidance_control.cmd.speed = 0;
+    last_speed_cmd = guidance_control.cmd.speed;
+		guidance_control.cmd.speed = 0;
 		rover_time = get_sys_time_msec();
 		reset_time = 1;
+    return;
 	}
-	else if((gvf_c_stopwp.stay_still) && (reset_time)){
+	else if(reset_time){
 		if( (get_sys_time_msec() - rover_time) >= 1000*gvf_c_stopwp.wait_time){
 			reset_time = 0;
+      guidance_control.cmd.speed = last_speed_cmd;
 			gvf_c_stopwp.stay_still = 0;
 		}	
 	}

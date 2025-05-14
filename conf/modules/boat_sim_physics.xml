@@ -16,7 +16,7 @@
           <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="physical_params.mu_y_sim" shortname="mu_y"/>
           <dl_setting MAX="10.0" MIN="0.0" STEP="0.1" VAR="physical_params.mu_w_sim" shortname="mu_w"/>
         </dl_settings>
-        <dl_settings NAME="disturbances">
+        <dl_settings NAME="Perturbaciones del medio">
           <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="physical_params.current_ampl_x" shortname="Amplitud corriente x"/>
           <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="physical_params.current_ampl_y" shortname="Amplitud corriente y"/>
           <dl_setting MAX="10.0" MIN="-10.0" STEP="0.1" VAR="physical_params.wind_ampl_x" shortname="Amplitud viento x"/>
