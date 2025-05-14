@@ -30,4 +30,5 @@
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",
+    "idf.pythonInstallPath": "/usr/bin/python3",
 }

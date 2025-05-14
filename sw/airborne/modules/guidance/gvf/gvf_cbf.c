@@ -55,6 +55,7 @@ struct cbf_tel cbf_telemetry;
 static void send_cbf(struct transport_tx *trans, struct link_device *dev)
 {
   uint16_t n = 1;
+  uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   if (cbf_control.n_neighborns > 0) { // n = 0 doesn't make sense
     n = cbf_control.n_neighborns;
   }
@@ -73,6 +74,7 @@ static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 {
   uint16_t n = 1;
   char msg[50];
+  uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   if (cbf_control.n_neighborns > 0) { // n = 0 doesn't make sense
     n = cbf_control.n_neighborns;
   }
@@ -80,13 +82,17 @@ static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
   for (int i = 0; i < cbf_control.n_neighborns ; i++) {
     cbf_telemetry.acs_available[i] = cbf_obs_tables[i].available;    
     if (cbf_obs_tables[i].ac_id>0 && cbf_obs_tables[i].ac_id<255){
-        	pprz_msg_send_CBF_REC(trans, dev, AC_ID, &cbf_obs_tables[i].ac_id,&(cbf_obs_tables[i].available),
+       for (int j = 0; j < CBF_MAX_NEIGHBORS; j++) {
+        if (cbf_nei_ac_ids[j]== cbf_obs_tables[i].ac_id) {
+          pprz_msg_send_CBF_REC(trans, dev, AC_ID, &cbf_obs_tables[i].ac_id,&(cbf_obs_tables[i].available),
     				&cbf_obs_tables[i].t_last_msg,
   				&cbf_obs_tables[i].state.x,&cbf_obs_tables[i].state.y,
   				&cbf_obs_tables[i].state.vx,&cbf_obs_tables[i].state.vy);
-  	
+          break;
   	}
 	}
+}
+}
 }
 #endif // PERIODIC TELEMETRY
  
@@ -149,18 +155,43 @@ void cbf_init(void)
 
 static void cbf_low_level_getState(void)
 {
+  char msg[100];
 
-  cbf_ac_state.x = stateGetPositionUtm_f()->north;
-  cbf_ac_state.y = stateGetPositionUtm_f()->east;
-  cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
-  // We assume that the course and psi
-  // of the rover (steering wheel) are the same
+    // Verifica si el origen UTM está configurado
+    if (state.utm_origin_f.zone == 0) {
+        struct UtmCoor_f utm_origin = { .north = 500000.0f, .east = 0.0f, .alt = 0.0f, .zone = 30 };
+        stateSetLocalUtmOrigin_f(MODULE_GVF_CBF_ID, &utm_origin);
+        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM origin set manually"), "UTM origin set manually");
+    }
+
+    // Forzar el cálculo de las coordenadas LLA si no están disponibles
+    if (!bit_is_set(state.pos_status, POS_LLA_F)) {
+        stateCalcPositionLla_f();
+        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("LLA position calculated"), "LLA position calculated");
+    }
+
+    // Forzar el cálculo de las coordenadas UTM
+    stateCalcPositionUtm_f();
+
+    // Verificar si las coordenadas UTM están inicializadas
+    if (!state.utm_initialized_f) {
+        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM not initialized"), "UTM not initialized");
+        return;
+    }
+
+    // Obtener las coordenadas UTM
+    cbf_ac_state.x = stateGetPositionUtm_f()->north;
+    cbf_ac_state.y = stateGetPositionUtm_f()->east;
+    cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
+
+    snprintf(msg, sizeof(msg), " %f, %f", cbf_ac_state.x, cbf_ac_state.y);
+    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
+
+    // Obtener otros estados
     cbf_ac_state.course = 90 - stateGetNedToBodyEulers_f()->psi; // ENU course
     cbf_ac_state.vx = stateGetSpeedEnu_f()->x;
     cbf_ac_state.vy = stateGetSpeedEnu_f()->y;
-   
 }
-
 
 // Fill the i'th obstacle table with the info contained in the buffer  
 static void write_cbf_table(uint16_t i, uint8_t *buf) 
