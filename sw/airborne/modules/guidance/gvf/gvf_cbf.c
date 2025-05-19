@@ -64,7 +64,7 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
     cbf_telemetry.acs_available[i] = cbf_obs_tables[i].available;
   }
   
-  pprz_msg_send_CBF(trans, dev, AC_ID, &cbf_ac_state.xi_x,&cbf_ac_state.xi_y,
+ pprz_msg_send_CBF(trans, dev, AC_ID, &cbf_ac_state.xi_x,&cbf_ac_state.xi_y,
   				&cbf_ac_state.xicbf_x,&cbf_ac_state.xicbf_y,
   				&cbf_ac_state.nei,&cbf_ac_state.active_conds,
   				&cbf_ac_state.r,&cbf_ac_state.alpha);
@@ -155,7 +155,7 @@ void cbf_init(void)
 
 static void cbf_low_level_getState(void)
 {
-  char msg[100];
+  char msg[200];
 
     // Verifica si el origen UTM está configurado
     if (state.utm_origin_f.zone == 0) {
@@ -169,24 +169,27 @@ static void cbf_low_level_getState(void)
         stateCalcPositionLla_f();
         DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("LLA position calculated"), "LLA position calculated");
     }
-
-    // Forzar el cálculo de las coordenadas UTM
+  // Forzar el cálculo de las coordenadas UTM
     stateCalcPositionUtm_f();
-
+   
     // Verificar si las coordenadas UTM están inicializadas
+    
     if (!state.utm_initialized_f) {
         DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM not initialized"), "UTM not initialized");
         return;
     }
 
     // Obtener las coordenadas UTM
-    cbf_ac_state.x = stateGetPositionUtm_f()->north;
-    cbf_ac_state.y = stateGetPositionUtm_f()->east;
+    struct UtmCoor_f *utm_pos = stateGetPositionUtm_f();
+    if (utm_pos->north == 0.0f && utm_pos->east == 0.0f) {
+    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM position is zero"), "UTM position is zero");
+    }
+    cbf_ac_state.x = utm_pos->north;
+    cbf_ac_state.y = utm_pos->east;
     cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
+    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM OK"), "UTM OK");
 
-    snprintf(msg, sizeof(msg), " %f, %f", cbf_ac_state.x, cbf_ac_state.y);
-    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
-
+  
     // Obtener otros estados
     cbf_ac_state.course = 90 - stateGetNedToBodyEulers_f()->psi; // ENU course
     cbf_ac_state.vx = stateGetSpeedEnu_f()->x;
@@ -261,7 +264,6 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
 static void send_cbf_state_to_nei(void)
 {
   struct pprzlink_msg msg;
-  
   for (int i = 0; i < cbf_control.n_neighborns; i++){
     if (cbf_obs_tables[i].ac_id>0 && cbf_obs_tables[i].ac_id<255) { // send state to the ACs in CBF_NEI_AC_IDS
       msg.trans = &(DefaultChannel).trans_tx;
@@ -275,7 +277,7 @@ static void send_cbf_state_to_nei(void)
                                         &cbf_ac_state.vx, &cbf_ac_state.vy, 
                                         &cbf_ac_state.speed, &cbf_ac_state.course,
                                         &cbf_ac_state.uref);
-      /*char m[30];
+      /*char m[30]; 
       sprintf(m,"Enviado a %u",msg.receiver_id);
       DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
      }
