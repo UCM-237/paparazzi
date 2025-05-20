@@ -101,6 +101,13 @@ upload: $(OBJDIR)/$(TARGET).bin
 	$(LOADER) -p /dev/ttyUSB0  -b 115200 -e -w -v $^
 
 #
+# serial flash mode matek with stm32flash
+else ifeq ($(FLASH_MODE),SERIAL_MATEK)
+LOADER ?= stm32flash
+upload: $(OBJDIR)/$(TARGET).bin
+	$(LOADER) -b 115200 -e -v /dev/ttyUSB0 -w $^
+
+#
 # JTAG flash mode
 else ifeq ($(FLASH_MODE),JTAG)
 # via OpenOCD and "normal" jtag
