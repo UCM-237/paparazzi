@@ -38,7 +38,7 @@
     </module>
     
    <module name="telemetry" type="xbee_api">
-    	<configure name="MODEM_PORT"  value="UART1"/>
+    	<configure name="MODEM_PORT"  value="UART3"/>
     </module>
     
     <!-- Compass ublox m8n -->
