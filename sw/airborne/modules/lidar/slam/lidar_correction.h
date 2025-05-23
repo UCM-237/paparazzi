@@ -48,6 +48,11 @@ struct WallSystem {
 };
 
 
+#ifdef USE_EKF_SLAM
+extern uint8_t N_psi;
+#endif
+
+
 extern struct WallSystem wall_system;
 extern void init_walls(void);  // Inicializa obstáculos
 extern void convert_walls_to_ltp(void);

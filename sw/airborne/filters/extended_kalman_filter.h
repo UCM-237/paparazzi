@@ -31,17 +31,17 @@
 
 // maximum size for the state vector
 #ifndef KF_MAX_STATE_SIZE
-#define KF_MAX_STATE_SIZE 6
+#define KF_MAX_STATE_SIZE 8
 #endif
 
-// maximum size for the command vector
+// maximum size for the command vector (useless here ??)
 #ifndef KF_MAX_CMD_SIZE
 #define KF_MAX_CMD_SIZE 3
 #endif
 
 // maximum size for the measurement vector
 #ifndef KF_MAX_MEAS_SIZE
-#define KF_MAX_MEAS_SIZE 6
+#define KF_MAX_MEAS_SIZE 8
 
 // function pointer types for the prediction and jacobian functions
 struct extended_kalman_filter;
@@ -109,5 +109,7 @@ extern void extended_kalman_filter_update(struct extended_kalman_filter *filter,
 
 extern void init_filter(struct extended_kalman_filter *filter, float dt);
 extern void update_matrix(struct extended_kalman_filter *filter);
+extern void update_lidar_covariance(struct extended_kalman_filter *filter, float theta);
+extern void clean_lidar_covariance(struct extended_kalman_filter *filter);
 
-#endif 
+#endif

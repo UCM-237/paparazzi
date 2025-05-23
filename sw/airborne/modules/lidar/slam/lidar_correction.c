@@ -27,7 +27,10 @@
 #include "lidar_correction.h"
 #include "modules/lidar/tfmini.h"
 #include "modules/ins/ins_int.h"
-// #include "modules/nav/waypoints.h"
+
+#ifdef USE_EKF_SLAM
+#include "modules/ins/ins_slam_ekf.h"
+#endif 
 
 #include "math/pprz_algebra.h"
 #include <math.h>
@@ -36,6 +39,10 @@
 
 
 struct WallSystem wall_system;  // Sistema de paredes global
+
+#ifdef USE_EKF_SLAM
+uint8_t N_psi = 0;
+#endif
 
 
 // Calcula la distancia desde un punto P a una pared definida por los puntos A y B
@@ -98,6 +105,7 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
   }
 
   float min_distance = FLT_MAX;
+  float psi = 10; // psi = [-pi, pi]
   
   // Iterar sobre todas las paredes
   for (uint8_t w = 0; w < wall_system.wall_count; w++) {
@@ -116,10 +124,23 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
       if (distance < min_distance) {
         min_distance = distance;
         *nearest_point = aux_point;
+        #ifdef USE_EKF_SLAM
+        psi = atan2f(-(p2.y - p1.y), p2.x - p1.x); // REVISAR
+        #endif
       }
     }
   }
-  
+
+  #ifdef USE_EKF_SLAM
+  if ((psi < 3.14f) && (psi > -3.14f)) {
+    if (N_psi == 0) {
+      kalman_variance.psi = psi;
+    } else {
+      kalman_variance.psi = (psi + kalman_variance.psi*(N_psi-1))/N_psi;
+    }
+    N_psi++;
+  }
+  #endif
   return min_distance;
 }
 

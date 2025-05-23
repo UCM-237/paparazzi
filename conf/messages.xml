@@ -1793,12 +1793,11 @@
     </message>
 
     <message name="INS_EKF" id="194">
-      <!-- <field name="X"       type="float[5]" format="%.2f"/> -->
-      <field name="P_0"     type="float[5]" format="%.2f"/>
-      <field name="P_1"     type="float[5]" format="%.2f"/>
-      <field name="P_2"     type="float[5]" format="%.2f"/>
-      <field name="P_3"     type="float[5]" format="%.2f"/>
-      <field name="P_4"     type="float[5]" format="%.2f"/>
+      <field name="X"        type="float[5]" format="%.2f"/>
+      <field name="INS"      type="float[5]" format="%.2f"/>
+      <field name="Y"        type="float[5]" format="%.2f"/>
+      <field name="R_delta"  type="float[5]" format="%.2f"/>
+      <field name="GPS"      type="float[5]" format="%.2f"/>
     </message>
 
     <!-- 195 is free -->

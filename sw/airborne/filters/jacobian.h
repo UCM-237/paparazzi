@@ -29,7 +29,27 @@
 
 struct extended_kalman_filter;
 
+
+/*******************************************************************************
+ *                                                                             *
+ *  EKF for IMU+GPS fusion                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
 extern void ekf_f(struct extended_kalman_filter *filter, float *U, float dt);
 extern void ekf_compute_F(struct extended_kalman_filter *filter, float *U, float dt);
+
+
+
+/*******************************************************************************
+ *                                                                             *
+ *  EKF for Lidar+GPS fusion                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+extern void ekf_slam_f(struct extended_kalman_filter *filter, float *U, float dt);
+extern void ekf_slam_compute_F(struct extended_kalman_filter *filter, float *U, float dt);
+
+
 
 #endif

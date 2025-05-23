@@ -23,15 +23,20 @@
  * @file modules/ins/ins_int.c
  *
  * INS + SLAM Correction for the rovers using the TFMini Lidar.
+ * This version use the Extended Kalman Filter.
  *
  */
 
 // ------------------------------------
 
 #include "autopilot.h"
+
 #include "modules/ins/ins_int.h"
-#include "modules/ins/ins_slam.h"
+#include "modules/ins/ins_slam_ekf.h"
 #include "modules/lidar/slam/lidar_correction.h"
+
+#include "filters/extended_kalman_filter.h"
+#define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
 #include "modules/nav/waypoints.h"
 
@@ -41,6 +46,10 @@ static struct FloatVect2 nearest_point = {0.0, 0.0};
 static struct FloatVect2 obstacle = {0.0, 0.0};
 static uint32_t N_medidas = 0;
 
+bool enable_ekf_filter = true;
+struct extended_kalman_filter kalman_filter;
+struct KalmanVariance kalman_variance;
+
 static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 
 // Parámetros de corrección
@@ -49,6 +58,10 @@ static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 #define MAX_WALL_DISTANCE 5.0f   // No se corrige si el obstáculo está muy lejos
 #define ALPHA 0.5f               // Factor de suavizado
 #define BETA 0.95f                // Factor de suavizado
+
+// Para el filtro de Kalman
+#define R_LIDAR_HIGH 20.0f
+#define R_LIDAR_LOW  1E-05
 
 // Para NPS
 #define GPS_BIAS_X 0.5f
@@ -179,6 +192,30 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
   }
 }
 
+static void send_ins_ekf(struct transport_tx *trans, struct link_device *dev)
+{
+  kalman_filter.K2[0][0] = POS_FLOAT_OF_BFP(ins_int.ltp_pos.x);
+  kalman_filter.K2[0][1] = POS_FLOAT_OF_BFP(ins_int.ltp_pos.y);
+  kalman_filter.K2[0][2] = SPEED_FLOAT_OF_BFP(ins_int.ltp_speed.x);
+  kalman_filter.K2[0][3] = SPEED_FLOAT_OF_BFP(ins_int.ltp_speed.y);
+  kalman_filter.K2[0][4] = (*stateGetNedToBodyEulers_f()).psi;
+
+  kalman_filter.K2[2][0] = kalman_filter.R[5][5];
+  kalman_filter.K2[2][1] = kalman_filter.R[5][6];
+  kalman_filter.K2[2][2] = kalman_filter.R[6][5];
+  kalman_filter.K2[2][3] = kalman_filter.R[6][6];
+  kalman_filter.K2[2][4] = kalman_variance.psi;
+
+  // kalman_filter.K2[4][0] = POS_FLOAT_OF_BFP(ins_int.ltp_pos.x) - kalman_filter.X[5];
+  // kalman_filter.K2[4][1] = POS_FLOAT_OF_BFP(ins_int.ltp_pos.y) - kalman_filter.X[6];
+  kalman_filter.K2[4][2] = kalman_filter.X[5];
+  kalman_filter.K2[4][3] = kalman_filter.X[6];
+  kalman_filter.K2[4][4] = kalman_filter.P[0][0];
+
+  pprz_msg_send_INS_EKF(trans, dev, AC_ID,
+                    kalman_filter.X, kalman_filter.K2[0], kalman_filter.K2[1], kalman_filter.K2[2], kalman_filter.K2[4]);
+}
+
 static void send_slam(struct transport_tx *trans, struct link_device *dev)
 {
   uint8_t converted = (uint8_t)wall_system.converted_to_ltp;
@@ -193,20 +230,144 @@ static void send_slam(struct transport_tx *trans, struct link_device *dev)
 #endif    // PERIODIC_TELEMETRY
 
 static void ins_ned_to_state(void);
-static void ins_reset_local_origin(void);
 
 
-void ins_int_init(void)
+/*******************************************************************************
+ *                                                                             *
+ *  Inits                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+void update_matrix(struct extended_kalman_filter *filter){
+  
+  filter->R[0][0] = kalman_variance.pos*1E-02;
+  filter->R[1][1] = kalman_variance.pos*1E-02;
+  filter->R[2][2] = kalman_variance.vel*1E-03;
+  filter->R[3][3] = kalman_variance.vel*1E-03;
+  filter->R[4][4] = kalman_variance.att*1E-03;
+
+  // This ones are updated in update_lidar_covariance
+  // filter->R[5][5] = kalman_variance.delta.x;
+  // filter->R[6][6] = kalman_variance.delta.y;
+
+  filter->Q[0][0] = kalman_variance.imu*1E-03;
+  filter->Q[1][1] = kalman_variance.imu*1E-03;
+  filter->Q[2][2] = kalman_variance.imu*1E-03;
+  filter->Q[3][3] = kalman_variance.imu*1E-03;
+  filter->Q[4][4] = kalman_variance.imu*1E-03;
+  filter->Q[5][5] = kalman_variance.imu;//*1E-05;
+  filter->Q[6][6] = kalman_variance.imu;//*1E-05;
+
+}
+
+
+void update_lidar_covariance(struct extended_kalman_filter *filter, float theta) {
+
+    float r_high = kalman_variance.delta.x; // Delta Perpendicular
+    float r_low = kalman_variance.delta.y;  // Delta Paralelo
+    
+    // Calcular vectores unitarios
+    float dx = cosf(theta);      // Dirección del rayo
+    float dy = sinf(theta);
+    float nx = -dy;              // Dirección perpendicular
+    float ny = dx;
+
+
+    float R[2][2] = {
+        {
+            r_low * dx * dx + r_high * nx * nx,
+            r_low * dx * dy + r_high * nx * ny
+        },
+        {
+            r_low * dy * dx + r_high * ny * nx,
+            r_low * dy * dy + r_high * ny * ny
+        }
+    };
+
+    filter->R[5][5] = R[0][0]; 
+    filter->R[5][6] = R[0][1];
+    filter->R[6][5] = R[1][0];
+    filter->R[6][6] = R[1][1];
+
+
+    // Same with H
+    float H[2][1] = {
+        { dx * dx },
+        { dy * dy }
+    };
+
+    filter->H[0][5] = -H[0][0];
+    // filter->H[5][0] *= H[0][0];
+    filter->H[1][6] = -H[1][0];
+    // filter->H[6][1] *= H[1][0];
+
+    printf("H[1][6]: %f\n", filter->H[1][6]);
+}
+
+
+// If no obstacle is detected, the covariance is set to a high value
+void clean_lidar_covariance(struct extended_kalman_filter *filter) {
+    
+    filter->R[5][5] = kalman_variance.delta.x; 
+    filter->R[5][6] = 0;
+    filter->R[6][5] = 0;
+    filter->R[6][6] = kalman_variance.delta.x;
+}
+
+
+void init_filter(struct extended_kalman_filter *filter, float dt){
+
+  dt = dt;    // Para evitar el warning
+
+  uint8_t n = 7; // [px, py, vx, vy, theta, delta_x, delta_y]
+  uint8_t c = 3; // [ax, ay, az]
+  uint8_t m = 7; // Measurement Vector
+
+  extended_kalman_filter_init(filter, n, c, m);
+
+  // You need to define this funcions in sw/airborne/filters/jacobian.c
+  filter->f = ekf_slam_f;
+  filter->compute_F = ekf_slam_compute_F;
+
+  filter->n = n;
+  filter->c = c;
+  filter->m = m;
+
+  MAKE_MATRIX_PTR(_H, filter->H, filter->m);
+  float_mat_identity(_H, m, n);
+  filter->H[0][5] = -1;
+  filter->H[1][6] = -1;
+
+  kalman_variance.pos = RP_GPS;
+  kalman_variance.vel = RV_GPS;
+  kalman_variance.att = RT;
+  kalman_variance.imu = R2_IMU;
+
+  kalman_variance.delta.x = R_LIDAR_HIGH; // 10
+  kalman_variance.delta.y = R_LIDAR_LOW;  // 0.01
+
+  const float P_init = 0.5;   // Hay que dejarlo menor que 1 (sino se vuelve inestable)
+  MAKE_MATRIX_PTR(_P, filter->P, n);
+  float_mat_identity(_P, n, n);
+  float_mat_scale(_P, P_init, n, n);
+  
+  update_matrix(filter);
+
+}
+
+
+void ins_slam_init(void)
 {
 
   #if USE_INS_NAV_INIT
-    ins_init_origin_i_from_flightplan(MODULE_INS_SLAM_ID, &ins_int.ltp_def);
+    ins_init_origin_i_from_flightplan(MODULE_INS_SLAM_EKF_ID, &ins_int.ltp_def);
     ins_int.ltp_initialized = true;
   #else
     ins_int.ltp_initialized  = false;
   #endif
 
   init_walls();
+  init_filter(&kalman_filter, DELTA_T);
   
   /* we haven't had any measurement updates yet, so set the counter to max */
   ins_int.propagation_cnt = INS_MAX_PROPAGATION_STEPS;
@@ -233,6 +394,7 @@ void ins_int_init(void)
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_REF, send_ins_ref);
     register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_SLAM, send_slam);
+    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_EKF, send_ins_ekf);
   #endif
 
   /*
@@ -262,7 +424,7 @@ static void reset_ref(void)
       ins_int.ltp_def.lla.alt = lla_pos.alt;
       ins_int.ltp_def.hmsl = gps.hmsl;
       ins_int.ltp_initialized = true;
-      stateSetLocalOrigin_i(MODULE_INS_SLAM_ID, &ins_int.ltp_def);
+      stateSetLocalOrigin_i(MODULE_INS_SLAM_EKF_ID, &ins_int.ltp_def);
     } else {
       ins_int.ltp_initialized = false;
     }
@@ -288,7 +450,7 @@ static void reset_vertical_ref(void)
     };
     ltp_def_from_lla_i(&ins_int.ltp_def, &lla);
     ins_int.ltp_def.hmsl = gps.hmsl;
-    stateSetLocalOrigin_i(MODULE_INS_SLAM_ID, &ins_int.ltp_def);
+    stateSetLocalOrigin_i(MODULE_INS_SLAM_EKF_ID, &ins_int.ltp_def);
   }
 #endif
   ins_int.vf_reset = true;
@@ -309,10 +471,13 @@ static void reset_vertical_pos(void)
 void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 {
 
-  (void)dt; // I dont need this (avoid the warning)
+  // (void)dt; // I dont need this (avoid the warning)
+
+  // Update the R and Q matrix (Not efficent. Change)
+  update_matrix(&kalman_filter);
 
   // Set body acceleration in the state
-  stateSetAccelBody_i(MODULE_INS_SLAM_ID, accel);
+  stateSetAccelBody_i(MODULE_INS_SLAM_EKF_ID, accel);
   struct FloatVector body_accel;   // Aceleración en ejes cuerpo
 
   // Esta en int32, dividir entre 1024 para obtener el valor en m/s2
@@ -324,8 +489,8 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   struct FloatRates *ang_vel;
   ang_vel = stateGetBodyRates_f();
 
-  // float U[3] = {body_accel.x, body_accel.y, ang_vel->r};
-  // extended_kalman_filter_predict(&kalman_filter, U, dt);
+  float U[3] = {body_accel.x, body_accel.y, ang_vel->r};
+  extended_kalman_filter_predict(&kalman_filter, U, dt);
 
   // Actualiza (y manda por telemetria), las aceleraciones en ejes cuerpo y la v. angular en Z
   ins_int.ltp_accel.x = ACCEL_BFP_OF_REAL(body_accel.x);
@@ -338,7 +503,6 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   /* increment the propagation counter, while making sure it doesn't overflow */
   if (ins_int.propagation_cnt < 100 * INS_MAX_PROPAGATION_STEPS) {
     ins_int.propagation_cnt++;
-    dt = 0; // Para quitar el error
   }
 }
 
@@ -394,41 +558,89 @@ void ins_int_update_gps(struct GpsState *gps_s)
   #endif
 
 
-  // Aqui hace la correccion del offset
-  if((offset.x == 0) && (offset.y == 0)){
+  // Display purposes
+  kalman_filter.K2[4][0] = gps_pos_cm_ned.x/100.0f;
+  kalman_filter.K2[4][1] = gps_pos_cm_ned.y/100.0f;
+
+
+  // Vector de Medidas
+  float Y[7];
+  Y[0] = gps_pos_cm_ned.x/100.0f;
+  Y[1] = gps_pos_cm_ned.y/100.0f;
+  Y[2] = gps_speed_cm_s_ned.x/100.0f;
+  Y[3] = gps_speed_cm_s_ned.y/100.0f;
+  Y[4] = ahrs_dcm.ltp_to_body_euler.psi;
+  Y[5] = offset.y;
+  Y[6] = offset.x;
+
+  // Actualiza la matriz de covarianza
+  if (kalman_variance.psi == 10) {
+    clean_lidar_covariance(&kalman_filter);
     float beta = (ins_slam.beta+99)/100;
-    gps_offset.x = gps_offset.x*beta;
-    gps_offset.y = gps_offset.y*beta;
+    Y[5] = kalman_filter.X[5]*beta;
+    Y[6] = kalman_filter.X[6]*beta;
   }
   else{
-    struct FloatVect2 alpha = {0.0f, 0.0f};
-
-    alpha.x = 0.01*ins_slam.alpha/(offset.x-gps_offset.x);
-    gps_offset.x += (offset.x-gps_offset.x)*ins_slam.alpha;
-    alpha.y = 0.01*ins_slam.alpha/(offset.y-gps_offset.y);
-    gps_offset.y += (offset.y-gps_offset.y)*ins_slam.alpha;
-
-    offset.x = 0;
-    offset.y = 0;
-    N_medidas = 0;
+    update_lidar_covariance(&kalman_filter, kalman_variance.psi);
   }
-  
 
+  
+  extended_kalman_filter_update(&kalman_filter, Y);
+
+  // Display the vector measurements
+  for (int i = 0; i < 5; i++) {
+    kalman_filter.K2[1][i] = Y[i];
+  }
+
+  // Satura el offset por si acaso
+  if (fabs(kalman_filter.X[5]) > ins_slam.max_distance_wall*5) {
+    kalman_filter.X[5] = ((kalman_filter.X[5] > 0) ? 1.0f : -1.0f) * ins_slam.max_distance_wall * 5;
+  }
+  else if (fabs(kalman_filter.X[6]) > ins_slam.max_distance_wall*5) {
+    kalman_filter.X[6] = ((kalman_filter.X[6] > 0) ? 1.0f : -1.0f) * ins_slam.max_distance_wall * 5;
+  }
+
+
+  if (kalman_variance.psi == 10) {
+    kalman_filter.X[5] = gps_offset.y;
+    kalman_filter.X[6] = gps_offset.x;
+  }
+  else{
+    gps_offset.y = kalman_filter.X[5];
+    gps_offset.x = kalman_filter.X[6];
+  }
+
+
+  // Reset the temporary variables
+  N_medidas = 0;
+  // ??? (dejarlos a 0)
+  offset.x = 0;
+  offset.y = 0;
+
+  kalman_variance.psi = 10;
+  N_psi = 0;
+
+  
   if(ins_slam.enable){
-    ins_int.ltp_pos.x = POS_BFP_OF_REAL(gps_pos_cm_ned.x/100.0f + gps_offset.x);
-    ins_int.ltp_pos.y = POS_BFP_OF_REAL(gps_pos_cm_ned.y/100.0f + gps_offset.y);
+    ins_int.ltp_pos.x = POS_BFP_OF_REAL(kalman_filter.X[0]);
+    ins_int.ltp_pos.y = POS_BFP_OF_REAL(kalman_filter.X[1]);
+    // Ignoro la velocidad de momento (ya se encarga el controlador de velocidad)
+    // ins_int.ltp_speed.x = SPEED_BFP_OF_REAL(kalman_filter.X[2]);
+    // ins_int.ltp_speed.y = SPEED_BFP_OF_REAL(kalman_filter.X[3]);
+    // kalman_filter.X[4] is updated in ahrs_float_dcm_wrapper.c
   }
   else{
     INT32_VECT2_SCALE_2(ins_int.ltp_pos, gps_pos_cm_ned,
                           INT32_POS_OF_CM_NUM, INT32_POS_OF_CM_DEN);
+    kalman_filter.X[5] = 0;
+    kalman_filter.X[6] = 0;
   }
 
   INT32_VECT2_SCALE_2(ins_int.ltp_speed, gps_speed_cm_s_ned,
-    INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
+                      INT32_SPEED_OF_CM_S_NUM, INT32_SPEED_OF_CM_S_DEN);
+
 
   ins_ned_to_state();
-  // waypoint_move_xy_i(16, POS_BFP_OF_REAL(obstacle.x), POS_BFP_OF_REAL(obstacle.y)); // DEBUG
-  // waypoint_move_xy_i(15, POS_BFP_OF_REAL(nearest_point.x), POS_BFP_OF_REAL(nearest_point.y)); // DEBUG
 
   /* reset the counter to indicate we just had a measurement update */
   ins_int.propagation_cnt = 0;
@@ -440,6 +652,7 @@ void ins_int_update_gps(struct GpsState *gps_s __attribute__((unused))) {}
 
 void ins_update_lidar(float distance, float angle){
 
+  // No hay obstáculo
   if (distance < ins_slam.min_distance || distance > ins_slam.max_distance) {
     return;
   } 
@@ -454,9 +667,14 @@ void ins_update_lidar(float distance, float angle){
   }
 
 
+  // TODAS estas cuentas estan en ENU
   // Obtener posición actual del rover en coordenadas locales
   float x_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->x);
   float y_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->y);
+
+  // Borra el offset de la última medida
+  x_rover -= kalman_filter.X[6];
+  y_rover -= kalman_filter.X[5];
 
   float theta = stateGetNedToBodyEulers_f()->psi;
   float corrected_angle = M_PI / 2 - angle*M_PI/180 - theta;
@@ -479,6 +697,11 @@ void ins_update_lidar(float distance, float angle){
   offset.x = (delta_x + (N_medidas - 1)*offset.x)/N_medidas;
   offset.y = (delta_y + (N_medidas - 1)*offset.y)/N_medidas;
 
+  
+  // Aplica el offset al obstaculo para pintarlo
+  obstacle.x += offset.x;
+  obstacle.y += offset.y;
+
 
   // Cuando lo termine de depurar se puede borrar
   debug_point.x = nearest_point.x;
@@ -490,9 +713,9 @@ void ins_update_lidar(float distance, float angle){
 /** copy position and speed to state interface */
 static void ins_ned_to_state(void)
 {
-  stateSetPositionNed_i(MODULE_INS_SLAM_ID, &ins_int.ltp_pos);
-  stateSetSpeedNed_i(MODULE_INS_SLAM_ID, &ins_int.ltp_speed);
-  stateSetAccelNed_i(MODULE_INS_SLAM_ID, &ins_int.ltp_accel);
+  stateSetPositionNed_i(MODULE_INS_SLAM_EKF_ID, &ins_int.ltp_pos);
+  stateSetSpeedNed_i(MODULE_INS_SLAM_EKF_ID, &ins_int.ltp_speed);
+  stateSetAccelNed_i(MODULE_INS_SLAM_EKF_ID, &ins_int.ltp_accel);
 
   #if defined SITL && USE_NPS
     if (nps_bypass_ins) {

@@ -131,14 +131,11 @@ void sim_overwrite_lidar(){
   if (!ins_int.ltp_initialized) return;
 
   // Pasar la posicion GPS a coordenadas NED
-  struct LlaCoor_i gps_nps = gps.lla_pos;
-
   struct FloatVect2 pos = {0.0f, 0.0f};
   struct NedCoor_i ned = {0.0f, 0.0f, 0.0f};
   ned_of_lla_point_i(&ned, stateGetNedOrigin_i(), &gps.lla_pos);
   pos.x = (float) (ned.y/100.0f);
   pos.y = (float) (ned.x/100.0f);
-  // pos = (struct FloatVect2){stateGetPositionNed_f()->y, stateGetPositionNed_f()->x};
   float theta = M_PI/2-(stateGetNedToBodyEulers_f()->psi)-tf_servo.ang*M_PI/180;
 
   float min_distance = FLT_MAX;

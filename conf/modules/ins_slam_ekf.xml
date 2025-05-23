@@ -1,0 +1,59 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="ins_slam_ekf" dir="ins" task="estimation">
+  <doc>
+    <description>
+      INS with SLAM Correction + Extended Kalman Filter
+    </description>
+    <define name="USE_INS_NAV_INIT" value="TRUE|FALSE" description="Initialize the origin of the local coordinate system from flight plan. (Default: TRUE)"/>
+    <define name="INS_INT_BARO_ID" value="BARO_BOARD_SENDER_ID" description="The ABI sender id of the baro to use"/>
+    <define name="INS_INT_GPS_ID" value="GPS_MULTI_ID" description="The ABI sender id of the GPS to use"/>
+    <define name="INS_INT_IMU_ID" value="ABI_BROADCAST" description="The ABI sender id of the IMU to use"/>
+    <define name="INS_INT_VEL_ID" value="ABI_BROADCAST" description="The ABI sender id of the VELOCITY_ESTIMATE (e.g. from opticflow"/>
+    <define name="USE_EKF_SLAM" value="TRUE|FALSE" description="Use it to enable this module"/>
+  </doc>
+
+  <settings name="INS_SLAM">
+    <dl_settings>
+      <dl_settings NAME="INS">
+        <dl_settings NAME="INS_EKF">
+          <dl_setting MAX="0.1" MIN="0.00001" STEP="0.001" VAR="kalman_variance.imu" shortname="R_IMU" param="R2_IMU"/>
+          <dl_setting MAX="1" MIN="0.001" STEP="1" VAR="kalman_variance.pos" shortname="RP_GPS" param="RP_GPS"/>
+          <dl_setting MAX="1" MIN="0.001" STEP="1" VAR="kalman_variance.vel" shortname="RV_GPS" param="RV_GPS"/>
+          <dl_setting MAX="1" MIN="0.001" STEP="1" VAR="kalman_variance.att" shortname="RT" param="RT"/>
+          <dl_setting MAX="100" MIN="0.01" STEP="1" VAR="kalman_variance.delta.x" shortname="R_LIDAR_HIGH"/>
+          <dl_setting MAX="1" MIN="0.0001" STEP="1" VAR="kalman_variance.delta.y" shortname="R_LIDAR_LOW"/>
+        </dl_settings>
+        <dl_settings NAME="INS_SLAM">
+          <dl_setting var="ins_slam.enable" min="0" step="1" max="1" values="FALSE|TRUE"/>
+          <dl_setting var="ins_slam.max_distance_wall" min="0" step="0.1" max="10" shortname="DISTANCE WALL"/>
+          <dl_setting var="ins_slam.min_distance" min="0" step="0.1" max="1" shortname="MIN_DISTANCE"/>
+          <dl_setting var="ins_slam.max_distance" min="1" step="0.1" max="12" shortname="MAX_DISTANCE"/>
+          <dl_setting var="ins_slam.alpha" min="0" step="0.1" max="1" shortname="ALPHA"/>
+          <dl_setting var="ins_slam.beta" min="0.7" step="0.01" max="1" shortname="BETA"/>
+          <dl_setting var="ins_slam.gps_bias.x" min="0" step="0.5" max="10" shortname="GPS_BIAS X"/>
+          <dl_setting var="ins_slam.gps_bias.y" min="0" step="0.5" max="10" shortname="GPS_BIAS Y"/>
+        </dl_settings>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+
+  <dep>
+    <depends>@imu,@gps|@position|@velocity</depends>
+    <provides>ins</provides>
+  </dep>
+  <header>
+    <file name="ins_int.h" dir="modules/ins"/>
+    <file name="ins_slam_ekf.h" dir="modules/ins"/>
+  </header>
+  <init fun="ins_slam_init()"/>
+  <makefile target="ap|nps">
+    <define name="INS_TYPE_H" value="modules/ins/ins_int.h" type="string"/>
+    <define name="USE_EKF_SLAM" value="TRUE"/>
+    <file name="ins.c"/>
+    <file name="ins_slam_ekf.c"/>
+    <file name="extended_kalman_filter.c" dir="filters"/>
+    <file name="jacobian.c" dir="filters"/>
+    <file name="pprz_random.c" dir="math"/>
+  </makefile>
+</module>

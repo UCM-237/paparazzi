@@ -33,7 +33,6 @@
 #include "modules/ins/ins_ekf.h"
 
 // KALMAN FILTER ----------------------
-// #include "filters/jacobian.h"
 #include "filters/extended_kalman_filter.h"
 
 #define DELTA_T  0.008  // Tiempo entre medidas por defecto
