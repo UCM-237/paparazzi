@@ -1,3 +1,5 @@
+<!-- Firmware para Pepa -->
+
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
 
 <airframe name="boat">
@@ -24,31 +26,25 @@
       <define name="NPS_BYPASS_LIDAR"  value="TRUE"/>
     </target>    
     
-    <!-- Same board module as matek_f765_wing but without OSD -->
-    <module name="board" type="matek_f405_car"/> <!-- IMU included -->
+    <!-- Same board module as matek_f405 but with another IMU -->
+    <module name="board" type="matek_f405v2_car"/> <!-- IMU included -->
     
     <module name="actuators" type="pwm"/>
 
     <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
-    <!-- Tana tiene el GPS 10Q, que lleva el conector grande, asi que hay que mapearlo
-    en el UART3 en vez del 4 -->
+
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART3"/> 
+    	<configure name="GPS_PORT"  value="UART3"/>
     </module>
     <module name="gps_ubx_ucenter"/>
 
 
     <!-- Pos estimated with Kalman Filter -->
-    <!-- <module name="ins"/>  -->
-    <!-- <module name="ins_kf"/> -->
+    <!-- <module name="ins"/>   -->
     <!-- <module name="ins" type="ekf"/> -->
-
-    <module name="ins" type="slam"/>
-
-    <!-- UNTESTED -->
-    <!-- <module name="ins" type="slam_ekf"/> -->
-
-
+    <!-- <module name="ins" type="slam"/> -->
+    <module name="ins" type="slam_ekf"/>
+    
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
@@ -85,7 +81,7 @@
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-
+    
     <!-- Obstacle grid -->
     <!--
     <module name="obstacle_rover">
@@ -109,7 +105,8 @@
 
   <!-- COMMANDS SECTION ..................................................................... -->
    <servos> 
-    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
+    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry...
+          On the board is the S3 and S4 -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>
@@ -137,15 +134,10 @@
 
   <!-- SECTIONS: General config ............................................................. -->
   <section name="IMU" prefix="IMU_">
-    <define name="BODY_TO_IMU_PHI"   value="0.0" unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="0.0" unit="deg"/>
-    <define name="BODY_TO_IMU_PSI"   value="90.0" unit="deg"/>
-    <define name="ACCEL_X_SIGN" 		 value="-1"/>
-    <define name="ACCEL_Y_SIGN"      value="1"/>
-    <define name="ACCEL_Z_SIGN"      value="-1"/>
-    <define name="GYRO_P_SIGN"       value="-1"/>
-    <define name="GYRO_Q_SIGN"       value="1"/>
-    <define name="GYRO_R_SIGN"       value="-1"/>
+    <define name="BODY_TO_IMU_PHI"   value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_PSI"   value="0." unit="deg"/>
+
     <!-- ....CALIBRATION 2022/06/07 .................................................... -->
     <!--define name="ACCEL_X_NEUTRAL" value="88"/>
     <define name="ACCEL_Y_NEUTRAL" value="-12"/>
@@ -171,14 +163,14 @@
     <define name="MAG_Y_SENS" value="4.148937385955166" integer="16"/>
     <define name="MAG_Z_SENS" value="3.242411432686237" integer="16"/>
 
-<!-- LAST CALIBRATION
+  <!-- LAST CALIBRATION
     <define name="MAG_X_NEUTRAL" value="263"/>
     <define name="MAG_Y_NEUTRAL" value="-429"/>
     <define name="MAG_Z_NEUTRAL" value="606"/>
     <define name="MAG_X_SENS" value="7.593931788741687" integer="16"/>
     <define name="MAG_Y_SENS" value="7.526016920835691" integer="16"/>
     <define name="MAG_Z_SENS" value="10.776584762252018" integer="16"/>
--->
+  -->
 
   </section>
 

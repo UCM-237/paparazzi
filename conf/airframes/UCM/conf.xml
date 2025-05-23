@@ -13,12 +13,12 @@
   <aircraft
    name="Rover_Tana"
    ac_id="1"
-   airframe="airframes/UCM/rover2f405WSE_Tana.xml"
+   airframe="airframes/UCM/rover2f405v2_Tana.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
    telemetry="telemetry/default_rover_pidcontrol.xml"
    flight_plan="flight_plans/UCM/steering_rover_gvfMission_football_LIDAR.xml"
    settings=""
-   settings_modules="modules/ahrs_float_dcm.xml modules/electrical.xml modules/gps.xml modules/gps_ublox.xml modules/gps_ubx_ucenter.xml modules/guidance_rover_steering.xml~SR Guidance~ modules/gvf_module.xml~GVF~ modules/gvf_parametric_bare.xml~GVF_PARAMETRIC_BARE~ modules/imu_common.xml modules/ins_slam.xml~INS_SLAM~ modules/lidar_tfmini.xml modules/nav_rover_base.xml modules/serial_com.xml"
+   settings_modules="modules/ahrs_float_dcm.xml modules/electrical.xml modules/gps.xml modules/gps_ublox.xml modules/gps_ubx_ucenter.xml modules/guidance_rover_steering.xml~SR Guidance~ modules/gvf_module.xml~GVF~ modules/gvf_parametric_bare.xml~GVF_PARAMETRIC_BARE~ modules/imu_common.xml modules/ins_slam_ekf.xml~INS_SLAM~ modules/lidar_tfmini.xml modules/nav_rover_base.xml modules/serial_com.xml"
    gui_color="#35008400e400"
   />
   <aircraft
@@ -35,10 +35,10 @@
   <aircraft
    name="Rover_Avelino"
    ac_id="4"
-   airframe="airframes/UCM/rover2f405WSE.xml"
+   airframe="airframes/UCM/rover_Avelino.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
    telemetry="telemetry/default_rover_pidcontrol.xml"
-   flight_plan="flight_plans/UCM/steering_rover_gvfMission_parametric_bare.xml"
+   flight_plan="flight_plans/UCM/steering_rover_gvfMission_football.xml"
    settings=""
    settings_modules="modules/ahrs_float_dcm.xml modules/electrical.xml modules/gps.xml modules/gps_ublox.xml modules/gps_ubx_ucenter.xml modules/guidance_rover_steering.xml~SR Guidance~ modules/gvf_module.xml~GVF~ modules/gvf_parametric_bare.xml~GVF_PARAMETRIC_BARE~ modules/imu_common.xml modules/ins_ekf.xml~KALMAN_FILTER~ modules/lidar_tfmini.xml modules/nav_rover_base.xml modules/serial_com.xml"
    gui_color="#8a00e2003400"
@@ -46,12 +46,12 @@
   <aircraft
    name="Rover_Pepa"
    ac_id="5"
-   airframe="airframes/UCM/rover2f405.xml"
+   airframe="airframes/UCM/rover2f405v2_Pepa.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
    telemetry="telemetry/default_rover_pidcontrol.xml"
-   flight_plan="flight_plans/UCM/steering_rover_gvfMission_parametric_bare.xml"
+   flight_plan="flight_plans/UCM/steering_rover_gvfMission_football.xml"
    settings=""
-   settings_modules="modules/ahrs_float_dcm.xml modules/electrical.xml modules/gps.xml modules/gps_ublox.xml modules/gps_ubx_ucenter.xml modules/guidance_rover_steering.xml~SR Guidance~ modules/gvf_module.xml~GVF~ modules/gvf_parametric_bare.xml~GVF_PARAMETRIC_BARE~ modules/imu_common.xml modules/lidar_tfmini.xml modules/nav_rover_base.xml"
+   settings_modules="modules/ahrs_float_dcm.xml modules/electrical.xml modules/gps.xml modules/gps_ublox.xml modules/gps_ubx_ucenter.xml modules/guidance_rover_steering.xml~SR Guidance~ modules/gvf_module.xml~GVF~ modules/gvf_parametric_bare.xml~GVF_PARAMETRIC_BARE~ modules/imu_common.xml modules/lidar_tfmini.xml modules/nav_rover_base.xml modules/serial_com.xml"
    gui_color="#fc00af003e00"
   />
   <aircraft
