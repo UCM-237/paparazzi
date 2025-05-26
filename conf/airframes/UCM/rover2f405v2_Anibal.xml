@@ -1,5 +1,3 @@
-<!-- Firmware para Pepa -->
-
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
 
 <airframe name="boat">
@@ -22,12 +20,7 @@
       <module name="radio_control" type="ppm"/>
       <module name="fdm"           type="rover"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
-      <!-- <define name="NPS_BYPASS_INS"  value="TRUE"/> -->
-      <define name="NPS_BYPASS_LIDAR"  value="TRUE"/>
-      <module name="telemetry_nps" dir="datalink" />
-       <!-- Multiple agents simulation -->
-      <!--configure name="MODEM_PORT_OUT" value="4250"/>
-      <configure name="MODEM_PORT_IN"  value="4251"/-->
+      <define name="NPS_BYPASS_INS"  value="TRUE"/>
     </target>    
     
     <!-- Same board module as matek_f405 but with another IMU -->
@@ -38,7 +31,7 @@
     <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
 
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART3"/>
+    	<configure name="GPS_PORT"  value="UART4"/>
     </module>
     <module name="gps_ubx_ucenter"/>
 
@@ -47,11 +40,11 @@
     <module name="ins"/>  
     <!-- <module name="ins" type="ekf"/> -->
     <!-- <module name="ins" type="slam"/> -->
-    <!-- <module name="ins" type="slam_ekf"/> -->
     
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
+      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.3"/>
     </module>
     
     <module name="telemetry" type="xbee_api">
@@ -85,16 +78,12 @@
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-
-    <!-- CBF module-->
+    
     <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
     <!-- <module name="gvf_cbf">
-      <define name="CBF_NEI_AC_IDS" value="{3,4,5,6}"/>
+      <define name="CBF_NEI_AC_IDS" value="{1,3,4,5}"/>
     </module> -->
-
-    <!-- <module name="traffic_info"/> -->
     
-
     <!-- Obstacle grid -->
     <!--
     <module name="obstacle_rover">
@@ -129,7 +118,6 @@
   <commands>
     <axis name="THROTTLE"    failsafe_value="0"/>
     <axis name="STEERING"    failsafe_value="0"/>
-    <axis name="SERVO"    failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
@@ -142,8 +130,7 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
-    <!-- <set servo="MOTOR_LIDAR" value="tf_servo.pos"/> -->
-    <set servo="MOTOR_LIDAR" value="@SERVO"/>
+    <set servo="MOTOR_LIDAR" value="tf_servo.pos"/>
   </command_laws>
 
 
@@ -152,7 +139,6 @@
     <define name="BODY_TO_IMU_PHI"   value="0." unit="deg"/>
     <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
     <define name="BODY_TO_IMU_PSI"   value="0." unit="deg"/>
-
     <!-- ....CALIBRATION 2022/06/07 .................................................... -->
     <!--define name="ACCEL_X_NEUTRAL" value="88"/>
     <define name="ACCEL_Y_NEUTRAL" value="-12"/>
@@ -178,14 +164,14 @@
     <define name="MAG_Y_SENS" value="4.148937385955166" integer="16"/>
     <define name="MAG_Z_SENS" value="3.242411432686237" integer="16"/>
 
-  <!-- LAST CALIBRATION
+<!-- LAST CALIBRATION
     <define name="MAG_X_NEUTRAL" value="263"/>
     <define name="MAG_Y_NEUTRAL" value="-429"/>
     <define name="MAG_Z_NEUTRAL" value="606"/>
     <define name="MAG_X_SENS" value="7.593931788741687" integer="16"/>
     <define name="MAG_Y_SENS" value="7.526016920835691" integer="16"/>
     <define name="MAG_Z_SENS" value="10.776584762252018" integer="16"/>
-  -->
+-->
 
   </section>
 
