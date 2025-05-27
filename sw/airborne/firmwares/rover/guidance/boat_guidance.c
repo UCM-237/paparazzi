@@ -51,7 +51,11 @@ ctrl_t guidance_control;
 
 static struct PID_f boat_pid;
 static float time_step;
+
+// This ones are for saving the state of the boat during the static ctrl
 static float last_speed_cmd;
+static float last_w;  // Virtual coordinate
+
 uint32_t rover_time = 0;
 uint8_t reset_time = 0;
 
@@ -303,6 +307,12 @@ void boat_guidance_steering_obtain_setpoint(void)
 		if( (get_sys_time_msec() - rover_time) >= 1000*gvf_c_stopwp.wait_time){
 			reset_time = 0;
       guidance_control.cmd.speed = last_speed_cmd;
+      if (gvf_c_stopwp.next_wp > 0){
+      gvf_parametric_bare_control.w = (float) (gvf_c_stopwp.next_wp-1);
+      }
+      else{
+        gvf_parametric_bare_control.w = 0.0f;
+      }
 			gvf_c_stopwp.stay_still = 0;
 		}	
 	}
