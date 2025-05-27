@@ -111,5 +111,21 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
       <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="gvf_quintic_bezier_bare"/>
     </block>
+    
+    <!-- Malacate functions -->
+    <block name="mision_malacate">
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
+      <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      <exception cond="dist_quintic(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_malacate"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_malacate">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun="send_measure_msg(WP_BZ0)"/>
+      <call_once fun="increase_bz_pointer()"/>
+      <call fun="boat_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="serial_response == 0" deroute="mision_malacate"/>  
+    </block>
   </blocks>
 </flight_plan>

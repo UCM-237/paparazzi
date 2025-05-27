@@ -27,7 +27,8 @@
       <module name="radio_control" type="ppm"/>
       <module name="fdm"           type="CYANOA"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
-      <!-- <define name="NPS_BYPASS_INS"  value="TRUE"/> -->
+      <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <module name="serial" type="nps"/>
     </target>    
     
     <!-- Same board module as matek_f405_wind but without OSD -->
@@ -84,10 +85,8 @@
     <module name="gvf_parametric_bare">
       <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
     </module>
-    <module name="guidance" type="boat">
-    	<define name="BOAT_SPEED_KF" value="5000"/>
-      <define name="BOAT_BEARING_KF" value="-5000"/>
-    </module>
+    <module name="guidance" type="boat"/>
+
 
 		
   </firmware>

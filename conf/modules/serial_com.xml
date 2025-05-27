@@ -30,7 +30,7 @@
   <periodic fun="serial_ping()" freq="10" autorun="TRUE"/>    <!-- Esto es para mandar la telemetria -->
   <event fun="serial_event()"/>                               <!-- Esto es para leer los mensajes -->
 
-  <makefile>
+  <makefile target="ap" firmware="rover"> 
     <configure name="SERIAL_UART" default = "UART5" case="upper|lower"/> <!-- Revisar estos configure | Mirar gps_ublox.xml -->
     <configure name="SERIAL_BAUD" default="B115200"/>
     <file name="serial_com.c"/>

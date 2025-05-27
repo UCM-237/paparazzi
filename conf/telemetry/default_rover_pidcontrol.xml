@@ -15,7 +15,7 @@
       <message name="BR_SONAR"	             period="1.0"/> 
       <message name="DATALINK_REPORT"        period="5.1"/>
       <message name="ENERGY"                 period="4.5"/> 
-      <!-- <message name="GPS"                    period="0.25"/> -->
+      <message name="GPS"                    period="0.25"/>
       <message name="GPS_INT"                period="0.35"/>
       <message name="GPS_SOL"                period="2.0"/>
       <message name="INS"                    period="0.3"/> 
@@ -29,6 +29,8 @@
 
       <message name="CIRCLE"                 period="2.5"/> 
       <message name="SEGMENT"                period="2.5"/> 
+
+      <message name="BODY_RATES_ACCEL"       period="0.3"/> 
       
       <!-- <message name="NUM_WP_MOVED"         period="1.6"/> -->
       
