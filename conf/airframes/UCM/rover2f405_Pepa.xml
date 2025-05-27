@@ -1,3 +1,5 @@
+<!-- Firmware para Pepa -->
+
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
 <!--Rover Pepa -->
 <airframe name="boat">
@@ -11,6 +13,9 @@
       <module name="radio_control" type="sbus">
         <configure name="SBUS_PORT" value="UART2"/>
       </module>
+      <module name="serial" type="com">
+    	  <configure name="SERIAL_UART" value="UART5"/>
+      </module>
     </target>
     
     <target name="nps" board="pc">
@@ -20,19 +25,25 @@
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
     </target>    
     
-    <!-- Same board module as matek_f765_wing but without OSD -->
-    <module name="board" type="matek_f405_car"/> <!-- IMU included -->
+    <!-- Same board module as matek_f405 but with another IMU -->
+    <module name="board" type="matek_f405v2_car"/> <!-- IMU included -->
     
     <module name="actuators" type="pwm"/>
+
+    <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
 
     <module name="gps" type="ublox">
     	<configure name="GPS_PORT"  value="UART3"/>
     </module>
     <module name="gps_ubx_ucenter"/>
+
+
+    <!-- Pos estimated with Kalman Filter -->
+    <module name="ins"/>  
+    <!-- <module name="ins" type="ekf"/> -->
+    <!-- <module name="ins" type="slam"/> -->
     
-    
-    <module name="ins"/> <!-- Speed estimated from GPS -->
-    
+    <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
       <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
@@ -42,8 +53,9 @@
     </module>
     
     <!-- Compass ublox m8n -->
+    <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
     <module name="mag_hmc58xx">
-    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C1"/>
+    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
     	
@@ -97,9 +109,11 @@
 
   <!-- COMMANDS SECTION ..................................................................... -->
    <servos> 
-    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
+    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry...
+          On the board is the S3 and S4 -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>
   </servos> 
   
   <!-- Low level commands (PWM signal) -->
@@ -118,6 +132,7 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
+    <set servo="MOTOR_LIDAR" value="tf_servo.pos"/>
   </command_laws>
 
 

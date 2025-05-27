@@ -27,8 +27,8 @@
       <configure name="MODEM_PORT_IN"  value="4251"/-->
     </target>    
     
-    <!-- Same board module as matek_f765_wing but without OSD -->
-    <module name="board" type="matek_f405_car"/> <!-- IMU included -->
+    <!-- Same board module as matek_f405 but with another IMU -->
+    <module name="board" type="matek_f405v2_car"/> <!-- IMU included -->
     
     <module name="actuators" type="pwm"/>
 
@@ -41,15 +41,14 @@
 
 
     <!-- Pos estimated with Kalman Filter -->
-    <module name="ins"/> 
-    <!-- <module name="ins_kf"/> -->
-    <!--module name="ins" type="ekf"/-->
-
-
+    <module name="ins"/>  
+    <!-- <module name="ins" type="ekf"/> -->
+    <!-- <module name="ins" type="slam"/> -->
+    <!-- <module name="ins" type="slam_ekf"/> -->
+    
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
-      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.5"/>
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
    <module name="telemetry" type="xbee_api">
@@ -116,7 +115,8 @@
 
   <!-- COMMANDS SECTION ..................................................................... -->
    <servos> 
-    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
+    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry...
+          On the board is the S3 and S4 -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>
@@ -126,6 +126,7 @@
   <commands>
     <axis name="THROTTLE"    failsafe_value="0"/>
     <axis name="STEERING"    failsafe_value="0"/>
+    <axis name="SERVO"    failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
@@ -138,7 +139,8 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
-    <set servo="MOTOR_LIDAR" value="tf_servo.pos"/>
+    <!-- <set servo="MOTOR_LIDAR" value="tf_servo.pos"/> -->
+    <set servo="MOTOR_LIDAR" value="@SERVO"/>
   </command_laws>
 
 
