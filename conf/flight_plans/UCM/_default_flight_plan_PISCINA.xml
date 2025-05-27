@@ -1,0 +1,131 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+<!-- Este plan de vuelo es para la piscina de la UCM -->
+
+<flight_plan alt="660" ground_alt="650" lat0="40.436857" lon0="-3.731207" max_dist_from_home="500" name="Rover Steering" security_height="0.3">
+  <header>
+
+</header>
+  <waypoints>
+    <waypoint name="HOME"    x="0" y="0"/>
+    <waypoint name="STDBY"   x="-55" y="20"/>
+    <waypoint name="ELLIPSE" x="-40" y="10"/>
+    <waypoint name="P1"      lat="40.4370040" lon="-3.7312671"/>
+    <waypoint name="P2"      lat="40.4373809" lon="-3.7314290"/>
+    <waypoint lat="40.4371049" lon="-3.7314030" name="BZ0"/> <!-- wP/-->
+    <waypoint lat="40.4369629" lon="-3.7313350" name="BZ1"/>
+    <waypoint lat="40.4370009" lon="-3.7311939" name="BZ2"/>
+    <waypoint lat="40.4370589" lon="-3.7311450" name="BZ3"/>
+    <waypoint lat="40.4372109" lon="-3.7312220" name="BZ4"/> <!-- wP/-->
+    <waypoint lat="40.4372909" lon="-3.7313140" name="BZ5"/>
+    <waypoint lat="40.4374239" lon="-3.7314750" name="BZ6"/>
+    <waypoint lat="40.4373409" lon="-3.7315690" name="BZ7"/> <!-- wP/-->
+    <waypoint lat="40.4373029" lon="-3.7314770" name="BZ8"/>
+    <waypoint lat="40.4371689" lon="-3.7313539" name="BZ9"/>
+    <waypoint lat="40.4372559" lon="-3.7313900" name="BZ10"/>
+    <waypoint lat="40.4371350" lon="-3.7314160" name="BZ11"/> <!-- wP/-->
+    <waypoint name="_S1" x="3" y="4"/>
+    <waypoint name="_S2" x="3" y="-4"/>
+    <waypoint name="_S3" x="-3" y="-4"/>
+    <waypoint name="_S4" x="-3" y="4"/>
+    <waypoint name="_N1" x="796.4" y="1254.9"/>
+    <waypoint name="_N2" x="796.4" y="-865.4"/>
+    <waypoint name="_N3" x="-908.7" y="-865.4"/>
+    <waypoint name="_N4" x="-908.7" y="1254.9"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L0"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L1"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L2"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L3"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L4"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L5"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L6"/>
+  </waypoints>
+  <sectors>
+    <sector color="red" name="Net">
+      <corner name="_N1"/>
+      <corner name="_N2"/>
+      <corner name="_N3"/>
+      <corner name="_N4"/>
+    </sector>
+  </sectors>
+  <variables>
+    <variable init="5.0" max="20.0" min="1.0" step="1.0" var="a_stb"/>
+    <variable init="5.0" max="20.0" min="1.0" step="1.0" var="b_stb"/>
+  </variables>
+  <blocks>
+    <block name="Wait GPS" strip_icon="gps.png">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+    </block>
+    <block name="Geo init" strip_icon="googleearth.png">
+      <while cond="LessThan(NavBlockTime(), 10)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+    </block>
+    <block name="Start Engine" strip_icon="on.png">
+      <while cond="LessThan(NavBlockTime(), 1)"/>
+      <call_once fun="autopilot_set_motors_on(TRUE)"/>
+    </block>
+    <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      <call fun="gvf_ellipse_wp(WP_STDBY, a_stb, b_stb, 0)"/>
+    </block>
+    <block name="line_to_HOME" strip_icon="home_drop.png">
+      <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="ellipse_wp" strip_icon="oval.png">
+      <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <!-- <exception cond="(12.1 > PowerVoltage()) @AND (GpsFixValid())" deroute="line_to_HOME"/> -->
+    </block>
+    <block name="line_P1_P2" strip_icon="line.png">
+      <call fun="gvf_line_wp1_wp2(WP_P1, WP_P2)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="segment_turn_P1_P2" strip_icon="line.png">
+      <call fun="gvf_segment_loop_wp1_wp2(WP_P1, WP_P2, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="sin_p1_p2" strip_icon="line_drop.png">
+      <call fun="gvf_sin_wp1_wp2(WP_P1, WP_P2, gvf_sin_par.w, gvf_sin_par.off, gvf_sin_par.A)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="line_array" strip_icon="line.png">
+      <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="dist(GetPosX(), GetPosY(), WP_L0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
+    </block>
+    <block name="gvf_bezier_bare">
+      <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="gvf_quintic_bezier_bare">
+      <!-- <go wp="BZ0"/> -->
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
+      <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      <exception cond="dist_quintic(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_control">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun="increase_bz_pointer()"/>
+      <call fun="boat_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="gvf_quintic_bezier_bare"/>
+    </block>
+    
+    <!-- Malacate functions -->
+    <block name="mision_malacate">
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
+      <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      <exception cond="dist_quintic(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_malacate"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_malacate">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun="send_measure_msg(WP_BZ0)"/>
+      <call_once fun="increase_bz_pointer()"/>
+      <call fun="boat_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="serial_response == 0" deroute="mision_malacate"/>  
+    </block>
+  </blocks>
+</flight_plan>

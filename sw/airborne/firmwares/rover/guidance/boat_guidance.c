@@ -54,7 +54,6 @@ static float time_step;
 
 // This ones are for saving the state of the boat during the static ctrl
 static float last_speed_cmd;
-static float last_w;  // Virtual coordinate
 
 uint32_t rover_time = 0;
 uint8_t reset_time = 0;
