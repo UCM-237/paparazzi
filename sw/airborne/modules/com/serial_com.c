@@ -91,7 +91,7 @@ uint32_t msg_buffer = 0;
 
 // Sonda (valores por defecto, se modifican en el flight plan)
 #define MAX_DEPTH 20*1000 // En mm
-#define MIN_DEPTH 0 // En mm
+#define MIN_DEPTH 0 			// En mm
 #define PROBE_MSG_LENGTH 12
 int16_t probe_depth = 5000; // En mm
 uint16_t probe_time = 180; // En s
@@ -577,8 +577,8 @@ void serial_ping()
 		else{
 			serial_snd.error = 0;
 			SET_BIT(msg_buffer, SONDA_MANUAL);
-			if((serial_msg.depth > MAX_DEPTH) || (serial_msg.depth < MIN_DEPTH)){
-				// serial_snd.error = 1; // Error de profundidad
+			if((serial_msg.depth >= MAX_DEPTH) || (serial_msg.depth <= MIN_DEPTH)){
+				serial_snd.error = 3; // Error de profundidad
 				SET_BIT(msg_buffer, SONDA_CENTER);
 			}
 			else{

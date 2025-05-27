@@ -104,7 +104,7 @@ struct serial_parse_t {
   uint16_t time;
   uint16_t depth;
 
-  int16_t button_state[BUTTONS]
+  int16_t button_state[BUTTONS];
 
 };
 
