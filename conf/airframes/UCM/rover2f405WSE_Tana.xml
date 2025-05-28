@@ -23,8 +23,8 @@
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
       <module name="telemetry_nps" dir="datalink" />
        <!-- Multiple agents simulation -->
-      <!--configure name="MODEM_PORT_OUT" value="4250"/>
-      <configure name="MODEM_PORT_IN"  value="4251"/-->
+      <configure name="MODEM_PORT_OUT" value="4250"/>
+      <configure name="MODEM_PORT_IN"  value="4251"/>
     </target>    
     
     <!-- Same board module as matek_f405 but with another IMU -->

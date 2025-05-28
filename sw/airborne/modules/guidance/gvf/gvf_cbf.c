@@ -161,13 +161,13 @@ static void cbf_low_level_getState(void)
     if (state.utm_origin_f.zone == 0) {
         struct UtmCoor_f utm_origin = { .north = 500000.0f, .east = 0.0f, .alt = 0.0f, .zone = 30 };
         stateSetLocalUtmOrigin_f(MODULE_GVF_CBF_ID, &utm_origin);
-        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM origin set manually"), "UTM origin set manually");
+       // DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM origin set manually"), "UTM origin set manually");
     }
 
     // Forzar el cálculo de las coordenadas LLA si no están disponibles
     if (!bit_is_set(state.pos_status, POS_LLA_F)) {
         stateCalcPositionLla_f();
-        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("LLA position calculated"), "LLA position calculated");
+        //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("LLA position calculated"), "LLA position calculated");
     }
   // Forzar el cálculo de las coordenadas UTM
     stateCalcPositionUtm_f();
@@ -175,19 +175,19 @@ static void cbf_low_level_getState(void)
     // Verificar si las coordenadas UTM están inicializadas
     
     if (!state.utm_initialized_f) {
-        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM not initialized"), "UTM not initialized");
+        //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM not initialized"), "UTM not initialized");
         return;
     }
 
     // Obtener las coordenadas UTM
     struct UtmCoor_f *utm_pos = stateGetPositionUtm_f();
     if (utm_pos->north == 0.0f && utm_pos->east == 0.0f) {
-    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM position is zero"), "UTM position is zero");
+    //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM position is zero"), "UTM position is zero");
     }
     cbf_ac_state.x = utm_pos->north;
     cbf_ac_state.y = utm_pos->east;
     cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
-    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM OK"), "UTM OK");
+    //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM OK"), "UTM OK");
 
   
     // Obtener otros estados
@@ -212,7 +212,7 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
   cbf_obs_tables[i].available = (uint8_t) 1;
   cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
   sprintf(msg,"Sender %u, Table pos %u",cbf_obs_tables[i].ac_id,i);
-  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
+  //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
   }  
 }
 
@@ -356,8 +356,7 @@ uint32_t now = get_sys_time_msec();
   
   // Modified field (only if there are active conditions
   cbf_ac_state.active_conds=active_conds;
-  cbf_ac_state.xi_y=gvf_c_field.xi_y;
-  cbf_ac_state.xi_x=gvf_c_field.xi_x;
+
   if (active_conds>0){
   	gvf_c_field.xi_x=gvf_c_field.xi_x-cx;
   	gvf_c_field.xi_y=gvf_c_field.xi_x-cy;
@@ -377,7 +376,7 @@ void parse_CBF_STATE(uint8_t *buf)
   int16_t sender_id = (int16_t) pprzlink_get_msg_sender_id(buf);
   char msg[15];
   sprintf(msg,"Sender %u",sender_id);
-  DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
+  //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
   for (uint16_t i = 0; i < CBF_MAX_NEIGHBORS; i++){
     if (cbf_obs_tables[i].ac_id == sender_id) {
       write_cbf_table(i, buf);

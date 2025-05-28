@@ -88,7 +88,7 @@
    gui_color="#e100e4001a00"
   />
   <aircraft
-   name="Rover_Tana2"
+   name="Rover_SIM2"
    ac_id="9"
    airframe="airframes/UCM/rover2f405WSE_Tana2.xml"
    radio="radios/UCM/T16SZ_SBUS_rover.xml"
