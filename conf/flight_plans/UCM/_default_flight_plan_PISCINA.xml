@@ -1,7 +1,7 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 <!-- Este plan de vuelo es para la piscina de la UCM -->
 
-<flight_plan alt="660" ground_alt="650" lat0="40.436857" lon0="-3.731207" max_dist_from_home="500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.436857" lon0="-3.731207" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
@@ -125,7 +125,8 @@
       <call_once fun="increase_bz_pointer()"/>
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-      <exception cond="serial_response == 0" deroute="mision_malacate"/>  
+      <exception cond="And(serial_response, serial_response)" deroute="mision_malacate"/>
+       <!-- <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="mision_malacate"/> -->
     </block>
   </blocks>
 </flight_plan>

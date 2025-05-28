@@ -12,7 +12,7 @@
   <settings>
     <dl_settings>
       <dl_settings NAME="SR_Com">
-        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_test" shortname="test" module="modules/com/serial_com" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_test" shortname="test" values="FALSE|TRUE"/>
       </dl_settings>
     </dl_settings>
   </settings>
@@ -22,8 +22,8 @@
   <header>
     <file name="serial_nps.h"/>
   </header>
-  <init fun="serial_init()"/>
-  <periodic fun="serial_ping()" freq="10" autorun="TRUE"/>
+  <init fun="serial_nps_init()"/>
+  <periodic fun="serial_nps_ping()" freq="10" autorun="TRUE"/>
   <!-- <event fun="serial_event()"/>   -->
 
   <makefile target="nps" firmware="rover">

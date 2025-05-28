@@ -25,7 +25,7 @@
 
 // This file simulates the serial communication for the malacate missions.
 
-#include "modules/com/serial_com.h"
+#include "modules/com/serial_nps.h"
 #include "mcu_periph/sys_time.h"
 #include "modules/nav/waypoints.h"
 
@@ -39,7 +39,7 @@ bool serial_response;
 
 struct serial_parse_t serial_msg;
 
-void serial_ping(void)
+void serial_nps_ping(void)
 {
   if (serial_msg_test && !waiting_for_response) {
     printf("[SIM] Enviando medida (de momento sin datos)\n");
@@ -65,11 +65,12 @@ void serial_ping(void)
   }
 }
 
-void serial_init(void)
+void serial_nps_init(void)
 {
   serial_response = false;
   serial_msg_test = false;
   waiting_for_response = false;
+  printf("[SIM] Inicializando comunicación serial simulada\n");
 }
 
 // Same as AP but without sending the message
@@ -80,6 +81,11 @@ void send_measure_msg(uint8_t wp)
   int probe_time = WaypointY(wp);
 
   serial_msg_test = true;
+}
+
+// Paparazzi cant check a variable directly, so we use a function to check the response
+bool check_malacate(){
+  return serial_response;
 }
 
 

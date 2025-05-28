@@ -243,6 +243,7 @@
     <define name="SENSORS_PARAMS" value="nps_sensors_params_default.h" type="string"/>
   </section>
   
+  <!-- Esto ademas de estar mal, no es muy fiable -->
   <section name="BAT">
     <define name="CATASTROPHIC_BAT_LEVEL"    value="7.35" unit="V"/>
     <define name="CRITIC_BAT_LEVEL"          value="7.40" unit="V"/>

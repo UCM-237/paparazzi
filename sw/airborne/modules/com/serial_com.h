@@ -125,5 +125,6 @@ void send_measure_msg(uint8_t wp);
 extern void serial_init(void);
 extern void serial_ping(void);
 extern void serial_event(void);
+extern bool check_malacate(void);
 
 #endif //SERIAL_COM_H

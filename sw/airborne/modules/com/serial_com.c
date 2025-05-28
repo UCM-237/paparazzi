@@ -813,3 +813,8 @@ void send_measure_msg(uint8_t wp){
 
 }
 
+// Paparazzi cant check a variable directly, so we use a function to check the response
+bool check_malacate(){
+  return serial_response;
+}
+

@@ -27,6 +27,8 @@
 #ifndef SERIAL_NPS_H
 #define SERIAL_NPS_H
 
+#include "std.h"
+
 // Variables globales
 extern bool serial_msg_setting;
 extern bool serial_msg_test;
@@ -46,8 +48,9 @@ struct serial_parse_t {
 extern struct serial_parse_t serial_msg;
 
 // Funciones simuladas
-extern void serial_init(void);
-extern void serial_ping(void);
+extern void serial_nps_init(void);
+extern void serial_nps_ping(void);
 extern void send_measure_msg(uint8_t wp);
+extern bool check_malacate(void);
 
 #endif // SERIAL_NPS_H
