@@ -56,8 +56,10 @@ float dist_WP=0.0;
 // Lines
 gvf_li_line gvf_lines_array[GVF_N_LINES];
 
-
-#if PERIODIC_TELEMETRY
+// Field
+ gvf_common_field gvf_c_field;
+ 
+ #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 static void send_gvf(struct transport_tx *trans, struct link_device *dev)
 {
@@ -192,7 +194,11 @@ void gvf_control_2D(float ke, float kn __attribute__((unused)), float e,
   // Calculation of the desired angular velocity in the vector field
   float pdx_dot = tx - ke * e * nx;
   float pdy_dot = ty - ke * e * ny;
-
+   
+  gvf_c_field.xi_x = pdx_dot;
+  gvf_c_field.xi_y = pdy_dot;
+  
+  
   float Apd_dot_dot_x = -ke * (nx * px_dot + ny * py_dot) * nx;
   float Apd_dot_dot_y = -ke * (nx * px_dot + ny * py_dot) * ny;
 

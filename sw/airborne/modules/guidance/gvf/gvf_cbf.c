@@ -66,7 +66,7 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
   
  pprz_msg_send_CBF(trans, dev, AC_ID, &cbf_ac_state.xi_x,&cbf_ac_state.xi_y,
   				&cbf_ac_state.xicbf_x,&cbf_ac_state.xicbf_y,
-  				&cbf_ac_state.nei,&cbf_ac_state.active_conds,
+  				&cbf_control.n_neighborns,&cbf_ac_state.active_conds,
   				&cbf_ac_state.r,&cbf_ac_state.alpha);
 }
 
@@ -298,6 +298,9 @@ uint32_t now = get_sys_time_msec();
  
  cbf_low_level_getState();
  send_cbf_state_to_nei();
+ cbf_ac_state.xi_x=gvf_c_field.xi_x;
+ cbf_ac_state.xi_y=gvf_c_field.xi_y;
+
  for (uint8_t i = 0; i < cbf_control.n_neighborns; ++i)  {
 	
     if (cbf_obs_tables[i].available == 0) { 
