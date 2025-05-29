@@ -76,13 +76,15 @@ void ekf_slam_f(struct extended_kalman_filter *filter, float *U, float dt) {
     float ax = U[0], ay = U[1], wz = U[2];
     float theta = filter->X[4];
 
+    float beta = 0.99999;
+
     filter->X_pred[0] = filter->X[0] + filter->X[2] * dt;
     filter->X_pred[1] = filter->X[1] + filter->X[3] * dt;
     filter->X_pred[2] = filter->X[2] + (cosf(theta) * ax - sinf(theta) * ay) * dt;
     filter->X_pred[3] = filter->X[3] + (sinf(theta) * ax + cosf(theta) * ay) * dt;
     filter->X_pred[4] = filter->X[4] + wz * dt;
-    filter->X_pred[5] = filter->X[5];
-    filter->X_pred[6] = filter->X[6];
+    filter->X_pred[5] = beta*filter->X[5];
+    filter->X_pred[6] = beta*filter->X[6];
 }
 
 // Jacobiano F (default F = I)

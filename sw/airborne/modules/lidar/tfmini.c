@@ -125,6 +125,7 @@ void tfmini_init(void)
 
 
 // Simulated Lidar Measurement (mover a otro archivo ???)
+#ifdef USE_NPS
 void sim_overwrite_lidar(){
   uint32_t now_ts = get_sys_time_usec();
 
@@ -171,6 +172,7 @@ void sim_overwrite_lidar(){
     AbiSendMsgLIDAR_SERVO(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance, tf_servo.ang);
   }
 }
+#endif // USE_NPS
 
 
 /**
@@ -314,6 +316,7 @@ void tfmini_servo(){
     else{
       tf_servo.pos = 0;
     }
+    commands[COMMAND_SERVO] = tf_servo.pos;
     tf_servo.ang = PWM2ANGLE(tf_servo.pos);
   }
 }

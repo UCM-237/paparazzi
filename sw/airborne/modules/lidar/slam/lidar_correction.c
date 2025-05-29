@@ -105,8 +105,10 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
   }
 
   float min_distance = FLT_MAX;
+  #ifdef USE_EKF_SLAM
   float psi = 10; // psi = [-pi, pi]
-  
+  #endif
+
   // Iterar sobre todas las paredes
   for (uint8_t w = 0; w < wall_system.wall_count; w++) {
     struct Wall *wall = &wall_system.walls[w];

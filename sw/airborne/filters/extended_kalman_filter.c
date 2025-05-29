@@ -96,8 +96,6 @@ void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float
     float_mat_mul_transpose(_P, _tmp, _F, filter->n, filter->n, filter->n); // P = tmp*F^t = F*P*F^t
     float_mat_sum(_P, _P, _Q, filter->n, filter->n);  // P = P + Q
 
-    // MAKE_MATRIX_PTR(_K2, filter->K2, filter->m); // Para probar
-    // float_mat_copy(_K2, _P, filter->n, filter->m);  // Para ver en el mensaje
 }
 
 
@@ -147,7 +145,7 @@ void extended_kalman_filter_update(struct extended_kalman_filter *filter, float 
   if(fabs(_P[0][0]) > 1e3){
     float_mat_copy(_P, _H, filter->n, filter->m); // P = I (para limitar, no deberia hacer falta)
   }
-
+  
   // // X = X + K * err
   float err[filter->n];
   float dx_err[filter->n];
@@ -156,17 +154,6 @@ void extended_kalman_filter_update(struct extended_kalman_filter *filter, float 
   float_vect_diff(err, Y, err, filter->m);
   float_mat_vect_mul(dx_err, _K, err, filter->n, filter->m); // K * err = K*(Y-err) = K*(Y-H*X)
   float_vect_sum(filter->X, filter->X, dx_err, filter->n); // X + dx_err = X + K*err
-
-  // printf("\n Valores de la matriz K:\n");
-  // printf("-------------------------\n");
-  // printf("Valor de K[0][0]: %f\t, Incertidumbre P[0][0]: %f\n", _K[0][0], _P[0][0]);
-  // printf("Valor de K[0][5]: %f\t, Incertidumbre P[0][5]: %f\n", _K[0][5], _P[0][5]);
-
-  // printf("Valor de K[1][1]: %f\t, Incertidumbre P[1][1]: %f\n", _K[1][1], _P[1][1]);
-  // printf("Valor de K[1][6]: %f\t, Incertidumbre P[1][6]: %f\n", _K[1][6], _P[1][6]);
-
-  // printf("Valor de K[5][5]: %f\t, Incertidumbre P[5][5]: %f\n", _K[5][5], _P[5][5]);
-  // printf("Valor de K[6][6]: %f\t, Incertidumbre P[6][6]: %f\n \n", _K[6][6], _P[6][6]);
 
 }
 

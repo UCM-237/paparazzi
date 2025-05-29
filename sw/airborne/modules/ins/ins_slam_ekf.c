@@ -60,7 +60,7 @@ static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 #define BETA 0.95f                // Factor de suavizado
 
 // Para el filtro de Kalman
-#define R_LIDAR_HIGH 20.0f
+#define R_LIDAR_HIGH 150.0f
 #define R_LIDAR_LOW  1E-05
 
 // Para NPS
@@ -75,6 +75,8 @@ struct FloatVector {
   float y;  ///< East
   float z;  ///< Down
 };
+
+struct NedCoor_f rover_pos;
 
 
 #include "modules/core/abi.h"
@@ -250,8 +252,8 @@ void update_matrix(struct extended_kalman_filter *filter){
   // filter->R[5][5] = kalman_variance.delta.x;
   // filter->R[6][6] = kalman_variance.delta.y;
 
-  filter->Q[0][0] = kalman_variance.imu*1E-03;
-  filter->Q[1][1] = kalman_variance.imu*1E-03;
+  filter->Q[0][0] = kalman_variance.imu;
+  filter->Q[1][1] = kalman_variance.imu;
   filter->Q[2][2] = kalman_variance.imu*1E-03;
   filter->Q[3][3] = kalman_variance.imu*1E-03;
   filter->Q[4][4] = kalman_variance.imu*1E-03;
@@ -267,8 +269,13 @@ void update_lidar_covariance(struct extended_kalman_filter *filter, float theta)
     float r_low = kalman_variance.delta.y;  // Delta Paralelo
     
     // Calcular vectores unitarios
-    float dx = cosf(theta);      // Dirección del rayo
-    float dy = sinf(theta);
+    // float dx = cosf(theta);      // Dirección del rayo
+    // float dy = sinf(theta);
+    // float nx = -dy;              // Dirección perpendicular
+    // float ny = dx;
+
+    float dx = cosf(theta)*cosf(theta);      // Dirección del rayo
+    float dy = sinf(theta)*sinf(theta);
     float nx = -dy;              // Dirección perpendicular
     float ny = dx;
 
@@ -289,29 +296,16 @@ void update_lidar_covariance(struct extended_kalman_filter *filter, float theta)
     filter->R[6][5] = R[1][0];
     filter->R[6][6] = R[1][1];
 
-
-    // Same with H
-    float H[2][1] = {
-        { dx * dx },
-        { dy * dy }
-    };
-
-    filter->H[0][5] = -H[0][0];
-    // filter->H[5][0] *= H[0][0];
-    filter->H[1][6] = -H[1][0];
-    // filter->H[6][1] *= H[1][0];
-
-    printf("H[1][6]: %f\n", filter->H[1][6]);
 }
 
 
 // If no obstacle is detected, the covariance is set to a high value
 void clean_lidar_covariance(struct extended_kalman_filter *filter) {
     
-    filter->R[5][5] = kalman_variance.delta.x; 
+    filter->R[5][5] = kalman_variance.delta.x*0.1; 
     filter->R[5][6] = 0;
     filter->R[6][5] = 0;
-    filter->R[6][6] = kalman_variance.delta.x;
+    filter->R[6][6] = kalman_variance.delta.x*0.1;
 }
 
 
@@ -335,8 +329,8 @@ void init_filter(struct extended_kalman_filter *filter, float dt){
 
   MAKE_MATRIX_PTR(_H, filter->H, filter->m);
   float_mat_identity(_H, m, n);
-  filter->H[0][5] = -1;
-  filter->H[1][6] = -1;
+  // filter->H[0][5] = -1;
+  // filter->H[1][6] = -1;
 
   kalman_variance.pos = RP_GPS;
   kalman_variance.vel = RV_GPS;
@@ -473,7 +467,7 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
 
   // (void)dt; // I dont need this (avoid the warning)
 
-  // Update the R and Q matrix (Not efficent. Change)
+  // Update the R and Q matrix (Not efficent. Maybe Change)
   update_matrix(&kalman_filter);
 
   // Set body acceleration in the state
@@ -549,13 +543,17 @@ void ins_int_update_gps(struct GpsState *gps_s)
   ned_of_ecef_vect_i(&gps_speed_cm_s_ned, &ins_int.ltp_def, &ecef_vel_i);
 
 
+
   // Error en el GPS para NPS (para debug)
   #ifdef USE_NPS
-    // gps_pos_cm_ned.x += ins_slam.gps_bias.x*fabs(rand_gaussian()*50/3); //*1*bias
-    // gps_pos_cm_ned.y += ins_slam.gps_bias.y*fabs(rand_gaussian()*50/3); //*1*bias;
+    // gps_pos_cm_ned.x += ins_slam.gps_bias.x*fabs(rand_gaussian()*50); //*1*bias
+    // gps_pos_cm_ned.y += ins_slam.gps_bias.y*fabs(rand_gaussian()*50); //*1*bias;
     gps_pos_cm_ned.x += ins_slam.gps_bias.x*100; // TEST mas sencillo, solo el offset
     gps_pos_cm_ned.y += ins_slam.gps_bias.y*100; // TEST mas sencillo, solo el offset
   #endif
+
+  rover_pos.x = gps_pos_cm_ned.x/100.0f; 
+  rover_pos.y = gps_pos_cm_ned.y/100.0f;  
 
 
   // Display purposes
@@ -565,8 +563,8 @@ void ins_int_update_gps(struct GpsState *gps_s)
 
   // Vector de Medidas
   float Y[7];
-  Y[0] = gps_pos_cm_ned.x/100.0f;
-  Y[1] = gps_pos_cm_ned.y/100.0f;
+  Y[0] = gps_pos_cm_ned.x/100.0f + kalman_filter.X[5];
+  Y[1] = gps_pos_cm_ned.y/100.0f + kalman_filter.X[6];
   Y[2] = gps_speed_cm_s_ned.x/100.0f;
   Y[3] = gps_speed_cm_s_ned.y/100.0f;
   Y[4] = ahrs_dcm.ltp_to_body_euler.psi;
@@ -574,7 +572,7 @@ void ins_int_update_gps(struct GpsState *gps_s)
   Y[6] = offset.x;
 
   // Actualiza la matriz de covarianza
-  if (kalman_variance.psi == 10) {
+  if (kalman_variance.psi == 10) {  // Si no hay medidas de Lidar
     clean_lidar_covariance(&kalman_filter);
     float beta = (ins_slam.beta+99)/100;
     Y[5] = kalman_filter.X[5]*beta;
@@ -591,6 +589,9 @@ void ins_int_update_gps(struct GpsState *gps_s)
   for (int i = 0; i < 5; i++) {
     kalman_filter.K2[1][i] = Y[i];
   }
+  kalman_filter.K2[1][0] -= offset.y;
+  kalman_filter.K2[1][1] -= offset.x;
+
 
   // Satura el offset por si acaso
   if (fabs(kalman_filter.X[5]) > ins_slam.max_distance_wall*5) {
@@ -601,14 +602,14 @@ void ins_int_update_gps(struct GpsState *gps_s)
   }
 
 
-  if (kalman_variance.psi == 10) {
-    kalman_filter.X[5] = gps_offset.y;
-    kalman_filter.X[6] = gps_offset.x;
-  }
-  else{
+  // if (kalman_variance.psi == 10) {
+  //   kalman_filter.X[5] = gps_offset.y;
+  //   kalman_filter.X[6] = gps_offset.x;
+  // }
+  // else{
     gps_offset.y = kalman_filter.X[5];
     gps_offset.x = kalman_filter.X[6];
-  }
+  // }
 
 
   // Reset the temporary variables
@@ -668,13 +669,16 @@ void ins_update_lidar(float distance, float angle){
 
 
   // TODAS estas cuentas estan en ENU
-  // Obtener posición actual del rover en coordenadas locales
-  float x_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->x);
-  float y_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->y);
+  // Obtener posición actual del rover (sin corregir) en coordenadas locales
+  // float x_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->x);
+  // float y_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->y);
 
-  // Borra el offset de la última medida
-  x_rover -= kalman_filter.X[6];
-  y_rover -= kalman_filter.X[5];
+  // // Borra el offset de la última medida
+  // x_rover -= kalman_filter.X[6];
+  // y_rover -= kalman_filter.X[5];
+  float x_rover = rover_pos.y;
+  float y_rover = rover_pos.x;
+  
 
   float theta = stateGetNedToBodyEulers_f()->psi;
   float corrected_angle = M_PI / 2 - angle*M_PI/180 - theta;

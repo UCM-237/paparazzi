@@ -118,6 +118,7 @@
   <commands>
     <axis name="THROTTLE"    failsafe_value="0"/>
     <axis name="STEERING"    failsafe_value="0"/>
+    <axis name="SERVO"    failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
@@ -130,7 +131,7 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
-    <set servo="MOTOR_LIDAR" value="tf_servo.pos"/>
+    <set servo="MOTOR_LIDAR" value="@SERVO"/>
   </command_laws>
 
 

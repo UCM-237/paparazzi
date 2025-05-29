@@ -88,12 +88,14 @@
     <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
+    <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>
   </servos> 
   
   <!-- Low level commands (PWM signal) -->
   <commands>
     <axis name="THROTTLE"    failsafe_value="0"/>
     <axis name="STEERING" failsafe_value="0"/>
+    <axis name="SERVO"    failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->
@@ -106,6 +108,7 @@
   <command_laws>
     <set servo="MOTOR_THROTTLE" value="@THROTTLE"/>
     <set servo="MOTOR_STEERING" value="@STEERING"/>
+    <set servo="MOTOR_LIDAR" value="@SERVO"/>
   </command_laws>
 
 
