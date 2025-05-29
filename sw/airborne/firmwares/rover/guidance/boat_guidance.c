@@ -161,8 +161,8 @@ void boat_bound_cmds(void)
 void boat_guidance_read_rc(void){
 
   // Multiply by 2 to maintain the same range as the NAV mode
-  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE]*2;
-  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL]*2;
+  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE]*2*0.7; // 70% por si acaso
+  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL]*2*0.7;
 
   // Display purposes
   guidance_control.throttle = (float)guidance_control.rc_throttle;  // +- 19200
