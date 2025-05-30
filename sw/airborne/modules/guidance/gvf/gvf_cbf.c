@@ -54,8 +54,8 @@ struct cbf_tel cbf_telemetry;
 
 static void send_cbf(struct transport_tx *trans, struct link_device *dev)
 {
-  uint16_t n = 1;
-  uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
+  uint8_t n = 1;
+  //uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   if (cbf_control.n_neighborns > 0) { // n = 0 doesn't make sense
     n = cbf_control.n_neighborns;
   }
@@ -66,14 +66,15 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
   
  pprz_msg_send_CBF(trans, dev, AC_ID, &cbf_ac_state.xi_x,&cbf_ac_state.xi_y,
   				&cbf_ac_state.xicbf_x,&cbf_ac_state.xicbf_y,
-  				&cbf_control.n_neighborns,&cbf_ac_state.active_conds,
+  				&cbf_control.n_neighborns,
+          &cbf_ac_state.active_conds,
   				&cbf_ac_state.r,&cbf_ac_state.alpha);
 }
 
 static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 {
-  uint16_t n = 1;
-  char msg[50];
+  uint8_t n = 1;
+  // This is the array of the ac_ids of the neighbors
   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   if (cbf_control.n_neighborns > 0) { // n = 0 doesn't make sense
     n = cbf_control.n_neighborns;
@@ -101,41 +102,56 @@ static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 void cbf_init(void)
 {
 
-  cbf_param.r = 2.0;
+  cbf_param.r = 3.0;
   cbf_param.alpha = 1.0;
-  cbf_ac_state.r=2.0;
+  cbf_ac_state.r=3.0;
   cbf_ac_state.alpha=1.0;
   cbf_ac_state.nei=0;
-  cbf_ac_state.active_conds=0;
+  cbf_ac_state.active_conds=(uint8_t)0;
   cbf_ac_state.xicbf_y=0;
   cbf_ac_state.xicbf_x=0;
   cbf_ac_state.xi_y=0;
   cbf_ac_state.xi_x=0;
-  cbf_control.n_neighborns=0;
+  cbf_control.n_neighborns= (uint8_t) 0;
+  cbf_param.timeout = 2000.0; // valor en milisegundos
  // Initilize the obstacles tables with the ac_id of the neighborns
   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
-  char msg[10];
+  for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
+    cbf_obs_tables[i].available = 0; // Initialize as not available
+    cbf_obs_tables[i].omega_safe = 0.0;
+  }
+  // Initialize the obstacles tables with the ac_id of the neighborns
   for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
     if (cbf_nei_ac_ids[i] > 0 && cbf_nei_ac_ids[i] < 255) {
       cbf_obs_tables[i].ac_id = cbf_nei_ac_ids[i];
       cbf_telemetry.acs_id[i] = cbf_nei_ac_ids[i]; // for telemetry
-
+      cbf_obs_tables[i].available = 1;
       cbf_control.n_neighborns = cbf_control.n_neighborns + 1;
     } 
     else {
       cbf_obs_tables[i].ac_id = 0;
       cbf_telemetry.acs_id[i] =0;
     }
-    cbf_obs_tables[i].available = 0;
-    cbf_telemetry.acs_timeslost[i] = 0; // for telemetry
+    // Initialize the state related to the obstacles   
     cbf_obs_tables[i].state.x=0.;
     cbf_obs_tables[i].state.y=0.;
     cbf_obs_tables[i].state.vx=0.;
     cbf_obs_tables[i].state.vy=0.;
     cbf_obs_tables[i].t_last_msg=0;
-    /*sprintf(msg," %u, %u",i, cbf_obs_tables[i].ac_id);
-    DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("INIT OK"), "INIT OK");*/
-  }
+    // Initialize the state related to telemetry
+    cbf_telemetry.acs_timeslost[i] = 0; // for telemetry
+    cbf_telemetry.acs_available[i]=0;
+    cbf_telemetry.uref[i]=0;
+    cbf_telemetry.prel_norm[i]=0;
+    cbf_telemetry.px_rel[i]=0;
+    cbf_telemetry.py_rel[i]=0;
+    cbf_telemetry.vx_rel[i]=0;
+    cbf_telemetry.vy_rel[i]=0;
+    cbf_telemetry.h_ref[i]=0;
+    cbf_telemetry.h_dot_ref[i]=0;
+    cbf_telemetry.psi_ref[i]=0;
+     }
+
   cbf_ac_state.nei=cbf_control.n_neighborns;
   #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF, send_cbf);
@@ -155,7 +171,7 @@ void cbf_init(void)
 
 static void cbf_low_level_getState(void)
 {
-  char msg[200];
+  
 
     // Verifica si el origen UTM está configurado
     if (state.utm_origin_f.zone == 0) {
@@ -220,40 +236,42 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
 {
   uint8_t ac_id = DL_CBF_REG_TABLE_ac_id(buf);
   if (ac_id == AC_ID) {
-    uint8_t nei_id = DL_CBF_REG_TABLE_nei_id(buf);
+      uint8_t nei_id = DL_CBF_REG_TABLE_nei_id(buf);
     
-    if (nei_id == 0) {
-      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
-        cbf_obs_tables[i].available = 0;
-      }
-    } 
-    else {
-      for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
-        if (cbf_obs_tables[i].ac_id == (int16_t)nei_id) {
-          	cbf_obs_tables[i].state.x = DL_CBF_REG_TABLE_x_enu(buf);
-  		cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
-  		cbf_obs_tables[i].state.vx = DL_CBF_REG_TABLE_vx_enu(buf);
-  		cbf_obs_tables[i].state.vy = DL_CBF_REG_TABLE_vy_enu(buf);
-  		cbf_obs_tables[i].state.speed  = DL_CBF_REG_TABLE_speed(buf);
-  		cbf_obs_tables[i].state.course = DL_CBF_REG_TABLE_course(buf);
-  		cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
-  		cbf_obs_tables[i].available = 1;
-  		cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
-          return;
+      if (nei_id == 0) {
+        for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
+          //cbf_obs_tables[i].available = 0;
         }
-}
+      } 
+      else {
+        for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
+          if (cbf_obs_tables[i].ac_id == nei_id) {
+              cbf_obs_tables[i].state.x = DL_CBF_REG_TABLE_x_enu(buf);
+              cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
+              cbf_obs_tables[i].state.vx = DL_CBF_REG_TABLE_vx_enu(buf);
+              cbf_obs_tables[i].state.vy = DL_CBF_REG_TABLE_vy_enu(buf);
+              cbf_obs_tables[i].state.speed  = DL_CBF_REG_TABLE_speed(buf);
+              cbf_obs_tables[i].state.course = DL_CBF_REG_TABLE_course(buf);
+              cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
+              cbf_obs_tables[i].available = (uint8_t) 1;
+              cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
+              return;
+           
+        }
+      } 
       for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
         if (cbf_obs_tables[i].available == 0) {
+            cbf_obs_tables[i].ac_id = nei_id;
           	cbf_obs_tables[i].state.x = DL_CBF_REG_TABLE_x_enu(buf);
-  		cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
-  		cbf_obs_tables[i].state.vx = DL_CBF_REG_TABLE_vx_enu(buf);
-  		cbf_obs_tables[i].state.vy = DL_CBF_REG_TABLE_vy_enu(buf);
-  		cbf_obs_tables[i].state.speed  = DL_CBF_REG_TABLE_speed(buf);
-  		cbf_obs_tables[i].state.course = DL_CBF_REG_TABLE_course(buf);
-  		cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
-  		cbf_obs_tables[i].available = 1;
-  		cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
-          return;
+            cbf_obs_tables[i].state.y = DL_CBF_REG_TABLE_y_enu(buf);
+            cbf_obs_tables[i].state.vx = DL_CBF_REG_TABLE_vx_enu(buf);
+            cbf_obs_tables[i].state.vy = DL_CBF_REG_TABLE_vy_enu(buf);
+            cbf_obs_tables[i].state.speed  = DL_CBF_REG_TABLE_speed(buf);
+            cbf_obs_tables[i].state.course = DL_CBF_REG_TABLE_course(buf);
+            cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
+            cbf_obs_tables[i].available = 1;
+            cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
+            return;
         }
     }
  
@@ -264,23 +282,28 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
 static void send_cbf_state_to_nei(void)
 {
   struct pprzlink_msg msg;
+  if (cbf_control.n_neighborns > CBF_MAX_NEIGHBORS) {
+   cbf_control.n_neighborns = CBF_MAX_NEIGHBORS;
+  } // Limit the number of neighbors to CBF_MAX_NEIGHBORS 
   for (int i = 0; i < cbf_control.n_neighborns; i++){
-    if (cbf_obs_tables[i].ac_id>0 && cbf_obs_tables[i].ac_id<255) { // send state to the ACs in CBF_NEI_AC_IDS
-      msg.trans = &(DefaultChannel).trans_tx;
-      msg.dev = &(DefaultDevice).device;
-      msg.sender_id = AC_ID;
-      msg.receiver_id = cbf_obs_tables[i].ac_id;
-      msg.component_id = 0;
-      
-      // The information sended is redundant
-     pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
-                                        &cbf_ac_state.vx, &cbf_ac_state.vy, 
-                                        &cbf_ac_state.speed, &cbf_ac_state.course,
-                                        &cbf_ac_state.uref);
-      /*char m[30]; 
-      sprintf(m,"Enviado a %u",msg.receiver_id);
-      DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
-     }
+    if (cbf_obs_tables[i].ac_id>0 && cbf_obs_tables[i].ac_id<255) {
+        if(cbf_obs_tables[i].available==1){// send state to the ACs in CBF_NEI_AC_IDS
+        msg.trans = &(DefaultChannel).trans_tx;
+        msg.dev = &(DefaultDevice).device;
+        msg.sender_id = AC_ID;
+        msg.receiver_id = cbf_obs_tables[i].ac_id;
+        msg.component_id = 0;
+        
+        // The information sended is redundant
+      pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
+                                          &cbf_ac_state.vx, &cbf_ac_state.vy, 
+                                          &cbf_ac_state.speed, &cbf_ac_state.course,
+                                          &cbf_ac_state.uref);
+        /*char m[30]; 
+        sprintf(m,"Enviado a %u",msg.receiver_id);
+        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
+      }
+    }
     }
 }
 
@@ -293,7 +316,7 @@ bool gvf_cbf(void){
 float eta[CBF_MAX_NEIGHBORS];
 float Aa[CBF_MAX_NEIGHBORS][2];
 float b[CBF_MAX_NEIGHBORS];
-int j=0;
+int j=0; 
 uint32_t now = get_sys_time_msec();
  
  cbf_low_level_getState();
@@ -319,29 +342,51 @@ uint32_t now = get_sys_time_msec();
      // Build the eta[j] (safe function)
      float dx=cbf_ac_state.x-cbf_obs_tables[i].state.x;
      float dy=cbf_ac_state.y-cbf_obs_tables[i].state.y;
+     cbf_ac_state.alpha=1.0;
+     
      eta[i]=(dx)*(dx)+(dy)*(dy)-cbf_param.r*cbf_param.r;
      //  Test the condition for each neighbour. If the condition does not hold the requierement is active
-     float bb=0.25*cbf_param.alpha*pow(eta[i],3);
-     if ((-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y) > bb){ // Condition is active
-     	Aa[j][0]=-dx;
-     	Aa[j][1]=-dy;
-     	b[j]=bb;
-     	j++;
+     float bb;
+     // To protect against division by zero
+     if(eta[i]<1e-6){
+        bb=0.0;
+        eta[i]=0.0;
+        cbf_ac_state.alpha=13;
      }
-   }
+     else{ 
+      bb=0.25*cbf_param.alpha*pow(eta[i],3);
+      cbf_ac_state.alpha=12;
+     }
+     cbf_ac_state.r=-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y;
+     //cbf_ac_state.alpha=-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y;
+     // TODO: Revisar que ocurre aqui porque da un core cuando las posiciones de los robots son muy cercanas
+     if ((-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y) > bb){ // Condition is active
+        cbf_ac_state.alpha=13;
+        Aa[j][0]=-dx;
+        Aa[j][1]=-dy;
+        b[j]=bb;
+        cbf_ac_state.r=b[j];
+        j++;
+      }
+   }  
   int active_conds=j;
+  cbf_ac_state.alpha=20;
+ 
   // Lagrange multiplier
-  if (active_conds>0) {
+  if (active_conds > 0 && active_conds <= CBF_MAX_NEIGHBORS) {
+    cbf_ac_state.alpha=14;
   	double Aact[active_conds][active_conds];
   	for (uint8_t i=0;i<active_conds;i++){
   		for   (uint8_t l=0;l<active_conds;l++){
   			Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
   		}
   	}
-  
-  	double L[active_conds][active_conds],D[active_conds],invA[active_conds][active_conds];
+    double L[active_conds][active_conds],D[active_conds],invA[active_conds][active_conds];
+    cbf_ac_state.alpha=20;
   	ldltDecomposition(Aact,L, D);
+    cbf_ac_state.alpha=15;
  	inverseUsingLDLT(L,D, invA);
+  cbf_ac_state.alpha=16;
   	double lambda_A[active_conds];
   	for (uint8_t i=0;i<active_conds;i++){
   		int su=0;
@@ -358,7 +403,7 @@ uint32_t now = get_sys_time_msec();
   	}   
   
   // Modified field (only if there are active conditions
-  cbf_ac_state.active_conds=active_conds;
+  cbf_ac_state.active_conds=(uint8_t)active_conds;
 
   if (active_conds>0){
   	gvf_c_field.xi_x=gvf_c_field.xi_x-cx;
@@ -366,9 +411,11 @@ uint32_t now = get_sys_time_msec();
   }
   
  }    
+ else{ 
  cbf_ac_state.xicbf_x=gvf_c_field.xi_x;
  cbf_ac_state.xicbf_y=gvf_c_field.xi_y;
- //
+ }
+ 
  return true;
 }
 // Helpers
@@ -388,8 +435,8 @@ void parse_CBF_STATE(uint8_t *buf)
     }
 }
 
-void ldltDecomposition(double A[N][N], double L[N][N], double D[N]) {
-    for (int i = 0; i < N; i++) {
+void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1]) {
+    for (int i = 0; i < N1; i++) {
         for (int j = 0; j <= i; j++) {
             double sum = 0;
 
@@ -409,8 +456,8 @@ void ldltDecomposition(double A[N][N], double L[N][N], double D[N]) {
     }
 }
 
-void forwardSubstitution(double L[N][N], double b[N], double y[N]) {
-    for (int i = 0; i < N; i++) {
+void forwardSubstitution(double L[N1][N1], double b[N1], double y[N1]) {
+    for (int i = 0; i < N1; i++) {
         double sum = 0.0;
         for (int j = 0; j < i; j++) {
             sum += L[i][j] * y[j];
@@ -419,27 +466,27 @@ void forwardSubstitution(double L[N][N], double b[N], double y[N]) {
     }
 }
 
-void diagonalSolve(double D[N], double y[N], double z[N]) {
-    for (int i = 0; i < N; i++) {
+void diagonalSolve(double D[N1], double y[N1], double z[N1]) {
+    for (int i = 0; i < N1; i++) {
         z[i] = y[i] / D[i];
     }
 }
 
-void backwardSubstitution(double L[N][N], double z[N], double x[N]) {
-    for (int i = N - 1; i >= 0; i--) {
+void backwardSubstitution(double L[N1][N1], double z[N1], double x[N1]) {
+    for (int i = N1 - 1; i >= 0; i--) {
         double sum = 0.0;
-        for (int j = i + 1; j < N; j++) {
+        for (int j = i + 1; j < N1; j++) {
             sum += L[j][i] * x[j];
         }
         x[i] = z[i] - sum;
     }
 }
 
-void inverseUsingLDLT(double L[N][N], double D[N], double invA[N][N]) {
-    double y[N], z[N], x[N], e[N];
+void inverseUsingLDLT(double L[N1][N1], double D[N1], double invA[N1][N1]) {
+    double y[N1], z[N1], x[N1], e[N1];
 
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
+    for (int i = 0; i < N1; i++) {
+        for (int j = 0; j < N1; j++) {
             e[j] = (i == j) ? 1.0 : 0.0; // Vector unitario
         }
 
@@ -447,7 +494,7 @@ void inverseUsingLDLT(double L[N][N], double D[N], double invA[N][N]) {
         diagonalSolve(D, y, z);
         backwardSubstitution(L, z, x);
 
-        for (int j = 0; j < N; j++) {
+        for (int j = 0; j < N1; j++) {
             invA[j][i] = x[j];
         }
     }

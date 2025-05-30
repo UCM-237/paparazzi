@@ -50,7 +50,7 @@
 #error "You have to define CBF_NEI_AC_IDS in the ariframe file!"
 #endif // CBF_NEI_AC_IDS
 
-#define N CBF_MAX_NEIGHBORS
+#define N1 CBF_MAX_NEIGHBORS
 
 // CBF parameters
 
@@ -62,7 +62,7 @@ struct cbf_parameters {
 // CBF control
 struct cbf_con {
   float omega_safe;
-  uint16_t n_neighborns;
+  uint8_t n_neighborns;
   uint32_t last_transmision;
 };
 
@@ -121,11 +121,11 @@ extern cbf_state_t cbf_ac_state;
 extern cbf_tab_entrie_t cbf_obs_tables[CBF_MAX_NEIGHBORS];
 
 extern struct cbf_parameters cbf_param;
-void ldltDecomposition(double A[N][N], double L[N][N], double D[N]);
-void forwardSubstitution(double L[N][N], double b[N], double y[N]);
-void diagonalSolve(double D[N], double y[N], double z[N]);
-void backwardSubstitution(double L[N][N], double z[N], double x[N]);
-void inverseUsingLDLT(double L[N][N], double D[N], double invA[N][N]);
+void ldltDecomposition(double A[N1 ][N1 ], double L[N1 ][N1 ], double D[N1 ]);
+void forwardSubstitution(double L[N1 ][N1 ], double b[N1 ], double y[N1 ]);
+void diagonalSolve(double D[N1 ], double y[N1 ], double z[N1 ]);
+void backwardSubstitution(double L[N1 ][N1 ], double z[N1 ], double x[N1 ]);
+void inverseUsingLDLT(double L[N1 ][N1 ], double D[N1 ], double invA[N1 ][N1 ]);
 void parseCBFTable(uint8_t *buf);
 /* External functions --------------------------- */
 extern void cbf_init(void);
