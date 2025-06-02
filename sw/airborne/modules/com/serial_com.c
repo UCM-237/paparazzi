@@ -91,7 +91,7 @@ uint32_t msg_buffer = 0;
 
 // Sonda (valores por defecto, se modifican en el flight plan)
 #define MAX_DEPTH 20*1000 // En mm
-#define MIN_DEPTH 0 			// En mm
+#define MIN_DEPTH 0.07*1000 			// En mm
 #define PROBE_MSG_LENGTH 12
 int16_t probe_depth = 5000; // En mm
 uint16_t probe_time = 180; // En s
@@ -186,6 +186,8 @@ void serial_init(void)
   serial_msg_setting = true;
 	serial_msg_test = false;
 	serial_button_check = false;
+
+	serial_msg.depth = 1.0; // Evito que se bloquee al principio
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -230,7 +232,7 @@ static void message_probe_parse(void){
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[7];
 	msgBytes[1]=serial_msg.msgData[6];
-	serial_msg.depth=serial_byteToint(msgBytes,2)*300;	// Es un int (en mm)
+	serial_msg.depth=serial_byteToint(msgBytes,2);//*300;	// Es un int (en mm)
 
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[9];
@@ -564,7 +566,7 @@ void serial_ping()
 	uint8_t msg_gps[5]={0,0,0,0,0};
 	// uint8_t msg_dist[5]={0,0,0,0,0};
 	
-
+	serial_msg.depth = MIN_DEPTH + 1;	// DEBUG (hay que borrarlo cuando llegue el momento)
 	if ((autopilot.mode == 0) && (bloqued_probe == false)){
 		// Modo Automatico-Manual
 		if(radio_control_get(7)<=0){
@@ -577,20 +579,34 @@ void serial_ping()
 		else{
 			serial_snd.error = 0;
 			SET_BIT(msg_buffer, SONDA_MANUAL);
-			if((serial_msg.depth >= MAX_DEPTH) || (serial_msg.depth <= MIN_DEPTH)){
-				serial_snd.error = 3; // Error de profundidad
-				SET_BIT(msg_buffer, SONDA_CENTER);
-			}
-			else{
-				if (radio_control_get(RADIO_GAIN2)>0){
-					SET_BIT(msg_buffer, SONDA_UP);
-				}
-				else if (radio_control_get(RADIO_GAIN2)<0){
-					SET_BIT(msg_buffer, SONDA_DOWN);
+			// Subir --
+			if (radio_control_get(RADIO_GAIN2)>0){
+				if (serial_msg.depth <= MIN_DEPTH){
+					RESET_BUFFER(msg_buffer);
+					SET_BIT(msg_buffer, SONDA_CENTER);
+					serial_snd.error = 4; // Error de profundidad minima
 				}
 				else{
-					SET_BIT(msg_buffer, SONDA_CENTER);
+					CLEAR_BIT(msg_buffer, SONDA_CENTER);
+					SET_BIT(msg_buffer, SONDA_UP);
 				}
+			}	
+			// Bajar --
+			else if (radio_control_get(RADIO_GAIN2)<0){
+				if (serial_msg.depth >= MAX_DEPTH){
+					RESET_BUFFER(msg_buffer);
+					SET_BIT(msg_buffer, SONDA_CENTER);
+					serial_snd.error = 3; // Error de profundidad maxima
+				}
+				else{
+					CLEAR_BIT(msg_buffer, SONDA_CENTER);
+					SET_BIT(msg_buffer, SONDA_DOWN);
+				}
+			}
+			// Quieto --
+			else{
+				RESET_BUFFER(msg_buffer);
+				SET_BIT(msg_buffer, SONDA_CENTER);
 			}
 		}		
 	}
