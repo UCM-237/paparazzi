@@ -165,6 +165,11 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   gvf_c_field.xi_x=Xp[0];
   gvf_c_field.xi_y=Xp[1];
   
+		// CBF
+	gvf_cbf();
+	Xp[0]=gvf_c_field.xi_x;
+	Xp[1]=gvf_c_field.xi_y;
+
 	chipnorm = sqrtf(Xp[0] * Xp[0] + Xp[1] * Xp[1]);
 	Xpn[0] = Xp[0]/chipnorm;
 	Xpn[1] = Xp[1]/chipnorm;
@@ -215,8 +220,7 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   // the vehicle. So it is not only okei but advisable to update it.
 	gvf_parametric_bare_control.w += w_dot * gvf_parametric_bare_control.delta_T * 1e-3;
 	
-	// CBF
-	gvf_cbf();
+
 }
 
 

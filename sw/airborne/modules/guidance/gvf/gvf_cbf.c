@@ -23,6 +23,7 @@
 #include <math.h>
 #include "std.h"
 
+
 #include "gvf.h"
 #include "gvf_low_level_control.h"
 #include "gvf_cbf.h"
@@ -103,9 +104,9 @@ void cbf_init(void)
 {
 
   cbf_param.r = 3.0;
-  cbf_param.alpha = 1.0;
+  cbf_param.alpha = 0.1;
   cbf_ac_state.r=3.0;
-  cbf_ac_state.alpha=1.0;
+  cbf_ac_state.alpha=0.1;
   cbf_ac_state.nei=0;
   cbf_ac_state.active_conds=(uint8_t)0;
   cbf_ac_state.xicbf_y=0;
@@ -318,7 +319,7 @@ float Aa[CBF_MAX_NEIGHBORS][2];
 float b[CBF_MAX_NEIGHBORS];
 int j=0; 
 uint32_t now = get_sys_time_msec();
- 
+cbf_param.alpha = 0.1; 
  cbf_low_level_getState();
  send_cbf_state_to_nei();
  cbf_ac_state.xi_x=gvf_c_field.xi_x;
@@ -342,80 +343,98 @@ uint32_t now = get_sys_time_msec();
      // Build the eta[j] (safe function)
      float dx=cbf_ac_state.x-cbf_obs_tables[i].state.x;
      float dy=cbf_ac_state.y-cbf_obs_tables[i].state.y;
-     cbf_ac_state.alpha=1.0;
-     
+   
      eta[i]=(dx)*(dx)+(dy)*(dy)-cbf_param.r*cbf_param.r;
      //  Test the condition for each neighbour. If the condition does not hold the requierement is active
      float bb;
      // To protect against division by zero
-     if(eta[i]<1e-6){
+     if(eta[i]<1e-12){
         bb=0.0;
         eta[i]=0.0;
-        cbf_ac_state.alpha=13;
      }
      else{ 
-      bb=0.25*cbf_param.alpha*pow(eta[i],3);
-      cbf_ac_state.alpha=12;
+      //bb=0.25*cbf_param.alpha*pow(eta[i],3);
+      bb=0.25*cbf_param.alpha*eta[i]*eta[i]*eta[i];
      }
-     cbf_ac_state.r=-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y;
-     //cbf_ac_state.alpha=-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y;
-     // TODO: Revisar que ocurre aqui porque da un core cuando las posiciones de los robots son muy cercanas
-     if ((-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y) > bb){ // Condition is active
-        cbf_ac_state.alpha=13;
+     
+     printf("Condition%f\t",-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y);
+     printf("GT %f\t",bb);
+     //TODO: Revisar cálculo y signos
+     if ((-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y) >= bb){ // Condition is active
         Aa[j][0]=-dx;
         Aa[j][1]=-dy;
         b[j]=bb;
-        cbf_ac_state.r=b[j];
         j++;
       }
    }  
   int active_conds=j;
-  cbf_ac_state.alpha=20;
+  cbf_ac_state.active_conds=(uint8_t)active_conds;
  
   // Lagrange multiplier
   if (active_conds > 0 && active_conds <= CBF_MAX_NEIGHBORS) {
-    cbf_ac_state.alpha=14;
-  	double Aact[active_conds][active_conds];
-  	for (uint8_t i=0;i<active_conds;i++){
-  		for   (uint8_t l=0;l<active_conds;l++){
-  			Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
-  		}
-  	}
-    double L[active_conds][active_conds],D[active_conds],invA[active_conds][active_conds];
-    cbf_ac_state.alpha=20;
-  	ldltDecomposition(Aact,L, D);
-    cbf_ac_state.alpha=15;
- 	inverseUsingLDLT(L,D, invA);
-  cbf_ac_state.alpha=16;
-  	double lambda_A[active_conds];
-  	for (uint8_t i=0;i<active_conds;i++){
-  		int su=0;
-  		for   (int l=0;l<active_conds;l++){
-  			su=invA[i][l]*(Aact[l][0]*gvf_c_field.xi_x+Aact[l][1]*gvf_c_field.xi_y-b[l]);
-  		}
-  		lambda_A[i]=su;
-  	}  
-  	float cx=0,cy=0;
-  	for (uint8_t i=0;i<active_conds;i++){
-  		cx=cx+Aact[i][0]*lambda_A[i];
-  		cy=cy+Aact[i][1]*lambda_A[i];
-  
-  	}   
-  
-  // Modified field (only if there are active conditions
-  cbf_ac_state.active_conds=(uint8_t)active_conds;
+    if (active_conds==1){
+      cbf_ac_state.alpha=19;
+      double Aact[2], lambda_A[2];
+      Aact[0]=Aa[0][0];
+      Aact[1]=Aa[0][1];
+      double norm_Aact=Aact[0]*Aact[0]+Aact[1]*Aact[1];
+      if (norm_Aact<1e-6){
+        norm_Aact=1e-6;
+      }
+      /*printf("A[0]=%f\t",Aact[0]);
+      printf("A[1]=%f\t",Aact[1]);
+      printf("norm_Aact=%f",norm_Aact);*/
+      lambda_A[0]=(Aact[0]*gvf_c_field.xi_x-b[0])/ norm_Aact;
+      lambda_A[1]=(Aact[1]*gvf_c_field.xi_y-b[0])/ norm_Aact;
+      float cx=0.0,cy=0.0;
+      /*printf("lambda_A[0]=%f\t",lambda_A[0]);
+      printf("lambda_A[1]=%f\t",lambda_A[1]);*/
+      cx=Aact[0]*lambda_A[0];
+      cy=Aact[1]*lambda_A[1];
 
-  if (active_conds>0){
-  	gvf_c_field.xi_x=gvf_c_field.xi_x-cx;
-  	gvf_c_field.xi_y=gvf_c_field.xi_x-cy;
-  }
-  
- }    
- else{ 
- cbf_ac_state.xicbf_x=gvf_c_field.xi_x;
- cbf_ac_state.xicbf_y=gvf_c_field.xi_y;
- }
+      cbf_ac_state.xicbf_x=gvf_c_field.xi_x-cx;
+      cbf_ac_state.xicbf_y=gvf_c_field.xi_x-cy;
+      /*printf("cx=%f\t",cx);
+      printf("cy=%f\t",cy);*/
+
+    }
+    else{
+      
+      double Aact[active_conds][active_conds];
+      for (uint8_t i=0;i<active_conds;i++){
+        for   (uint8_t l=0;l<active_conds;l++){
+          Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
+        }
+      }
+      
+      double L[active_conds][active_conds],D[active_conds],invA[active_conds][active_conds];
+      cbf_ac_state.alpha=20;
+    
+      ldltDecomposition(Aact,L, D);
+      cbf_ac_state.alpha=15;
+      inverseUsingLDLT(L,D, invA);
+      cbf_ac_state.alpha=16;
+      double lambda_A[active_conds];
+      for (uint8_t i=0;i<active_conds;i++){
+        int su=0;
+        for   (int l=0;l<active_conds;l++){
+          su=invA[i][l]*(Aact[l][0]*gvf_c_field.xi_x+Aact[l][1]*gvf_c_field.xi_y-b[l]);
+        }
+        lambda_A[i]=su;
+      }  
+      float cx=0,cy=0;
+      for (uint8_t i=0;i<active_conds;i++){
+        cx=cx+Aact[i][0]*lambda_A[i];
+        cy=cy+Aact[i][1]*lambda_A[i];
+    
+      }   
+    }
+  // Modified field (only if there are active conditions
+    cbf_ac_state.active_conds=(uint8_t)active_conds;
+    gvf_c_field.xi_x=cbf_ac_state.xicbf_x;
+    gvf_c_field.xi_y=cbf_ac_state.xicbf_y;
  
+ }    
  return true;
 }
 // Helpers
@@ -436,7 +455,9 @@ void parse_CBF_STATE(uint8_t *buf)
 }
 
 void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1]) {
+   cbf_ac_state.alpha=30;
     for (int i = 0; i < N1; i++) {
+       cbf_ac_state.alpha=31;
         for (int j = 0; j <= i; j++) {
             double sum = 0;
 
@@ -446,16 +467,24 @@ void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1]) {
                 }
                 D[j] = A[j][j] - sum;
                 L[j][j] = 1.0;
-            } else {
+            } 
+            else {
                 for (int k = 0; k < j; k++) {
                     sum += L[i][k] * L[j][k] * D[k];
                 }
+            if (D[j]< 1e-6) {
+                // Handle the case where D[j] is too small to avoid division by zero
+                L[i][j] = 0.0; // or some other handling
+               
+            } else {
+            
                 L[i][j] = (A[i][j] - sum) / D[j];
+                          
             }
         }
     }
 }
-
+}
 void forwardSubstitution(double L[N1][N1], double b[N1], double y[N1]) {
     for (int i = 0; i < N1; i++) {
         double sum = 0.0;

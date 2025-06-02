@@ -198,7 +198,9 @@ void gvf_control_2D(float ke, float kn __attribute__((unused)), float e,
   gvf_c_field.xi_x = pdx_dot;
   gvf_c_field.xi_y = pdy_dot;
   
-  
+  gvf_cbf();
+  pdx_dot=  gvf_c_field.xi_x;
+  pdy_dot = gvf_c_field.xi_y;
   float Apd_dot_dot_x = -ke * (nx * px_dot + ny * py_dot) * nx;
   float Apd_dot_dot_y = -ke * (nx * px_dot + ny * py_dot) * ny;
 
