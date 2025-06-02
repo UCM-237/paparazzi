@@ -93,6 +93,17 @@ uint32_t msg_buffer = 0;
 #define MAX_DEPTH 20*1000 // En mm
 #define MIN_DEPTH 0.07*1000 			// En mm
 #define PROBE_MSG_LENGTH 12
+
+// Malacate states
+#define INIT 0
+#define CHECK 1
+#define MANUAL 2
+#define TEST 3
+#define AUTO 4
+#define BLOCKED 5
+#define READING 6
+uint8_t malacate_state = INIT;
+
 int16_t probe_depth = 5000; // En mm
 uint16_t probe_time = 180; // En s
 uint8_t probe_error = 0; // 0: OK
@@ -159,6 +170,7 @@ int cont = 0;
 
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
   pprz_msg_send_SERIAL_COM(trans, dev, AC_ID,
+							&malacate_state,
 							&serial_msg.button_state,
   						&serial_snd.msg_id,
 							&serial_snd.msg_length,
@@ -187,6 +199,7 @@ void serial_init(void)
 	serial_msg_test = false;
 	serial_button_check = false;
 
+	malacate_state = INIT;
 	serial_msg.depth = 1.0; // Evito que se bloquee al principio
   
   last_s=get_sys_time_msec();
@@ -565,63 +578,76 @@ void serial_ping()
 	struct sonar_parse_t *sonar_data;	// No funciona en el rover, solo en el barco
 	uint8_t msg_gps[5]={0,0,0,0,0};
 	// uint8_t msg_dist[5]={0,0,0,0,0};
+
+	if (malacate_state == READING){
+		if (autopilot.mode == 0)
+			malacate_state = MANUAL;
+		else
+			malacate_state = AUTO;
+	}
+
+	// Comprobación de la sonda
+	switch (malacate_state)
+	{
+	case INIT:
+		RESET_BUFFER(msg_buffer);
+		malacate_state = CHECK;
+		break;
 	
-	serial_msg.depth = MIN_DEPTH + 1;	// DEBUG (hay que borrarlo cuando llegue el momento)
-	if ((autopilot.mode == 0) && (bloqued_probe == false)){
-		// Modo Automatico-Manual
-		if(radio_control_get(7)<=0){
-			SET_BIT(msg_buffer, SONDA_TEST);
-			CLEAR_BIT(msg_buffer, SONDA_UP);
-			CLEAR_BIT(msg_buffer, SONDA_DOWN);
-			CLEAR_BIT(msg_buffer, SONDA_CENTER);
+	// Buttons not in init position ---------------------------------------------------------------
+	case CHECK:
+		serial_snd.error = 2;
+		RESET_BUFFER(msg_buffer);
+		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
+			malacate_state = READING;
 		}
-		// Modo Manual
-		else{
-			serial_snd.error = 0;
-			SET_BIT(msg_buffer, SONDA_MANUAL);
-			// Subir --
-			if (radio_control_get(RADIO_GAIN2)>0){
-				if (serial_msg.depth <= MIN_DEPTH){
-					RESET_BUFFER(msg_buffer);
-					SET_BIT(msg_buffer, SONDA_CENTER);
-					serial_snd.error = 4; // Error de profundidad minima
-				}
-				else{
-					CLEAR_BIT(msg_buffer, SONDA_CENTER);
-					SET_BIT(msg_buffer, SONDA_UP);
-				}
-			}	
-			// Bajar --
-			else if (radio_control_get(RADIO_GAIN2)<0){
-				if (serial_msg.depth >= MAX_DEPTH){
-					RESET_BUFFER(msg_buffer);
-					SET_BIT(msg_buffer, SONDA_CENTER);
-					serial_snd.error = 3; // Error de profundidad maxima
-				}
-				else{
-					CLEAR_BIT(msg_buffer, SONDA_CENTER);
-					SET_BIT(msg_buffer, SONDA_DOWN);
-				}
-			}
-			// Quieto --
-			else{
+		break;
+
+	// MANUAL MODE ----------------------------------------------------------------------------------
+	case MANUAL:
+		serial_snd.error = 0;
+		SET_BIT(msg_buffer, SONDA_MANUAL);
+		int gain2 = radio_control_get(RADIO_GAIN2);
+
+		// Subir --
+		if (gain2>0){
+			if (serial_msg.depth <= MIN_DEPTH){
 				RESET_BUFFER(msg_buffer);
 				SET_BIT(msg_buffer, SONDA_CENTER);
+				serial_snd.error = 4; // Error de profundidad minima
 			}
-		}		
-	}
-	else if (bloqued_probe == true){
-		serial_snd.error = 1;
-		SET_BIT(msg_buffer, SONDA_CENTER);
-		if(radio_control_get(7)>0){
-			SET_BIT(msg_buffer, SONDA_MANUAL);
-			bloqued_probe = false;
-			serial_msg.error = 0;
-			serial_snd.error = 0;
+			else{
+				CLEAR_BIT(msg_buffer, SONDA_CENTER);
+				SET_BIT(msg_buffer, SONDA_UP);
+			}
+		}	
+		// Bajar --
+		else if (gain2<0){
+			if (serial_msg.depth >= MAX_DEPTH){
+				RESET_BUFFER(msg_buffer);
+				SET_BIT(msg_buffer, SONDA_CENTER);
+				serial_snd.error = 3; // Error de profundidad maxima
+			}
+			else{
+				CLEAR_BIT(msg_buffer, SONDA_CENTER);
+				SET_BIT(msg_buffer, SONDA_DOWN);
+			}
 		}
-	}
-	else {
-		// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
+		// Quieto --
+		else{
+			RESET_BUFFER(msg_buffer);
+			SET_BIT(msg_buffer, SONDA_CENTER);
+		}
+		malacate_state == READING
+		break;
+
+	// Auto-Manual mode --------------------------------------------------------------------------
+	case TEST:
+		SET_BIT(msg_buffer, SONDA_TEST);
+		break;
+	
+	// Full Auto mode ----------------------------------------------------------------------------
+	case AUTO:
 		if(serial_msg_test == true){
 			SET_BIT(msg_buffer, MEASURE_SN);
 			// AQUI CREO QUE FALTA ALGO
@@ -630,19 +656,102 @@ void serial_ping()
 		else{
 			SET_BIT(msg_buffer, SONDA_AUTO);
 		}
-	}
+		malacate_state == READING
+		break;
 
-
-	// Comprobación inicial de los botones
-	if(serial_button_check == false){
-		serial_snd.error = 2; // Esto ya se comprobara
-		RESET_BUFFER(msg_buffer);
+	// Sonda bloqued (REVISAR)
+	case BLOCKED:
+		serial_snd.error = 1;
 		SET_BIT(msg_buffer, SONDA_CENTER);
-		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
-			serial_button_check = true;
+		if(radio_control_get(7)>0){
+			malacate_state = READING;
+			bloqued_probe = false;
+			serial_msg.error = 0;
 			serial_snd.error = 0;
 		}
+		break;
+
+	default:
+		break;
 	}
+	
+	// serial_msg.depth = MIN_DEPTH + 1;	// DEBUG (hay que borrarlo cuando llegue el momento)
+	// if ((autopilot.mode == 0) && (bloqued_probe == false)){
+	// 	// Modo Automatico-Manual
+	// 	if(radio_control_get(7)<=0){
+	// 		SET_BIT(msg_buffer, SONDA_TEST);
+	// 		CLEAR_BIT(msg_buffer, SONDA_UP);
+	// 		CLEAR_BIT(msg_buffer, SONDA_DOWN);
+	// 		CLEAR_BIT(msg_buffer, SONDA_CENTER);
+	// 	}
+	// 	// Modo Manual
+	// 	else{
+	// 		serial_snd.error = 0;
+	// 		SET_BIT(msg_buffer, SONDA_MANUAL);
+	// 		// Subir --
+	// 		if (radio_control_get(RADIO_GAIN2)>0){
+	// 			if (serial_msg.depth <= MIN_DEPTH){
+	// 				RESET_BUFFER(msg_buffer);
+	// 				SET_BIT(msg_buffer, SONDA_CENTER);
+	// 				serial_snd.error = 4; // Error de profundidad minima
+	// 			}
+	// 			else{
+	// 				CLEAR_BIT(msg_buffer, SONDA_CENTER);
+	// 				SET_BIT(msg_buffer, SONDA_UP);
+	// 			}
+	// 		}	
+	// 		// Bajar --
+	// 		else if (radio_control_get(RADIO_GAIN2)<0){
+	// 			if (serial_msg.depth >= MAX_DEPTH){
+	// 				RESET_BUFFER(msg_buffer);
+	// 				SET_BIT(msg_buffer, SONDA_CENTER);
+	// 				serial_snd.error = 3; // Error de profundidad maxima
+	// 			}
+	// 			else{
+	// 				CLEAR_BIT(msg_buffer, SONDA_CENTER);
+	// 				SET_BIT(msg_buffer, SONDA_DOWN);
+	// 			}
+	// 		}
+	// 		// Quieto --
+	// 		else{
+	// 			RESET_BUFFER(msg_buffer);
+	// 			SET_BIT(msg_buffer, SONDA_CENTER);
+	// 		}
+	// 	}		
+	// }
+	// else if (bloqued_probe == true){
+	// 	serial_snd.error = 1;
+	// 	SET_BIT(msg_buffer, SONDA_CENTER);
+	// 	if(radio_control_get(7)>0){
+	// 		SET_BIT(msg_buffer, SONDA_MANUAL);
+	// 		bloqued_probe = false;
+	// 		serial_msg.error = 0;
+	// 		serial_snd.error = 0;
+	// 	}
+	// }
+	// else {
+	// 	// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
+	// 	if(serial_msg_test == true){
+	// 		SET_BIT(msg_buffer, MEASURE_SN);
+	// 		// AQUI CREO QUE FALTA ALGO
+	// 		bloqued_probe = true; 
+	// 	}
+	// 	else{
+	// 		SET_BIT(msg_buffer, SONDA_AUTO);
+	// 	}
+	// }
+
+
+	// // Comprobación inicial de los botones
+	// if(serial_button_check == false){
+	// 	serial_snd.error = 2; // Esto ya se comprobara
+	// 	RESET_BUFFER(msg_buffer);
+	// 	SET_BIT(msg_buffer, SONDA_CENTER);
+	// 	if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
+	// 		serial_button_check = true;
+	// 		serial_snd.error = 0;
+	// 	}
+	// }
 
 
 	if (now_s > (last_s + SEND_INTERVAL)) {

@@ -1943,6 +1943,7 @@
     </message>
 
     <message name="SERIAL_COM" id="212">
+       <field name="STATE"		    type="uint8" values="INIT|CHECK|MANUAL|TEST|AUTO|BLOCKED|READING"/>
        <field name="BUTTON_STATE"	type="int16[3]"/>
      	 <field name="SEND_ID"		  type="uint8"/>
     	 <field name="SEND_LENGTH"	type="uint8"/> 

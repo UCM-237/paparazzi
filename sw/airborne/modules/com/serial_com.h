@@ -111,6 +111,8 @@ struct serial_parse_t {
 extern struct serial_parse_t serial_msg;
 extern struct serial_send_t serial_snd;
 
+extern uint8_t malacate_state;
+
 
 // Message functions
 uint8_t set_header(uint8_t type);
