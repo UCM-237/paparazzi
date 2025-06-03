@@ -166,7 +166,15 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   gvf_c_field.xi_y=Xp[1];
   
 		// CBF
-	gvf_cbf();
+	if (gvf_cbf()){
+		// If the CBF is active, we need to update the xi_x and xi_y
+		Xp[0] = gvf_c_field.xi_x;
+		Xp[1] = gvf_c_field.xi_y;
+	
+	}
+	
+	// Normalization;
+	
 	Xp[0]=gvf_c_field.xi_x;
 	Xp[1]=gvf_c_field.xi_y;
 

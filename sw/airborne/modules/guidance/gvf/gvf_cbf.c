@@ -103,9 +103,9 @@ static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 void cbf_init(void)
 {
 
-  cbf_param.r = 3.0;
+  cbf_param.r = 4.0;
   cbf_param.alpha = 0.1;
-  cbf_ac_state.r=3.0;
+  cbf_ac_state.r=4.0;
   cbf_ac_state.alpha=0.1;
   cbf_ac_state.nei=0;
   cbf_ac_state.active_conds=(uint8_t)0;
@@ -319,7 +319,8 @@ float Aa[CBF_MAX_NEIGHBORS][2];
 float b[CBF_MAX_NEIGHBORS];
 int j=0; 
 uint32_t now = get_sys_time_msec();
-cbf_param.alpha = 0.1; 
+int nid=(int) AC_ID;
+
  cbf_low_level_getState();
  send_cbf_state_to_nei();
  cbf_ac_state.xi_x=gvf_c_field.xi_x;
@@ -343,24 +344,36 @@ cbf_param.alpha = 0.1;
      // Build the eta[j] (safe function)
      float dx=cbf_ac_state.x-cbf_obs_tables[i].state.x;
      float dy=cbf_ac_state.y-cbf_obs_tables[i].state.y;
-   
+     
+     // To protect against dx and dy being zero
+     // TODO: Review the 0.5 value, it is a magic number
+     if (fabs(dx)<0.5 && fabs(dy)<0.5){
+ 
+        dx=0.5;
+        dy=0.5;
+     }
+       
+      
+     // Calculate the eta value
+     // eta[i] = (dx)^2 + (dy)^2 - r^2
+     // where r is the safe distance
      eta[i]=(dx)*(dx)+(dy)*(dy)-cbf_param.r*cbf_param.r;
      //  Test the condition for each neighbour. If the condition does not hold the requierement is active
      float bb;
      // To protect against division by zero
-     if(eta[i]<1e-12){
+     //TODO: Review this condition, maybe if eta[i] is very small, we can continue the loop
+     if(eta[i]<1e-22){
         bb=0.0;
         eta[i]=0.0;
+        continue;
      }
      else{ 
-      //bb=0.25*cbf_param.alpha*pow(eta[i],3);
+      
       bb=0.25*cbf_param.alpha*eta[i]*eta[i]*eta[i];
      }
-     
-     printf("Condition%f\t",-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y);
-     printf("GT %f\t",bb);
+     printf("ACID: %d\t, c1: %f, \tGT: %f\n",nid, dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y,bb);
      //TODO: Revisar cálculo y signos
-     if ((-dx*gvf_c_field.xi_x-dy*gvf_c_field.xi_y) >= bb){ // Condition is active
+     if ((dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y) >= bb){ // Condition is active
         Aa[j][0]=-dx;
         Aa[j][1]=-dy;
         b[j]=bb;
@@ -373,33 +386,33 @@ cbf_param.alpha = 0.1;
   // Lagrange multiplier
   if (active_conds > 0 && active_conds <= CBF_MAX_NEIGHBORS) {
     if (active_conds==1){
-      cbf_ac_state.alpha=19;
-      double Aact[2], lambda_A[2];
+      // If there is only one active condition, we can use a simpler approach
+      // We can use the Lagrange multiplier method to find the solution
+      // We have the condition: Aact * gvf_c_field.xi = b
+      // where Aact is the active condition and b is the right hand side
+      double Aact[2], lambda_A;
       Aact[0]=Aa[0][0];
       Aact[1]=Aa[0][1];
       double norm_Aact=Aact[0]*Aact[0]+Aact[1]*Aact[1];
       if (norm_Aact<1e-6){
         norm_Aact=1e-6;
       }
-      /*printf("A[0]=%f\t",Aact[0]);
-      printf("A[1]=%f\t",Aact[1]);
-      printf("norm_Aact=%f",norm_Aact);*/
-      lambda_A[0]=(Aact[0]*gvf_c_field.xi_x-b[0])/ norm_Aact;
-      lambda_A[1]=(Aact[1]*gvf_c_field.xi_y-b[0])/ norm_Aact;
+ 
+      lambda_A=(Aact[0]*gvf_c_field.xi_x+Aact[1]*gvf_c_field.xi_y-b[0])/ norm_Aact;
       float cx=0.0,cy=0.0;
-      /*printf("lambda_A[0]=%f\t",lambda_A[0]);
-      printf("lambda_A[1]=%f\t",lambda_A[1]);*/
-      cx=Aact[0]*lambda_A[0];
-      cy=Aact[1]*lambda_A[1];
 
+      cx=Aact[0]*lambda_A;
+      cy=Aact[1]*lambda_A;
+      
+      printf("ACID: %d\t, cx: %f, \tcy: %f\n",nid, cx,cy);
+      printf("ACID: %d\t, Aact[0]: %f, \tAaxt[1]: %f, \tlambda :%f\n",nid, Aact[0], Aact[1], lambda_A);
       cbf_ac_state.xicbf_x=gvf_c_field.xi_x-cx;
-      cbf_ac_state.xicbf_y=gvf_c_field.xi_x-cy;
-      /*printf("cx=%f\t",cx);
-      printf("cy=%f\t",cy);*/
+      cbf_ac_state.xicbf_y=gvf_c_field.xi_y-cy;
+
 
     }
     else{
-      
+      /*
       double Aact[active_conds][active_conds];
       for (uint8_t i=0;i<active_conds;i++){
         for   (uint8_t l=0;l<active_conds;l++){
@@ -427,15 +440,15 @@ cbf_param.alpha = 0.1;
         cx=cx+Aact[i][0]*lambda_A[i];
         cy=cy+Aact[i][1]*lambda_A[i];
     
-      }   
+      }   */
     }
   // Modified field (only if there are active conditions
     cbf_ac_state.active_conds=(uint8_t)active_conds;
     gvf_c_field.xi_x=cbf_ac_state.xicbf_x;
     gvf_c_field.xi_y=cbf_ac_state.xicbf_y;
- 
- }    
  return true;
+ }    
+ return false; // No active conditions, no modification of the field
 }
 // Helpers
 
@@ -455,9 +468,9 @@ void parse_CBF_STATE(uint8_t *buf)
 }
 
 void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1]) {
-   cbf_ac_state.alpha=30;
+   printf("LDLT Decomposition\n");
     for (int i = 0; i < N1; i++) {
-       cbf_ac_state.alpha=31;
+      
         for (int j = 0; j <= i; j++) {
             double sum = 0;
 
