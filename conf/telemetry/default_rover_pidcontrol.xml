@@ -44,8 +44,8 @@
       
       <message name="GVF_PARAMETRIC"         period="0.4"/>
       <message name="CBF" 	    	       period="0.5"/>
-      <message name="CBF_STATE" 	       period="0.1"/>
-      <message name="CBF_REC" 	       period="0.5"/>
+      <message name="CBF_STATE" 	       period="0.05"/>
+      <message name="CBF_REC" 	       period="10.0"/>
       <!--message name="STATIC_CONTROL" 	       period="1.0"/-->
       <message name="GVF"                    period="1.0"/>
       <!--message name="LIDAR"                  period="0.05"/-->

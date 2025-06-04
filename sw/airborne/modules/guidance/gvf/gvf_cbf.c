@@ -104,9 +104,9 @@ void cbf_init(void)
 {
 
   cbf_param.r = 4.0;
-  cbf_param.alpha = 0.1;
+  cbf_param.alpha =10;
   cbf_ac_state.r=4.0;
-  cbf_ac_state.alpha=0.1;
+  cbf_ac_state.alpha=10;
   cbf_ac_state.nei=0;
   cbf_ac_state.active_conds=(uint8_t)0;
   cbf_ac_state.xicbf_y=0;
@@ -344,15 +344,22 @@ int nid=(int) AC_ID;
      // Build the eta[j] (safe function)
      float dx=cbf_ac_state.x-cbf_obs_tables[i].state.x;
      float dy=cbf_ac_state.y-cbf_obs_tables[i].state.y;
-     
      // To protect against dx and dy being zero
      // TODO: Review the 0.5 value, it is a magic number
-     if (fabs(dx)<0.5 && fabs(dy)<0.5){
- 
-        dx=0.5;
-        dy=0.5;
+    /*if (fabs(dx)<0.1 && fabs(dy)<0.1){
+        if(dx<0){
+          dx=-0.1;
+        }
+        else{
+          dx=0.1;
+        }
+        if(dy<0){
+          dy=-0.1;
+        }
+        else{   
+        dy=0.1;
      }
-       
+    }*/
       
      // Calculate the eta value
      // eta[i] = (dx)^2 + (dy)^2 - r^2
@@ -365,13 +372,13 @@ int nid=(int) AC_ID;
      if(eta[i]<1e-22){
         bb=0.0;
         eta[i]=0.0;
-        continue;
+      
      }
      else{ 
       
       bb=0.25*cbf_param.alpha*eta[i]*eta[i]*eta[i];
      }
-     printf("ACID: %d\t, c1: %f, \tGT: %f\n",nid, dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y,bb);
+     printf("ACID: %d\t, c: %f\n",nid, dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y-bb);
      //TODO: Revisar cálculo y signos
      if ((dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y) >= bb){ // Condition is active
         Aa[j][0]=-dx;
@@ -398,7 +405,7 @@ int nid=(int) AC_ID;
         norm_Aact=1e-6;
       }
  
-      lambda_A=(Aact[0]*gvf_c_field.xi_x+Aact[1]*gvf_c_field.xi_y-b[0])/ norm_Aact;
+      lambda_A=(Aact[0]*gvf_c_field.xi_x+Aact[1]*gvf_c_field.xi_y-b[0]*4)/(4* norm_Aact);
       float cx=0.0,cy=0.0;
 
       cx=Aact[0]*lambda_A;
