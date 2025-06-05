@@ -344,23 +344,7 @@ int nid=(int) AC_ID;
      // Build the eta[j] (safe function)
      float dx=cbf_ac_state.x-cbf_obs_tables[i].state.x;
      float dy=cbf_ac_state.y-cbf_obs_tables[i].state.y;
-     // To protect against dx and dy being zero
-     // TODO: Review the 0.5 value, it is a magic number
-    /*if (fabs(dx)<0.1 && fabs(dy)<0.1){
-        if(dx<0){
-          dx=-0.1;
-        }
-        else{
-          dx=0.1;
-        }
-        if(dy<0){
-          dy=-0.1;
-        }
-        else{   
-        dy=0.1;
-     }
-    }*/
-      
+  
      // Calculate the eta value
      // eta[i] = (dx)^2 + (dy)^2 - r^2
      // where r is the safe distance
@@ -369,26 +353,7 @@ int nid=(int) AC_ID;
      float bb;
      
      bb=0.25*cbf_param.alpha*eta[i]*eta[i]*eta[i];
-     // To protect against division by zero
-     //TODO: Review this condition, maybe if eta[i] is very small, we can continue the loop
-     /*if(eta[i]<1e-22){
-        bb=0.0;
-        eta[i]=0.0;
-      
-     }
-     else{ 
-      
-      
-     }*/
-     //printf("ACID: %d\t, c: %f\n",nid, dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y-bb);
-     //TODO: Revisar cálculo y signos
-     /*if ((dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y) >= bb){ // Condition is active
-        Aa[j][0]=-dx;
-        Aa[j][1]=-dy;
-        b[j]=bb;
-        j++;
-      }*/
-      printf("ACID: %d\t, eta: %f\n",nid, eta[i]);
+  
      if(eta[i]<0){ // Condition is active
         Aa[j][0]=-dx;
         Aa[j][1]=-dy;
@@ -398,7 +363,7 @@ int nid=(int) AC_ID;
    }  
   int active_conds=j;
   cbf_ac_state.active_conds=(uint8_t)active_conds;
-  printf("ACID: %d\t, active conds: %d\n",nid, cbf_ac_state.active_conds);
+  
   // Lagrange multiplier
   if (active_conds > 0 && active_conds <= CBF_MAX_NEIGHBORS) {
     if (active_conds==1){
@@ -420,15 +385,13 @@ int nid=(int) AC_ID;
       cx=Aact[0]*lambda_A;
       cy=Aact[1]*lambda_A;
       
-      printf("ACID: %d\t, cx: %f, \tcy: %f\n",nid, cx,cy);
-      //printf("ACID: %d\t, Aact[0]: %f, \tAaxt[1]: %f, \tlambda :%f\n",nid, Aact[0], Aact[1], lambda_A);
       cbf_ac_state.xicbf_x=gvf_c_field.xi_x-cx;
       cbf_ac_state.xicbf_y=gvf_c_field.xi_y-cy;
 
 
     }
     else{
-      /*
+      printf("Active conditions: %d\n", active_conds);
       double Aact[active_conds][active_conds];
       for (uint8_t i=0;i<active_conds;i++){
         for   (uint8_t l=0;l<active_conds;l++){
@@ -436,13 +399,41 @@ int nid=(int) AC_ID;
         }
       }
       
-      double L[active_conds][active_conds],D[active_conds],invA[active_conds][active_conds];
-      cbf_ac_state.alpha=20;
-    
-      ldltDecomposition(Aact,L, D);
-      cbf_ac_state.alpha=15;
-      inverseUsingLDLT(L,D, invA);
-      cbf_ac_state.alpha=16;
+     //TODO: Lio con las matrices. Ver qué pasa
+      for (int i=0;i<active_conds;i++){
+        for   (int l=0;l<active_conds;l++){
+          invA[i][l]=0.0;
+          L[i][l]=0.0;
+          
+        }
+        D[i]=0.0;
+      }
+
+        
+      bool singA=true;
+      for (uint8_t i=0;i<active_conds;i++){
+        for   (uint8_t l=0;l<active_conds;l++){
+          if (Aact[i][l]>=fabs(1e-6)){
+            singA=false;
+            break;
+          };
+        }
+      }
+      if (singA){
+        printf("Singular matrix, cannot solve the CBF\n");
+        return false;
+      }
+
+      ldltDecomposition(Aact,L, D,active_conds);
+      printf("LDLT Decomposition done\n");
+      printf("L matrix:\n");
+      for (uint8_t i=0;i<active_conds;i++){
+        for   (uint8_t l=0;l<active_conds;l++){
+          printf("%f ", L[i][l]);
+        }
+        printf("\n");
+      } 
+      inverseUsingLDLT(L,D, invA,active_conds);
       double lambda_A[active_conds];
       for (uint8_t i=0;i<active_conds;i++){
         int su=0;
@@ -456,7 +447,7 @@ int nid=(int) AC_ID;
         cx=cx+Aact[i][0]*lambda_A[i];
         cy=cy+Aact[i][1]*lambda_A[i];
     
-      }   */
+      }   
     }
   // Modified field (only if there are active conditions
     cbf_ac_state.active_conds=(uint8_t)active_conds;
@@ -483,9 +474,10 @@ void parse_CBF_STATE(uint8_t *buf)
     }
 }
 
-void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1]) {
+void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1], int n1) {
    printf("LDLT Decomposition\n");
-    for (int i = 0; i < N1; i++) {
+  
+    for (int i = 0; i < n1; i++) {
       
         for (int j = 0; j <= i; j++) {
             double sum = 0;
@@ -495,17 +487,19 @@ void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1]) {
                     sum += L[j][k] * L[j][k] * D[k];
                 }
                 D[j] = A[j][j] - sum;
+                printf("D[%d] = %f\n", j, D[j]);
                 L[j][j] = 1.0;
             } 
             else {
                 for (int k = 0; k < j; k++) {
                     sum += L[i][k] * L[j][k] * D[k];
                 }
-            if (D[j]< 1e-6) {
+            if (fabs(D[j])< 1e-6) {
                 // Handle the case where D[j] is too small to avoid division by zero
                 L[i][j] = 0.0; // or some other handling
-               
-            } else {
+               printf("Warning: D[%d] is too small, setting L[%d][%d] to 0\n", j, i, j);
+            } 
+            else {
             
                 L[i][j] = (A[i][j] - sum) / D[j];
                           
@@ -513,9 +507,11 @@ void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1]) {
         }
     }
 }
+
 }
-void forwardSubstitution(double L[N1][N1], double b[N1], double y[N1]) {
-    for (int i = 0; i < N1; i++) {
+void forwardSubstitution(double L[N1][N1], double b[N1], double y[N1],int n1) {
+   printf("Forward Substitution\n");
+    for (int i = 0; i < n1; i++) {
         double sum = 0.0;
         for (int j = 0; j < i; j++) {
             sum += L[i][j] * y[j];
@@ -524,35 +520,67 @@ void forwardSubstitution(double L[N1][N1], double b[N1], double y[N1]) {
     }
 }
 
-void diagonalSolve(double D[N1], double y[N1], double z[N1]) {
-    for (int i = 0; i < N1; i++) {
+void diagonalSolve(double D[N1], double y[N1], double z[N1],int n1) {
+    // Solve the diagonal system D * z = y
+    // where D is a diagonal matrix
+    printf("Diagonal Solve\n");
+    if (n1 <= 0) {
+        printf("Error: n1 must be greater than 0\n");
+        return;
+    }  
+    printf("Diagonal elements:\n");
+  for (int i = 0; i < n1; i++) {
+
+    if (fabs(D[i]) < 1e-6) {
+        // Handle the case where D[i] is too small to avoid division by zero
+        z[i] = 0.0; // or some other handling
+        printf("Warning: D[%d] is too small, setting z[%d] to 0\n", i, i);
+    }
+    else {
+        // Normal case, perform the division
         z[i] = y[i] / D[i];
     }
+  }
 }
 
-void backwardSubstitution(double L[N1][N1], double z[N1], double x[N1]) {
-    for (int i = N1 - 1; i >= 0; i--) {
+void backwardSubstitution(double L[N1][N1], double z[N1], double x[N1],int n1) {
+    
+    // Solve the system L^T * x = z
+    // where L is a lower triangular matrix
+    printf("Backward Substitution\n");
+    if (n1 <= 0) {
+        printf("Error: n1 must be greater than 0\n");
+        return;
+    }
+    for (int i = n1 - 1; i >= 0; i--) {
         double sum = 0.0;
-        for (int j = i + 1; j < N1; j++) {
+        for (int j = i + 1; j < n1; j++) {
             sum += L[j][i] * x[j];
         }
         x[i] = z[i] - sum;
     }
 }
 
-void inverseUsingLDLT(double L[N1][N1], double D[N1], double invA[N1][N1]) {
-    double y[N1], z[N1], x[N1], e[N1];
+void inverseUsingLDLT(double L[N1][N1], double D[N1], double invA[N1][N1],int n1) { 
+    // Compute the inverse of A using the LDLT decomposition
+    printf("Inverse using LDLT\n");
+    if (n1 <= 0) {
+        printf("Error: n1 must be greater than 0\n");
+        return; 
+    }
+    // Initialize the inverse matrix to zero     
+    double y[n1], z[n1], x[n1], e[n1];
 
-    for (int i = 0; i < N1; i++) {
-        for (int j = 0; j < N1; j++) {
+    for (int i = 0; i < n1; i++) {
+        for (int j = 0; j < n1; j++) {
             e[j] = (i == j) ? 1.0 : 0.0; // Vector unitario
         }
 
-        forwardSubstitution(L, e, y);
-        diagonalSolve(D, y, z);
-        backwardSubstitution(L, z, x);
+        forwardSubstitution(L, e, y,n1);
+        diagonalSolve(D, y, z,n1);
+        backwardSubstitution(L, z, x,n1);
 
-        for (int j = 0; j < N1; j++) {
+        for (int j = 0; j < n1; j++) {
             invA[j][i] = x[j];
         }
     }
