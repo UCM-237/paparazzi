@@ -103,9 +103,9 @@ static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 void cbf_init(void)
 {
 
-  cbf_param.r = 4.0;
+  cbf_param.r = 3.0;
   cbf_param.alpha =10;
-  cbf_ac_state.r=4.0;
+  cbf_ac_state.r=3.0;
   cbf_ac_state.alpha=10;
   cbf_ac_state.nei=0;
   cbf_ac_state.active_conds=(uint8_t)0;
@@ -367,20 +367,29 @@ int nid=(int) AC_ID;
      eta[i]=(dx)*(dx)+(dy)*(dy)-cbf_param.r*cbf_param.r;
      //  Test the condition for each neighbour. If the condition does not hold the requierement is active
      float bb;
+     
+     bb=0.25*cbf_param.alpha*eta[i]*eta[i]*eta[i];
      // To protect against division by zero
      //TODO: Review this condition, maybe if eta[i] is very small, we can continue the loop
-     if(eta[i]<1e-22){
+     /*if(eta[i]<1e-22){
         bb=0.0;
         eta[i]=0.0;
       
      }
      else{ 
       
-      bb=0.25*cbf_param.alpha*eta[i]*eta[i]*eta[i];
-     }
-     printf("ACID: %d\t, c: %f\n",nid, dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y-bb);
+      
+     }*/
+     //printf("ACID: %d\t, c: %f\n",nid, dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y-bb);
      //TODO: Revisar cálculo y signos
-     if ((dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y) >= bb){ // Condition is active
+     /*if ((dx*gvf_c_field.xi_x+dy*gvf_c_field.xi_y) >= bb){ // Condition is active
+        Aa[j][0]=-dx;
+        Aa[j][1]=-dy;
+        b[j]=bb;
+        j++;
+      }*/
+      printf("ACID: %d\t, eta: %f\n",nid, eta[i]);
+     if(eta[i]<0){ // Condition is active
         Aa[j][0]=-dx;
         Aa[j][1]=-dy;
         b[j]=bb;
@@ -389,7 +398,7 @@ int nid=(int) AC_ID;
    }  
   int active_conds=j;
   cbf_ac_state.active_conds=(uint8_t)active_conds;
- 
+  printf("ACID: %d\t, active conds: %d\n",nid, cbf_ac_state.active_conds);
   // Lagrange multiplier
   if (active_conds > 0 && active_conds <= CBF_MAX_NEIGHBORS) {
     if (active_conds==1){
@@ -412,7 +421,7 @@ int nid=(int) AC_ID;
       cy=Aact[1]*lambda_A;
       
       printf("ACID: %d\t, cx: %f, \tcy: %f\n",nid, cx,cy);
-      printf("ACID: %d\t, Aact[0]: %f, \tAaxt[1]: %f, \tlambda :%f\n",nid, Aact[0], Aact[1], lambda_A);
+      //printf("ACID: %d\t, Aact[0]: %f, \tAaxt[1]: %f, \tlambda :%f\n",nid, Aact[0], Aact[1], lambda_A);
       cbf_ac_state.xicbf_x=gvf_c_field.xi_x-cx;
       cbf_ac_state.xicbf_y=gvf_c_field.xi_y-cy;
 
