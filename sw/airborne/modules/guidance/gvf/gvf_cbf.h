@@ -122,11 +122,11 @@ extern cbf_state_t cbf_ac_state;
 extern cbf_tab_entrie_t cbf_obs_tables[CBF_MAX_NEIGHBORS];
 
 extern struct cbf_parameters cbf_param;
-void ldltDecomposition(double A[N1 ][N1 ], double L[N1 ][N1 ], double D[N1 ],int n1);
-void forwardSubstitution(double L[N1 ][N1 ], double b[N1 ], double y[N1 ],int n1);
-void diagonalSolve(double D[N1 ], double y[N1 ], double z[N1 ],int n1);
-void backwardSubstitution(double L[N1 ][N1 ], double z[N1 ], double x[N1 ],int n1);
-void inverseUsingLDLT(double L[N1 ][N1 ], double D[N1 ], double invA[N1 ][N1 ],int n1);
+bool ldltDecomposition(double A[N1 ][N1 ], double L[N1 ][N1 ], double D[N1 ],int n1);
+bool forwardSubstitution(double L[N1 ][N1 ], double b[N1 ], double y[N1 ],int n1);
+bool diagonalSolve(double D[N1 ], double y[N1 ], double z[N1 ],int n1);
+bool backwardSubstitution(double L[N1 ][N1 ], double z[N1 ], double x[N1 ],int n1);
+bool inverseUsingLDLT(double L[N1 ][N1 ], double D[N1 ], double invA[N1 ][N1 ],int n1);
 void parseCBFTable(uint8_t *buf);
 /* External functions --------------------------- */
 extern void cbf_init(void);

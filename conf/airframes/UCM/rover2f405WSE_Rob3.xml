@@ -82,7 +82,7 @@
     </module>
     <!-- CBF module-->
     <module name="gvf_cbf">
-       <define name="CBF_NEI_AC_IDS" value="{9,11}"/>
+       <define name="CBF_NEI_AC_IDS" value="{9,11,13}"/>
     </module>
     
     <module name="traffic_info"/>

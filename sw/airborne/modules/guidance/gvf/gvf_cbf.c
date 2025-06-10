@@ -396,6 +396,7 @@ int nid=(int) AC_ID;
       for (uint8_t i=0;i<active_conds;i++){
         for   (uint8_t l=0;l<active_conds;l++){
           Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
+          //printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
         }
       }
       
@@ -424,7 +425,9 @@ int nid=(int) AC_ID;
         return false;
       }
 
-      ldltDecomposition(Aact,L, D,active_conds);
+      if(!ldltDecomposition(Aact,L, D,active_conds)){
+        return false; // Decomposition failed, singular matrix
+      }
       printf("LDLT Decomposition done\n");
       printf("L matrix:\n");
       for (uint8_t i=0;i<active_conds;i++){
@@ -433,7 +436,9 @@ int nid=(int) AC_ID;
         }
         printf("\n");
       } 
-      inverseUsingLDLT(L,D, invA,active_conds);
+      if(!inverseUsingLDLT(L,D, invA,active_conds)){  
+        return false; // Inverse failed, singular matrix
+      }
       double lambda_A[active_conds];
       for (uint8_t i=0;i<active_conds;i++){
         int su=0;
@@ -474,7 +479,7 @@ void parse_CBF_STATE(uint8_t *buf)
     }
 }
 
-void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1], int n1) {
+bool ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1], int n1) {
    printf("LDLT Decomposition\n");
   
     for (int i = 0; i < n1; i++) {
@@ -498,6 +503,7 @@ void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1], int n1)
                 // Handle the case where D[j] is too small to avoid division by zero
                 L[i][j] = 0.0; // or some other handling
                printf("Warning: D[%d] is too small, setting L[%d][%d] to 0\n", j, i, j);
+               return false; // Singular matrix, cannot proceed
             } 
             else {
             
@@ -506,10 +512,11 @@ void ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1], int n1)
             }
         }
     }
+    return true; // Decomposition successful
 }
 
 }
-void forwardSubstitution(double L[N1][N1], double b[N1], double y[N1],int n1) {
+bool forwardSubstitution(double L[N1][N1], double b[N1], double y[N1],int n1) {
    printf("Forward Substitution\n");
     for (int i = 0; i < n1; i++) {
         double sum = 0.0;
@@ -518,39 +525,42 @@ void forwardSubstitution(double L[N1][N1], double b[N1], double y[N1],int n1) {
         }
         y[i] = b[i] - sum;
     }
+    return true; // Solve successful
 }
 
-void diagonalSolve(double D[N1], double y[N1], double z[N1],int n1) {
+bool diagonalSolve(double D[N1], double y[N1], double z[N1],int n1) {
     // Solve the diagonal system D * z = y
     // where D is a diagonal matrix
     printf("Diagonal Solve\n");
     if (n1 <= 0) {
         printf("Error: n1 must be greater than 0\n");
-        return;
+        return false;
     }  
     printf("Diagonal elements:\n");
   for (int i = 0; i < n1; i++) {
-
+    printf("y[%d] = %f\n", i, y[i]);
     if (fabs(D[i]) < 1e-6) {
         // Handle the case where D[i] is too small to avoid division by zero
         z[i] = 0.0; // or some other handling
         printf("Warning: D[%d] is too small, setting z[%d] to 0\n", i, i);
+        return false; // Singular matrix, cannot proceed
     }
     else {
         // Normal case, perform the division
         z[i] = y[i] / D[i];
     }
   }
+  return true; // Solve successful
 }
 
-void backwardSubstitution(double L[N1][N1], double z[N1], double x[N1],int n1) {
+bool backwardSubstitution(double L[N1][N1], double z[N1], double x[N1],int n1) {
     
     // Solve the system L^T * x = z
     // where L is a lower triangular matrix
     printf("Backward Substitution\n");
     if (n1 <= 0) {
         printf("Error: n1 must be greater than 0\n");
-        return;
+        return false;
     }
     for (int i = n1 - 1; i >= 0; i--) {
         double sum = 0.0;
@@ -559,14 +569,16 @@ void backwardSubstitution(double L[N1][N1], double z[N1], double x[N1],int n1) {
         }
         x[i] = z[i] - sum;
     }
+
+  return true; // Solve successful
 }
 
-void inverseUsingLDLT(double L[N1][N1], double D[N1], double invA[N1][N1],int n1) { 
+bool inverseUsingLDLT(double L[N1][N1], double D[N1], double invA[N1][N1],int n1) { 
     // Compute the inverse of A using the LDLT decomposition
     printf("Inverse using LDLT\n");
     if (n1 <= 0) {
         printf("Error: n1 must be greater than 0\n");
-        return; 
+        return false; 
     }
     // Initialize the inverse matrix to zero     
     double y[n1], z[n1], x[n1], e[n1];
@@ -576,12 +588,22 @@ void inverseUsingLDLT(double L[N1][N1], double D[N1], double invA[N1][N1],int n1
             e[j] = (i == j) ? 1.0 : 0.0; // Vector unitario
         }
 
-        forwardSubstitution(L, e, y,n1);
-        diagonalSolve(D, y, z,n1);
-        backwardSubstitution(L, z, x,n1);
+        if(!forwardSubstitution(L, e, y,n1)){
+            printf("Forward substitution failed\n");
+            return false; // Forward substitution failed  
+        }
+        if(!diagonalSolve(D, y, z,n1)){
+            printf("Diagonal solve failed\n");
+            return false; // Diagonal solve failed        
+        }
+        if(!backwardSubstitution(L, z, x,n1)){
+            printf("Backward substitution failed\n");
+            return false; // Backward substitution failed
+        }
 
         for (int j = 0; j < n1; j++) {
             invA[j][i] = x[j];
         }
     }
+  return true; // Inverse successful
 }
