@@ -396,7 +396,7 @@ int nid=(int) AC_ID;
       for (uint8_t i=0;i<active_conds;i++){
         for   (uint8_t l=0;l<active_conds;l++){
           Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
-          //printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
+          printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
         }
       }
       
@@ -446,6 +446,7 @@ int nid=(int) AC_ID;
           su=invA[i][l]*(Aact[l][0]*gvf_c_field.xi_x+Aact[l][1]*gvf_c_field.xi_y-b[l]);
         }
         lambda_A[i]=su;
+        printf("lambda_A[%d] = %f\n", i, lambda_A[i]);
       }  
       float cx=0,cy=0;
       for (uint8_t i=0;i<active_conds;i++){
