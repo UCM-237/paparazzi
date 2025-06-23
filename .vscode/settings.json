@@ -44,7 +44,13 @@
         "pprz_random.h": "c",
         "pprz_geodetic_int.h": "c",
         "cmath": "c",
-        "random": "c"
+        "random": "c",
+        "string": "c",
+        "string_view": "c",
+        "std.h": "c",
+        "ins_slam_ekf.h": "c",
+        "math.h": "c",
+        "rover_obstacles.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

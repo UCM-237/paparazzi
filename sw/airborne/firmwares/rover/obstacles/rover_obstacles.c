@@ -15,6 +15,7 @@ PRINT_CONFIG_VAR(N_COL_GRID)
 #define L_MIN    -127  // saturación mínima
 #define L_MAX     127  // saturación máxima
 #define L0         0   // valor inicial (desconocido)
+#define L_T				100  // Threeshold para considerar una celda ocupada
 
 world_grid obstacle_grid;
 
@@ -34,6 +35,17 @@ static void send_obstacle_grid(struct transport_tx *trans, struct link_device *d
   				N_COL_GRID, obstacle_grid.world[obstacle_grid.now_row]);
   				
   obstacle_grid.now_row = (obstacle_grid.now_row + 1) % N_ROW_GRID;
+}
+static void send_grid_init(struct transport_tx *trans, struct link_device *dev)
+{
+  // Send all cols from obstacle_grid.now_row in a cyclic pattern
+  pprz_msg_send_GRID_INIT(trans, dev, AC_ID,
+  				&obstacle_grid.dx,
+  				&obstacle_grid.dy,
+  				&obstacle_grid.xmin,
+  				&obstacle_grid.xmax,
+  				&obstacle_grid.ymin,
+  				&obstacle_grid.ymax);
 }
 #endif
 
@@ -56,6 +68,7 @@ void init_grid(uint8_t pa, uint8_t pb){
 	
 	#if PERIODIC_TELEMETRY
   	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_OBSTACLE_GRID, send_obstacle_grid);
+		register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GRID_INIT, send_grid_init);
 	#endif	
 	obstacle_grid.is_ready = 1;
 
@@ -84,6 +97,18 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
 	#if PERIODIC_TELEMETRY
 		register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_OBSTACLE_GRID, send_obstacle_grid);
 	#endif
+
+	// Manda el mensaje una vez para la estacion de tierra
+	DOWNLINK_SEND_GRID_INIT(
+		DefaultChannel,
+		DefaultDevice,
+		&obstacle_grid.dx,
+		&obstacle_grid.dy,
+		&obstacle_grid.xmin,
+		&obstacle_grid.xmax,
+		&obstacle_grid.ymin,
+		&obstacle_grid.ymax
+	);
 }
 
 
@@ -116,8 +141,8 @@ void fill_bayesian_cell(float px, float py){
 		rover_pos = *stateGetPositionEnu_f();
 		obtain_cell_xy(rover_pos.x, rover_pos.y, &rx, &ry);
 
-		update_line_bayes(rx, ry, cx, cy);         // Libre entre rover y obstáculo
-		update_cell_bayes(cx, cy, true);           // Ocupado en el punto final
+		update_line_bayes(rx, ry, cx, cy);   // Libre entre rover y obstáculo
+		update_cell_bayes(cx, cy, true);     // Ocupado en el punto final
 }
 
 // Bresenham
@@ -141,7 +166,17 @@ void update_cell_bayes(int x, int y, bool is_occupied) {
     int updated = *cell + delta;
     if (updated > L_MAX) updated = L_MAX;
     if (updated < L_MIN) updated = L_MIN;
-    *cell = (int8_t)updated;
+
+		// Decide si enviar esta celda (0 unknown, 1 ocupado, 2 libre)
+		int8_t old_value = *cell;
+    uint8_t old_state = (old_value > L_T) ? 1 : (old_value < -L_T) ? 2 : 0;
+    uint8_t new_state = (updated > L_T) ? 1 : (updated < -L_T) ? 2 : 0;
+
+		if(old_state != new_state){
+			DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, &y, &x, &updated);
+		}
+
+		*cell = (int8_t)updated;
 }
 
 
