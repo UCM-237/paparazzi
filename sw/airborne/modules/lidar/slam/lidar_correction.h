@@ -49,7 +49,9 @@ struct WallSystem {
 
 
 #ifdef USE_EKF_SLAM
-extern uint8_t N_psi;
+#define MAX_LIDAR_MEASUREMENTS 10
+extern uint8_t psi_counter;
+extern float psi_list[MAX_LIDAR_MEASUREMENTS];
 #endif
 
 

@@ -17,7 +17,7 @@
 
 
 typedef struct{
-	uint8_t world[N_ROW_GRID][N_COL_GRID];
+	int8_t world[N_ROW_GRID][N_COL_GRID];
 	float xmin;
 	float xmax;
 	float ymin;
@@ -33,8 +33,10 @@ extern world_grid obstacle_grid;
 
 
 extern void init_grid(uint8_t pa, uint8_t pb);
+extern void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4);
 extern void obtain_cell_xy(float px, float py, int *cell_x, int *cell_y);
 extern void fill_cell(float px, float py);
+extern void fill_bayesian_cell(float px, float py);
 
 
 

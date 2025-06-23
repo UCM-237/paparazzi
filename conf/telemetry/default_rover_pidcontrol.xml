@@ -31,6 +31,7 @@
       <!-- El Lidar habra que quitarlo o ver que hacer con el. Esto es para depurar -->
       <message name="LIDAR"                  period="0.2"/>
       <message name="SLAM"                   period="0.2"/>
+      <message name="OBSTACLE_GRID"	         period="2"/>
       
 
       <!-- <message name="CIRCLE"                 period="2.5"/>  -->

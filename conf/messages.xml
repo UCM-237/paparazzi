@@ -1731,21 +1731,34 @@
     </message>
     
     <!-- Obstacle telemetry -->
-    <!--
     <message name="OBSTACLE_GRID" id="182">
     	<description>
     		Obstacle grid telemetry
     	</description>
-    	<field name="cell width" type="float"/>
-    	<field name="cell height" type="float"/>
+    	<field name="cell_width" type="float"/>
+    	<field name="cell_height" type="float"/>
     	<field name="xmin" type="float"/>
     	<field name="xmax" type="float"/>
     	<field name="ymin" type="float"/>
     	<field name="ymax" type="float"/>
     	<field name="row_number" type="uint16"/>
-    	<field name="columns" type="uint8[]"/>
+    	<field name="columns" type="int8[]"/>
     </message>
-    -->
+
+    <!-- <message name="BAYESIAN_GRID" id="182">
+    	<description>
+    		Obstacle grid telemetry for Bayesian Map
+    	</description>
+    	<field name="cell_width" type="float"/>
+    	<field name="cell_height" type="float"/>
+    	<field name="xmin" type="float"/>
+    	<field name="xmax" type="float"/>
+    	<field name="ymin" type="float"/>
+    	<field name="ymax" type="float"/>
+    	<field name="row_number" type="uint16"/>
+    	<field name="columns" type="int8[]"/>
+    </message> -->
+   
     
     <!-- 183 is free -->
     <!-- 184 is free -->
@@ -1768,8 +1781,8 @@
     <message name="SLAM" id="192">
       <field name="offset"            type="float[2]" format="%.2f" unit="m"/>
       <field name="gps_offset"        type="float[2]" format="%.2f" unit="m"/>
-      <field name="nearest_point"     type="float[2]" format="%.2f" unit="m"/>
-      <field name="obstacle" type="float[2]" format="%.2f" unit="m"/>
+      <field name="obstacle_type"     type="uint8"/>
+      <field name="obstacle"          type="float[2]" format="%.2f" unit="m"/>
       <field name="wall_converted"    type="uint8" unit="bool" values="FALSE|TRUE"/>
     </message>
 

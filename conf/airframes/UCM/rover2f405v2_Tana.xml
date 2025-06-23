@@ -95,13 +95,12 @@
     <!-- <module name="traffic_info"/> -->
     
 
-    <!-- Obstacle grid -->
-    <!--
+    <!-- Obstacle grid -->    
     <module name="obstacle_rover">
     	<define name="N_COL_GRID" value="50"/>
     	<define name="N_ROW_GRID" value="50"/>
     </module>
-    -->
+   
     
     <module name="guidance" type="rover_steering">
       <define name="MAX_DELTA"            value="15.0"/>

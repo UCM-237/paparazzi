@@ -44,6 +44,7 @@ static struct FloatVect2 gps_offset = {0.0, 0.0};
 static struct FloatVect2 offset = {0.0, 0.0};
 static struct FloatVect2 nearest_point = {0.0, 0.0};
 static struct FloatVect2 obstacle = {0.0, 0.0};
+static uint8_t obstacle_type = 0; // 0 -> Conocido, 1-> Desconocido
 static uint32_t N_medidas = 0;
 
 bool enable_ekf_filter = true;
@@ -78,6 +79,9 @@ struct FloatVector {
 
 struct NedCoor_f rover_pos;
 
+#ifdef USE_GRID
+#include "firmwares/rover/obstacles/rover_obstacles.h"
+#endif
 
 #include "modules/core/abi.h"
 #include "modules/datalink/downlink.h"
@@ -194,6 +198,7 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
   }
 }
 
+// TODO: Ordenar esto
 static void send_ins_ekf(struct transport_tx *trans, struct link_device *dev)
 {
   kalman_filter.K2[0][0] = POS_FLOAT_OF_BFP(ins_int.ltp_pos.x);
@@ -224,7 +229,7 @@ static void send_slam(struct transport_tx *trans, struct link_device *dev)
   pprz_msg_send_SLAM(trans, dev, AC_ID,
                      (float[2]){offset.x, offset.y},
                      (float[2]){gps_offset.x, gps_offset.y},
-                     (float[2]){nearest_point.x, nearest_point.y},
+                     &obstacle_type,
                      (float[2]){obstacle.x, obstacle.y},
                      &converted);
 }
@@ -546,8 +551,8 @@ void ins_int_update_gps(struct GpsState *gps_s)
 
   // Error en el GPS para NPS (para debug)
   #ifdef USE_NPS
-    // gps_pos_cm_ned.x += ins_slam.gps_bias.x*fabs(rand_gaussian()*50); //*1*bias
-    // gps_pos_cm_ned.y += ins_slam.gps_bias.y*fabs(rand_gaussian()*50); //*1*bias;
+    // gps_pos_cm_ned.x = gps_pos_cm_ned.x + fabs(rand_gaussian()*50) + ins_slam.gps_bias.x; //*1*bias
+    // gps_pos_cm_ned.y = gps_pos_cm_ned.y + fabs(rand_gaussian()*50) + ins_slam.gps_bias.y; //*1*bias;
     gps_pos_cm_ned.x += ins_slam.gps_bias.x*100; // TEST mas sencillo, solo el offset
     gps_pos_cm_ned.y += ins_slam.gps_bias.y*100; // TEST mas sencillo, solo el offset
   #endif
@@ -572,17 +577,24 @@ void ins_int_update_gps(struct GpsState *gps_s)
   Y[6] = offset.x;
 
   // Actualiza la matriz de covarianza
-  if (kalman_variance.psi == 10) {  // Si no hay medidas de Lidar
+
+  if (psi_counter <= 0) {  // Si no hay medidas de Lidar
+    kalman_variance.psi = 10; // Display
     clean_lidar_covariance(&kalman_filter);
     float beta = (ins_slam.beta+99)/100;
     Y[5] = kalman_filter.X[5]*beta;
     Y[6] = kalman_filter.X[6]*beta;
   }
   else{
+    float psi_sum = 0.0f;
+    psi_counter = (psi_counter > 10) ? 10 : psi_counter;
+    for (int i = 0; i < psi_counter; i++) {
+      psi_sum += psi_list[i];
+    }
+    kalman_variance.psi = (psi_counter != 0) ? (psi_sum / psi_counter) : 0.0f;
     update_lidar_covariance(&kalman_filter, kalman_variance.psi);
   }
 
-  
   extended_kalman_filter_update(&kalman_filter, Y);
 
   // Display the vector measurements
@@ -618,8 +630,8 @@ void ins_int_update_gps(struct GpsState *gps_s)
   offset.x = 0;
   offset.y = 0;
 
-  kalman_variance.psi = 10;
-  N_psi = 0;
+  // kalman_variance.psi = 10;
+  psi_counter = 0;
 
   
   if(ins_slam.enable){
@@ -672,10 +684,6 @@ void ins_update_lidar(float distance, float angle){
   // Obtener posición actual del rover (sin corregir) en coordenadas locales
   // float x_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->x);
   // float y_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->y);
-
-  // // Borra el offset de la última medida
-  // x_rover -= kalman_filter.X[6];
-  // y_rover -= kalman_filter.X[5];
   float x_rover = rover_pos.y;
   float y_rover = rover_pos.x;
   
@@ -690,22 +698,29 @@ void ins_update_lidar(float distance, float angle){
   nearest_point = (struct FloatVect2){0.0f, 0.0f};
   float distance_wall = find_nearest_wall(&obstacle, &nearest_point);
   if(distance_wall > ins_slam.max_distance_wall){
-    return;
-  } 
+    obstacle_type = 1;  // Unknown Obstacle
+    psi_counter--;      
+    // return;
+  }
+  else{
+    // Actualiza el offset y la posición
+    float delta_x = nearest_point.x - obstacle.x;
+    float delta_y = nearest_point.y - obstacle.y;
 
-  // Actualiza el offset y la posición
-  float delta_x = nearest_point.x - obstacle.x;
-  float delta_y = nearest_point.y - obstacle.y;
+    N_medidas++;
+    offset.x = (delta_x + (N_medidas - 1)*offset.x)/N_medidas;
+    offset.y = (delta_y + (N_medidas - 1)*offset.y)/N_medidas;
 
-  N_medidas++;
-  offset.x = (delta_x + (N_medidas - 1)*offset.x)/N_medidas;
-  offset.y = (delta_y + (N_medidas - 1)*offset.y)/N_medidas;
+    
+    // Aplica el offset al obstaculo para pintarlo
+    obstacle.x += offset.x;
+    obstacle.y += offset.y;
+    obstacle_type = 0;  // Known Obstacle
+  }
 
-  
-  // Aplica el offset al obstaculo para pintarlo
-  obstacle.x += offset.x;
-  obstacle.y += offset.y;
-
+  // Rellena la cuadricula
+  // TODO: Maybe, separate known and unknown obstacles
+  fill_bayesian_cell(obstacle.x, obstacle.y);
 
   // Cuando lo termine de depurar se puede borrar
   debug_point.x = nearest_point.x;

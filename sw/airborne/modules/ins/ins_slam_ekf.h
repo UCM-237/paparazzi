@@ -35,10 +35,10 @@
 #include "math/pprz_algebra_float.h"
 
 #ifndef R2_IMU
-  #define R2_IMU 25E-05
+  #define R2_IMU 25E-06
 #endif
 #ifndef RP_GPS
-  #define RP_GPS 5E-03
+  #define RP_GPS 5E-01
 #endif
 #ifndef RV_GPS
   #define RV_GPS 10E-03

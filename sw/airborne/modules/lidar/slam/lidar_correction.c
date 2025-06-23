@@ -21,8 +21,6 @@
 
 // ------------------------------------
 
-// En teoria ya funciona, ver si los resultados tienen sentido.
-
 
 #include "lidar_correction.h"
 #include "modules/lidar/tfmini.h"
@@ -30,6 +28,8 @@
 
 #ifdef USE_EKF_SLAM
 #include "modules/ins/ins_slam_ekf.h"
+uint8_t psi_counter = 0;
+float psi_list[MAX_LIDAR_MEASUREMENTS];
 #endif 
 
 #include "math/pprz_algebra.h"
@@ -40,8 +40,8 @@
 
 struct WallSystem wall_system;  // Sistema de paredes global
 
-#ifdef USE_EKF_SLAM
-uint8_t N_psi = 0;
+#ifdef USE_GRID
+#include "firmwares/rover/obstacles/rover_obstacles.h"
 #endif
 
 
@@ -135,12 +135,8 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
 
   #ifdef USE_EKF_SLAM
   if ((psi < 3.14f) && (psi > -3.14f)) {
-    if (N_psi == 0) {
-      kalman_variance.psi = psi;
-    } else {
-      kalman_variance.psi = (psi + kalman_variance.psi*(N_psi-1))/N_psi;
-    }
-    N_psi++;
+    psi_list[psi_counter % MAX_LIDAR_MEASUREMENTS] = psi;
+    psi_counter++;
   }
   #endif
   return min_distance;
@@ -187,6 +183,14 @@ void init_walls(void) {
   wall_system.converted_to_ltp = false;
 
 }
+
+#ifdef USE_GRID
+// TODO: Find a easy way to this
+// void fill_known_grid(){
+
+
+// }
+#endif // USE_GRID
 
 
 void convert_walls_to_ltp(void) {

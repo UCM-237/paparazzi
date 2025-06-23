@@ -3,9 +3,12 @@
 <module name="obstacle_rover" dir="firmwares/rover/obstacles">
   <doc>
     <description> 
-	Obstacle rover grid
+	   Obstacle rover grid
     </description>
+    <define name="USE_GRID" value="TRUE|FALSE" description="Use it to enable this module"/>
   </doc>
+
+  
   
   <header>
      <file name="rover_obstacles.h"/>
@@ -16,7 +19,8 @@
   </makefile>
    
   <makefile firmware="rover">
-     <file name="rover_obstacles.c" dir="$(SRC_FIRMWARE)/obstacles"/>
+      <file name="rover_obstacles.c" dir="$(SRC_FIRMWARE)/obstacles"/>
+      <define name="USE_GRID" value="TRUE"/>
   </makefile>
   
 </module>
