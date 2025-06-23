@@ -111,7 +111,7 @@ typedef struct{
   uint32_t t_last_msg;
 } cbf_tab_entrie_t;
 
- double L[N1][N1],D[N1],invA[N1][N1];
+ //double L[N1][N1],D[N1],invA[N1][N1];
 
 /* Structure definitions ------------------------ */
 
@@ -122,11 +122,10 @@ extern cbf_state_t cbf_ac_state;
 extern cbf_tab_entrie_t cbf_obs_tables[CBF_MAX_NEIGHBORS];
 
 extern struct cbf_parameters cbf_param;
-bool ldltDecomposition(double A[N1 ][N1 ], double L[N1 ][N1 ], double D[N1 ],int n1);
-bool forwardSubstitution(double L[N1 ][N1 ], double b[N1 ], double y[N1 ],int n1);
-bool diagonalSolve(double D[N1 ], double y[N1 ], double z[N1 ],int n1);
-bool backwardSubstitution(double L[N1 ][N1 ], double z[N1 ], double x[N1 ],int n1);
-bool inverseUsingLDLT(double L[N1 ][N1 ], double D[N1 ], double invA[N1 ][N1 ],int n1);
+bool lu_factorization(float A[N1][N1], float L[N1][N1], float U[N1][N1], int P[N1], int n) ;
+bool apply_permutation(float b[N1], float bp[N1], int P[N1], int n);
+bool forward_substitution(float L[N1][N1], float b[N1], float y[N1], int n);
+bool backward_substitution(float U[N1][N1], float y[N1], float lambda_A[N1], int n);
 void parseCBFTable(uint8_t *buf);
 /* External functions --------------------------- */
 extern void cbf_init(void);

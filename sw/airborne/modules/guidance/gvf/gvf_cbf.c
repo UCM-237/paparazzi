@@ -41,10 +41,11 @@ cbf_state_t cbf_ac_state = {0};
 cbf_tab_entrie_t cbf_obs_tables[CBF_MAX_NEIGHBORS];
 // State
 
-gvf_common_field gvf_c_field;
+//  gvf_common_field gvf_c_field;
 struct cbf_con cbf_control;
 struct cbf_tel cbf_telemetry;
 
+#define N1 CBF_MAX_NEIGHBORS // Number of active conditions, maximum number of neighbors
 
 
 
@@ -391,65 +392,43 @@ int nid=(int) AC_ID;
 
     }
     else{
-      printf("Active conditions: %d\n", active_conds);
+    //  printf("Active conditions: %d\n", active_conds);
       double Aact[active_conds][active_conds];
+      float c[active_conds];
+      float bp[active_conds];  // b permuted
+      float L[active_conds][active_conds], U[active_conds][active_conds];
+      float y[active_conds], lambda_A[active_conds];
+      int P[active_conds];
+
       for (uint8_t i=0;i<active_conds;i++){
+          c[i]=Aa[i][0]*gvf_c_field.xi_x+Aa[i][1]*gvf_c_field.xi_y-b[i];
         for   (uint8_t l=0;l<active_conds;l++){
           Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
-          printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
+      //    printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
         }
-      }
+        if(!lu_factorization(Aact, L,U,P, active_conds)){
+          printf("LU factorization failed\n");
+          return false;
+        }
+         if(!apply_permutation(c, bp, P, active_conds)){
+          printf("Apply permutation failed\n");
+          return false;
+         }
+         if(!forward_substitution(L, bp, y, active_conds)){
+          printf("Forward substitution failed\n");
+          return false;
+         }
+         if(!backward_substitution(U, y, lambda_A, active_conds)){
+          printf("Backward substitution failed\n");
+          return false;
+        }
+
       
-     //TODO: Lio con las matrices. Ver qué pasa
-      for (int i=0;i<active_conds;i++){
-        for   (int l=0;l<active_conds;l++){
-          invA[i][l]=0.0;
-          L[i][l]=0.0;
-          
-        }
-        D[i]=0.0;
-      }
-
-        
-      bool singA=true;
-      for (uint8_t i=0;i<active_conds;i++){
-        for   (uint8_t l=0;l<active_conds;l++){
-          if (Aact[i][l]>=fabs(1e-6)){
-            singA=false;
-            break;
-          };
-        }
-      }
-      if (singA){
-        printf("Singular matrix, cannot solve the CBF\n");
-        return false;
-      }
-
-      if(!ldltDecomposition(Aact,L, D,active_conds)){
-        return false; // Decomposition failed, singular matrix
-      }
-      printf("LDLT Decomposition done\n");
-      printf("L matrix:\n");
-      for (uint8_t i=0;i<active_conds;i++){
-        for   (uint8_t l=0;l<active_conds;l++){
-          printf("%f ", L[i][l]);
-        }
-        printf("\n");
-      } 
-      if(!inverseUsingLDLT(L,D, invA,active_conds)){  
-        return false; // Inverse failed, singular matrix
-      }
-      double lambda_A[active_conds];
-      for (uint8_t i=0;i<active_conds;i++){
-        int su=0;
-        for   (int l=0;l<active_conds;l++){
-          su=invA[i][l]*(Aact[l][0]*gvf_c_field.xi_x+Aact[l][1]*gvf_c_field.xi_y-b[l]);
-        }
-        lambda_A[i]=su;
-        printf("lambda_A[%d] = %f\n", i, lambda_A[i]);
       }  
       float cx=0,cy=0;
       for (uint8_t i=0;i<active_conds;i++){
+        printf("lambda_A[%d] = %f\n", i, lambda_A[i]);
+        // Calculate the modified field
         cx=cx+Aact[i][0]*lambda_A[i];
         cy=cy+Aact[i][1]*lambda_A[i];
     
@@ -480,131 +459,91 @@ void parse_CBF_STATE(uint8_t *buf)
     }
 }
 
-bool ldltDecomposition(double A[N1][N1], double L[N1][N1], double D[N1], int n1) {
-   printf("LDLT Decomposition\n");
-  
-    for (int i = 0; i < n1; i++) {
-      
-        for (int j = 0; j <= i; j++) {
-            double sum = 0;
 
-            if (j == i) {
-                for (int k = 0; k < j; k++) {
-                    sum += L[j][k] * L[j][k] * D[k];
+bool lu_factorization(float A[N1][N1], float L[N1][N1], float U[N1][N1], int P[N1], int n) {
+    // Initialize permitation vector P and matrices L and U
+    for (int i = 0; i < n; i++) {
+        P[i] = i;
+        for (int j = 0; j < n; j++) {
+            L[i][j] = 0.0f;
+            U[i][j] = 0.0f;
+        }
+    }
+
+    for (int k = 0; k < n; k++) {
+        //Partial pivoting: find the row with the maximum value in column k
+        // and swap it with the current row k to avoid numerical instability
+        float max = fabsf(A[k][k]);
+        int maxRow = k;
+        for (int i = k + 1; i < n; i++) {
+            if (fabsf(A[i][k]) > max) {
+                max = fabsf(A[i][k]);
+                maxRow = i;
+            }
+        }
+        // Exchange rows in the permutation vector P and matrix A
+        if (maxRow != k) {
+            int temp = P[k];
+            P[k] = P[maxRow];
+            P[maxRow] = temp;
+            for (int j = 0; j < n; j++) {
+                float tmp = A[k][j];
+                A[k][j] = A[maxRow][j];
+                A[maxRow][j] = tmp;
+            }
+        }
+
+        // Build L and U
+        for (int i = 0; i < n; i++) {
+            if (i <= k) {
+                float sum = 0.0f;
+                for (int p = 0; p < i; p++) sum += L[i][p] * U[p][k];
+                U[i][k] = A[i][k] - sum;
+            }
+            if (i >= k) {
+                float sum = 0.0f;
+                for (int p = 0; p < k; p++) sum += L[i][p] * U[p][k];
+                if (fabsf(U[k][k]) < 1e-6) {
+                    printf("Pivot close to zero\n");
+                    return false;
                 }
-                D[j] = A[j][j] - sum;
-                printf("D[%d] = %f\n", j, D[j]);
-                L[j][j] = 1.0;
-            } 
-            else {
-                for (int k = 0; k < j; k++) {
-                    sum += L[i][k] * L[j][k] * D[k];
-                }
-            if (fabs(D[j])< 1e-6) {
-                // Handle the case where D[j] is too small to avoid division by zero
-                L[i][j] = 0.0; // or some other handling
-               printf("Warning: D[%d] is too small, setting L[%d][%d] to 0\n", j, i, j);
-               return false; // Singular matrix, cannot proceed
-            } 
-            else {
-            
-                L[i][j] = (A[i][j] - sum) / D[j];
-                          
+                L[i][k] = (A[i][k] - sum) / U[k][k];
             }
         }
     }
-    return true; // Decomposition successful
+
+    // Set 1 on the diagonal of L
+    for (int i = 0; i < n; i++) {
+        L[i][i] = 1.0f;
+    }
+  return true;
 }
 
+bool apply_permutation(float b[N1], float bp[N1], int P[N1], int n) {
+    for (int i = 0; i < n; i++) {
+        bp[i] = b[P[i]];
+    }
+    return true;
 }
-bool forwardSubstitution(double L[N1][N1], double b[N1], double y[N1],int n1) {
-   printf("Forward Substitution\n");
-    for (int i = 0; i < n1; i++) {
-        double sum = 0.0;
+
+bool forward_substitution(float L[N1][N1], float b[N1], float y[N1], int n) {
+    for (int i = 0; i < n; i++) {
+        y[i] = b[i];
         for (int j = 0; j < i; j++) {
-            sum += L[i][j] * y[j];
+            y[i] -= L[i][j] * y[j];
         }
-        y[i] = b[i] - sum;
     }
-    return true; // Solve successful
+    return true;
+}
+bool backward_substitution(float U[N1][N1], float y[N1], float x[N1], int n) {
+    for (int i = n - 1; i >= 0; i--) {
+        x[i] = y[i];
+        for (int j = i + 1; j < n; j++) {
+            x[i] -= U[i][j] * x[j];
+        }
+        x[i] /= U[i][i];
+    }
+  return true;
 }
 
-bool diagonalSolve(double D[N1], double y[N1], double z[N1],int n1) {
-    // Solve the diagonal system D * z = y
-    // where D is a diagonal matrix
-    printf("Diagonal Solve\n");
-    if (n1 <= 0) {
-        printf("Error: n1 must be greater than 0\n");
-        return false;
-    }  
-    printf("Diagonal elements:\n");
-  for (int i = 0; i < n1; i++) {
-    printf("y[%d] = %f\n", i, y[i]);
-    if (fabs(D[i]) < 1e-6) {
-        // Handle the case where D[i] is too small to avoid division by zero
-        z[i] = 0.0; // or some other handling
-        printf("Warning: D[%d] is too small, setting z[%d] to 0\n", i, i);
-        return false; // Singular matrix, cannot proceed
-    }
-    else {
-        // Normal case, perform the division
-        z[i] = y[i] / D[i];
-    }
-  }
-  return true; // Solve successful
-}
 
-bool backwardSubstitution(double L[N1][N1], double z[N1], double x[N1],int n1) {
-    
-    // Solve the system L^T * x = z
-    // where L is a lower triangular matrix
-    printf("Backward Substitution\n");
-    if (n1 <= 0) {
-        printf("Error: n1 must be greater than 0\n");
-        return false;
-    }
-    for (int i = n1 - 1; i >= 0; i--) {
-        double sum = 0.0;
-        for (int j = i + 1; j < n1; j++) {
-            sum += L[j][i] * x[j];
-        }
-        x[i] = z[i] - sum;
-    }
-
-  return true; // Solve successful
-}
-
-bool inverseUsingLDLT(double L[N1][N1], double D[N1], double invA[N1][N1],int n1) { 
-    // Compute the inverse of A using the LDLT decomposition
-    printf("Inverse using LDLT\n");
-    if (n1 <= 0) {
-        printf("Error: n1 must be greater than 0\n");
-        return false; 
-    }
-    // Initialize the inverse matrix to zero     
-    double y[n1], z[n1], x[n1], e[n1];
-
-    for (int i = 0; i < n1; i++) {
-        for (int j = 0; j < n1; j++) {
-            e[j] = (i == j) ? 1.0 : 0.0; // Vector unitario
-        }
-
-        if(!forwardSubstitution(L, e, y,n1)){
-            printf("Forward substitution failed\n");
-            return false; // Forward substitution failed  
-        }
-        if(!diagonalSolve(D, y, z,n1)){
-            printf("Diagonal solve failed\n");
-            return false; // Diagonal solve failed        
-        }
-        if(!backwardSubstitution(L, z, x,n1)){
-            printf("Backward substitution failed\n");
-            return false; // Backward substitution failed
-        }
-
-        for (int j = 0; j < n1; j++) {
-            invA[j][i] = x[j];
-        }
-    }
-  return true; // Inverse successful
-}
