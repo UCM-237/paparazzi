@@ -670,6 +670,7 @@ void ins_update_lidar(float distance, float angle){
     return;
   } 
 
+  // Sin GPS no funciona nada, comentar para hacer pruebas
   if (!ins_int.ltp_initialized) {
       return; // No se corrige si la posición del rover no está inicializada
   }
@@ -720,7 +721,9 @@ void ins_update_lidar(float distance, float angle){
 
   // Rellena la cuadricula
   // TODO: Maybe, separate known and unknown obstacles
-  fill_bayesian_cell(obstacle.x, obstacle.y);
+  #ifdef USE_GRID
+    fill_bayesian_cell(obstacle.x, obstacle.y);
+  #endif
 
   // Cuando lo termine de depurar se puede borrar
   debug_point.x = nearest_point.x;

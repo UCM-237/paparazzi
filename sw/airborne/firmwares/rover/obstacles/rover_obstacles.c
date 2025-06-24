@@ -10,12 +10,12 @@ PRINT_CONFIG_VAR(N_ROW_GRID)
 PRINT_CONFIG_VAR(N_COL_GRID)
 
 // Mapa de Probabilidades
-#define L_FREE    -25  // celda observada libre (log-odds negativo)
-#define L_OCC     25   // celda observada ocupada (log-odds positivo)
+#define L_FREE    -10  // celda observada libre (log-odds negativo)
+#define L_OCC     20   // celda observada ocupada (log-odds positivo)
 #define L_MIN    -127  // saturación mínima
 #define L_MAX     127  // saturación máxima
 #define L0         0   // valor inicial (desconocido)
-#define L_T				100  // Threeshold para considerar una celda ocupada
+#define L_T				100  // Threeshold para considerar una celda ocupada/libres
 
 world_grid obstacle_grid;
 
@@ -38,7 +38,6 @@ static void send_obstacle_grid(struct transport_tx *trans, struct link_device *d
 }
 static void send_grid_init(struct transport_tx *trans, struct link_device *dev)
 {
-  // Send all cols from obstacle_grid.now_row in a cyclic pattern
   pprz_msg_send_GRID_INIT(trans, dev, AC_ID,
   				&obstacle_grid.dx,
   				&obstacle_grid.dy,
@@ -95,7 +94,8 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
   memset(obstacle_grid.world, 0, sizeof(obstacle_grid.world));
 
 	#if PERIODIC_TELEMETRY
-		register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_OBSTACLE_GRID, send_obstacle_grid);
+  	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_OBSTACLE_GRID, send_obstacle_grid);
+		register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GRID_INIT, send_grid_init);
 	#endif
 
 	// Manda el mensaje una vez para la estacion de tierra
@@ -132,6 +132,10 @@ void fill_cell(float px, float py){
 }
 
 void fill_bayesian_cell(float px, float py){
+
+		// DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, 0, 0, 120);
+		if (!obstacle_grid.is_ready) return;
+
     int cx, cy;
     obtain_cell_xy(px, py, &cx, &cy);
 
@@ -145,7 +149,7 @@ void fill_bayesian_cell(float px, float py){
 		update_cell_bayes(cx, cy, true);     // Ocupado en el punto final
 }
 
-// Bresenham
+// Bresenham algorithm
 void update_line_bayes(int x0, int y0, int x1, int y1) {
     int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;

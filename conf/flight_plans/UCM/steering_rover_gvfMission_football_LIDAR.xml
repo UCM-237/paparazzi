@@ -25,10 +25,6 @@
     <waypoint lat="40.4512980" lon="-3.7289949" name="BZ9"/>
     <waypoint lat="40.4513050" lon="-3.7290239" name="BZ10"/>
     <waypoint lat="40.4513050" lon="-3.7291041" name="BZ11"/>
-    <!-- <waypoint name="_S1" x="3" y="4"/>
-    <waypoint name="_S2" x="3" y="-4"/>
-    <waypoint name="_S3" x="-3" y="-4"/>
-    <waypoint name="_S4" x="-3" y="4"/> -->
     <waypoint name="_N1" x="90" y="90"/>
     <waypoint name="_N2" x="90" y="-90"/>
     <waypoint name="_N3" x="-90" y="-90"/>

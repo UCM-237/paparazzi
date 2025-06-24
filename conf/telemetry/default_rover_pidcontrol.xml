@@ -32,7 +32,7 @@
       <message name="LIDAR"                  period="0.2"/>
       <message name="SLAM"                   period="0.2"/>
       <!-- <message name="OBSTACLE_GRID"	         period="15.0"/> -->
-      <message name="GRID_INIT"	         period="15.0"/>
+      <message name="GRID_INIT"	             period="15.0"/>
       
 
       <!-- <message name="CIRCLE"                 period="2.5"/>  -->
