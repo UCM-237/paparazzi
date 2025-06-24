@@ -1,5 +1,6 @@
-
 #include "./rover_obstacles.h"
+#include "modules/lidar/tfmini.h"
+#include "modules/ins/ins_slam_ekf.h"
 #include "math/pprz_geodetic_float.h"
 
 #include "modules/datalink/telemetry.h"
@@ -133,11 +134,10 @@ void fill_cell(float px, float py){
 
 void fill_bayesian_cell(float px, float py){
 
-		// DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, 0, 0, 120);
 		if (!obstacle_grid.is_ready) return;
 
     int cx, cy;
-    obtain_cell_xy(px, py, &cx, &cy);
+		obtain_cell_xy(px, py, &cx, &cy);
 
 		// Obtiene la celda en la que esta el rover
 		int rx, ry;
@@ -148,6 +148,53 @@ void fill_bayesian_cell(float px, float py){
 		update_line_bayes(rx, ry, cx, cy);   // Libre entre rover y obstáculo
 		update_cell_bayes(cx, cy, true);     // Ocupado en el punto final
 }
+
+// Rellena las celda libres cuando no hay medida del lidar
+void fill_free_cells() {
+		if (!obstacle_grid.is_ready) return;
+
+		// Obtiene la medida actual del lidar
+		float lidar = tfmini.distance;
+		float angle = tf_servo.ang;
+
+		// Obtiene la celda en la que esta el rover
+		int rx, ry;
+		struct EnuCoor_f rover_pos;
+		rover_pos = *stateGetPositionEnu_f();
+		obtain_cell_xy(rover_pos.x, rover_pos.y, &rx, &ry);
+		if (rx < 0 || rx >= N_COL_GRID || ry < 0 || ry >= N_ROW_GRID) {
+			return;
+		}
+
+		// Si no hay medida del lidar, se marcan las celdas como libres
+		if(lidar == 0.0f){
+			// Calcula el obstaculo ficticio
+			int cx, cy;
+			float theta = stateGetNedToBodyEulers_f()->psi;
+			float corrected_angle = M_PI / 2 - angle*M_PI/180 - theta;
+
+			float px = rover_pos.x + (ins_slam.max_distance * cosf(corrected_angle));
+			float py = rover_pos.y + (ins_slam.max_distance * sinf(corrected_angle));
+
+			obtain_cell_xy(px, py, &cx, &cy);
+
+			update_line_bayes(rx, ry, cx, cy);   // Libre entre rover y obstáculo
+			return;
+		}
+		else{
+			update_cell_bayes(rx, ry, false);    // Libre en el punto final
+		}
+
+		
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ *  Aux functions                                                           *
+ *                                                                             *
+ ******************************************************************************/
+
 
 // Bresenham algorithm
 void update_line_bayes(int x0, int y0, int x1, int y1) {
@@ -164,7 +211,11 @@ void update_line_bayes(int x0, int y0, int x1, int y1) {
     }
 }
 
+
 void update_cell_bayes(int x, int y, bool is_occupied) {
+		if (x < 0 || x >= N_COL_GRID || y < 0 || y >= N_ROW_GRID) {
+			return;
+		}
     int8_t *cell = &obstacle_grid.world[y][x];
     int delta = is_occupied ? L_OCC : L_FREE;
     int updated = *cell + delta;
