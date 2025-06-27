@@ -124,11 +124,9 @@ float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2
       float distance = distance_to_segment(obstacle_pos, &p1, &p2, &aux_point);
       
       if (distance < min_distance) {
+        psi = atan2f(-(p2.y - p1.y), p2.x - p1.x);
         min_distance = distance;
         *nearest_point = aux_point;
-        #ifdef USE_EKF_SLAM
-        psi = atan2f(-(p2.y - p1.y), p2.x - p1.x); // REVISAR
-        #endif
       }
     }
   }

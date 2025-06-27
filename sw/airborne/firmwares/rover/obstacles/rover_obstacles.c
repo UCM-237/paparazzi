@@ -1,3 +1,5 @@
+// Depends of tfmini lidar and INS SLAM EKF (could be replaced by other lidar and ins slam)
+
 #include "./rover_obstacles.h"
 #include "modules/lidar/tfmini.h"
 #include "modules/ins/ins_slam_ekf.h"
@@ -45,7 +47,9 @@ static void send_grid_init(struct transport_tx *trans, struct link_device *dev)
   				&obstacle_grid.xmin,
   				&obstacle_grid.xmax,
   				&obstacle_grid.ymin,
-  				&obstacle_grid.ymax);
+  				&obstacle_grid.ymax,
+					&obstacle_grid.map.threshold
+					);
 }
 #endif
 
@@ -92,6 +96,10 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
   obstacle_grid.now_row = 0;
   obstacle_grid.is_ready = 1;
 
+	obstacle_grid.map.threshold = (int8_t) L_T; 
+	obstacle_grid.map.occ = (int8_t) L_OCC; 
+	obstacle_grid.map.free = (int8_t) L_FREE; 
+
   memset(obstacle_grid.world, 0, sizeof(obstacle_grid.world));
 
 	#if PERIODIC_TELEMETRY
@@ -108,7 +116,8 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
 		&obstacle_grid.xmin,
 		&obstacle_grid.xmax,
 		&obstacle_grid.ymin,
-		&obstacle_grid.ymax
+		&obstacle_grid.ymax,
+		&obstacle_grid.map.threshold
 	);
 }
 
@@ -224,8 +233,9 @@ void update_cell_bayes(int x, int y, bool is_occupied) {
 
 		// Decide si enviar esta celda (0 unknown, 1 ocupado, 2 libre)
 		int8_t old_value = *cell;
-    uint8_t old_state = (old_value > L_T) ? 1 : (old_value < -L_T) ? 2 : 0;
-    uint8_t new_state = (updated > L_T) ? 1 : (updated < -L_T) ? 2 : 0;
+		int8_t LT = obstacle_grid.map.threshold;
+    uint8_t old_state = (old_value > LT) ? 1 : (old_value < -LT) ? 2 : 0;
+    uint8_t new_state = (updated > LT) ? 1 : (updated < -LT) ? 2 : 0;
 
 		if(old_state != new_state){
 			DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, &y, &x, &updated);

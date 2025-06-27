@@ -1729,9 +1729,11 @@
     	<field name="speed_measured"   type="float"/>						  <!-- Measured speed -->
     	<field name="curvature"				 type="float"/>							<!-- Computed curvature with the GVF -->
     </message>
+
+    <!-- 182 is free -->
     
     <!-- Obstacle telemetry -->
-    <message name="OBSTACLE_GRID" id="182">
+    <message name="OBSTACLE_GRID" id="183">
     	<description>
     		Obstacle grid telemetry
     	</description>
@@ -1745,7 +1747,7 @@
     	<field name="columns" type="int8[]"/>
     </message>
 
-    <message name="GRID_CHANGES" id="183">
+    <message name="GRID_CHANGES" id="184">
     	<description>
     		Send just the grid that has changed
     	</description>
@@ -1754,7 +1756,7 @@
     	<field name="value" type="int8"/>
     </message>
 
-    <message name="GRID_INIT" id="184">
+    <message name="GRID_INIT" id="185">
     	<description>
     		Obstacle grid data
     	</description>
@@ -1764,6 +1766,7 @@
     	<field name="xmax" type="float"/>
     	<field name="ymin" type="float"/>
     	<field name="ymax" type="float"/>
+      <field name="threshold" type="int8"/>
     </message>
 
     <!-- 185 is free -->

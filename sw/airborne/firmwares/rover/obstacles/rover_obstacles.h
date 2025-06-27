@@ -15,6 +15,12 @@
 #include "std.h"
 
 
+typedef struct{
+	int8_t threshold;
+	int8_t occ;
+	int8_t free;
+} bayesian_map;
+
 
 typedef struct{
 	int8_t world[N_ROW_GRID][N_COL_GRID];
@@ -27,6 +33,7 @@ typedef struct{
 	float dy;
 	uint16_t now_row;
 	int is_ready;
+	bayesian_map map;
 } world_grid;
 
 extern world_grid obstacle_grid;
