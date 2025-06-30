@@ -149,7 +149,7 @@ void rover_guidance_steering_init(void)
   // Initialize distance protection
   tfmini_event();
   obstacle_avoidance.distance = tfmini.distance;
-  obstacle_avoidance.use_obstacle_avoidance = 1;
+  obstacle_avoidance.use_obstacle_avoidance = 0;  // Dont use
   obstacle_avoidance.use_speed_function = 0;
   obstacle_avoidance.max_distance = 2.0;
   obstacle_avoidance.min_distance = 0.1;

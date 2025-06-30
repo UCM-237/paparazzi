@@ -304,6 +304,7 @@ static void tfmini_parse(uint8_t byte)
 // ############ LIDAR MOTOR ###########
 // ####################################
 
+#ifdef COMMAND_SERVO
 void tfmini_servo(){
   if (get_sys_time_msec() > last_time + motor_speed) {
     last_time = get_sys_time_msec();
@@ -320,5 +321,10 @@ void tfmini_servo(){
     tf_servo.ang = PWM2ANGLE(tf_servo.pos);
   }
 }
+#else
+void tfmini_servo(void) {
+  // No servo functionality; do nothing
+}
+#endif
 
 
