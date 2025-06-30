@@ -1,6 +1,6 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="660" ground_alt="650" lat0="40.4506486" lon0="-3.7271496" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.4506485" lon0="-3.7271496" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
@@ -54,10 +54,12 @@
   <modules>
     <module name="gvf_module"/>
     <module name="gvf_parametric_bare"/>
+    <module name="gvf_cbf"/>
   </modules>
   <blocks>
     <block name="Wait GPS" strip_icon="gps.png">
       <call_once fun="NavKillThrottle()"/>
+      <call_once fun="cbf_init()"/>
       <while cond="!GpsFixValid()"/>
     </block>
     <block name="Geo init" strip_icon="googleearth.png">
@@ -76,7 +78,7 @@
       <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
-    <block name="ellipse_wp" strip_icon="oval.png">
+    <block name="ellipse_wp" pre_call="gvf_cbf()" strip_icon="oval.png">
       <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
@@ -96,6 +98,7 @@
       <call fun="gvf_romboid_wp(WP_ELLIPSE, gvf_romboid_par.r)"/>
     </block>
     <block name="gvf_bezier_bare">
+      <call fun="gvf_cbf()"/>
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>

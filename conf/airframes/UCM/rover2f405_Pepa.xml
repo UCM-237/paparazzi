@@ -1,5 +1,7 @@
-<!DOCTYPE airframe SYSTEM "../airframe.dtd">
+<!-- Firmware para Pepa -->
 
+<!DOCTYPE airframe SYSTEM "../airframe.dtd">
+<!--Rover Pepa -->
 <airframe name="boat">
 
   <firmware name="rover"> 
@@ -31,24 +33,22 @@
     <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
 
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART4"/>
+    	<configure name="GPS_PORT"  value="UART3"/>
     </module>
     <module name="gps_ubx_ucenter"/>
 
 
     <!-- Pos estimated with Kalman Filter -->
-    <!-- <module name="ins"/>  --> 
-    <!-- <module name="ins" type="kf"/> -->
-    <module name="ins" type="ekf"/>
+    <module name="ins"/>  
+    <!-- <module name="ins" type="ekf"/> -->
     <!-- <module name="ins" type="slam"/> -->
     
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
-      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.3"/>
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
-    <module name="telemetry" type="xbee_api">
+   <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>
     </module>
     
@@ -58,6 +58,7 @@
     	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
+    	
     </module>
     
     
@@ -76,13 +77,15 @@
     <module name="gvf_parametric_bare">
       <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
     </module>
+    
+   <module name="gvf_cbf">
+   <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
+       <define name="CBF_NEI_AC_IDS" value="{1,3,4,6}"/>
+    </module>
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-    <module name="gvf_cbf">
-   <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
-       <define name="CBF_NEI_AC_IDS" value="{1,3,4,5}"/>
-    </module>
+    
     <!-- Obstacle grid -->
     <!--
     <module name="obstacle_rover">
@@ -116,7 +119,7 @@
   <!-- Low level commands (PWM signal) -->
   <commands>
     <axis name="THROTTLE"    failsafe_value="0"/>
-    <axis name="STEERING"    failsafe_value="0"/>
+    <axis name="STEERING" failsafe_value="0"/>
   </commands>
 
   <!-- When SetCommandsFromRC -->

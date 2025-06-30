@@ -27,7 +27,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include "std.h"
-
+#include "../gvf/gvf_cbf.h"
 #include "gvf_parametric_bare.h"
 #include "./trajectories/gvf_parametric_bare_2d_bezier_splines.h"
 
@@ -180,15 +180,32 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   X[0] = L * ( L * beta * f1d - kx * phi1);
   X[1] = L * ( L * beta * f2d - ky * phi2);
   X[2] = L * ( L * L + beta * (kx * phi1 * f1d + ky * phi2 * f2d));
+  
+	Xp[0] = X[0];
+	Xp[1] = X[1];
+  // From gvf_common.h
+  
+  gvf_c_field.xi_x=Xp[0];
+  gvf_c_field.xi_y=Xp[1];
+  
+		// CBF
+	if (gvf_cbf()){
+		// If the CBF is active, we need to update the xi_x and xi_y
+		Xp[0] = gvf_c_field.xi_x;
+		Xp[1] = gvf_c_field.xi_y;
+	
+	}
+	
+	// Normalization;
+	
+	Xp[0]=gvf_c_field.xi_x;
+	Xp[1]=gvf_c_field.xi_y;
 
-  Xp[0] = X[0];
-  Xp[1] = X[1];
-
-  chipnorm = sqrtf(Xp[0] * Xp[0] + Xp[1] * Xp[1]);
-
-  Xpn[0] = Xp[0]/chipnorm;
-  Xpn[1] = Xp[1]/chipnorm;
-
+	chipnorm = sqrtf(Xp[0] * Xp[0] + Xp[1] * Xp[1]);
+	Xpn[0] = Xp[0]/chipnorm;
+	Xpn[1] = Xp[1]/chipnorm;
+	
+  // Jacobian
   J[0][0] = -kx * L * L;
   J[0][1] = 0;
   J[0][2] = L * (L * L * beta * beta * f1dd + kx * beta * L * f1d);
@@ -228,7 +245,8 @@ void gvf_parametric_bare_control_2D(float kx, float ky, float f1, float f2, floa
   
   // Virtual coordinate update, even if the vehicle is not in autonomous mode, the parameter w will get "closer" to
   // the vehicle. So it is not only okei but advisable to update it.
-  gvf_parametric_bare_control.w += w_dot * gvf_parametric_bare_control.delta_T * 1e-3;
+	gvf_parametric_bare_control.w += w_dot * gvf_parametric_bare_control.delta_T * 1e-3;
+	
 }
 
 /** 2D Trajectories **/

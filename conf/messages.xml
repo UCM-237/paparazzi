@@ -1487,7 +1487,7 @@
     </message>
 
     <message name="STATIC_CONTROL" id="158">
-      <field name="active"  type="uint8" values="INACTIVE|ACTIVE"/>
+      <field name="active"  type="int16" values="INACTIVE|ACTIVE"/>
       <field name="dist_WP" type="float" />
       <field name="pt_bz"  type="uint8"/>
       <field name="pxd" type="float"/>
@@ -1730,10 +1730,57 @@
     	<field name="curvature"				 type="float"/>							<!-- Computed curvature with the GVF -->
     </message>
 
-    <!-- 182 is free -->
+    <!--- CBF message -->
+    <message name="CBF_STATE" id="182">
+      <description>
+        CBF air-to-air message.
+      </description>
+      <field name="x_enu"  type="float"/>
+      <field name="y_enu"  type="float"/>
+      <field name="vx_enu" type="float"/>
+      <field name="vy_enu" type="float"/>
+      <field name="speed"  type="float"/>
+      <field name="course" type="float"/>
+      <field name="uref"   type="float"/>
+    </message>
     
-    <!-- Obstacle telemetry -->
-    <message name="OBSTACLE_GRID" id="183">
+    <message name="CBF" id="183">
+      <description>
+        CBF telemetry message.
+      </description>
+      <field name="Xi_x"    		type="float"/>
+      <field name="Xi_y"   		type="float"/>
+      <field name="Xi_CBF_x"    	type="float"/>
+      <field name="Xi_CBF_y"    	type="float"/>
+      <field name="Num_neig"         type="uint8"/>
+      <field name="Active_conds"  type="uint8"/>
+      <field name="R"         type="float"/>
+      <field name="alpha"     type="float"/>
+    </message>
+    
+    <message name="CBF_REC" id="184">
+      <description>
+        CBF telemetry message.
+      </description>
+      <field name="Neigbour"    	type="uint16"/>
+      <field name="Available"   	type="uint8"/>
+      <field name="Times_lost"    	type="uint32"/>
+      <field name="px"    		type="float"/>
+      <field name="py"         	type="float"/>
+      <field name="vx"  		type="float"/>
+      <field name="vy"         	type="float"/>
+      
+    </message>
+    
+    <!-- MULTI_CONS -->
+    <message name="MULTI_CONS" id="185">
+      <description>
+        Air-to-air message containing consensus variables for multi-agent coordination.
+      </description>
+      <field name="x" type="float[]"> Array of consensus state variables </field>
+    </message>
+    
+    <message name="OBSTACLE_GRID" id="186">
     	<description>
     		Obstacle grid telemetry
     	</description>
@@ -1747,7 +1794,7 @@
     	<field name="columns" type="int8[]"/>
     </message>
 
-    <message name="GRID_CHANGES" id="184">
+    <message name="GRID_CHANGES" id="187">
     	<description>
     		Send just the grid that has changed
     	</description>
@@ -1756,7 +1803,7 @@
     	<field name="value" type="int8"/>
     </message>
 
-    <message name="GRID_INIT" id="185">
+    <message name="GRID_INIT" id="188">
     	<description>
     		Obstacle grid data
     	</description>
@@ -1769,10 +1816,6 @@
       <field name="threshold" type="int8"/>
     </message>
 
-    <!-- 185 is free -->
-    <!-- 186 is free -->
-    <!-- 187 is free -->
-    <!-- 188 is free -->
     <!-- 189 is free -->
     <!-- 190 is free -->
 
@@ -2918,7 +2961,7 @@
     </message>
 
     <message name="DCF_REG_TABLE" id="158" link="forwarded">
-      <description>Init the table of an aircraft for the Distributed Circular Formation algorithm. If the nei_id is equal to zero, then you wipe out (clean) the whole table of the aircraft.</description>
+      <description>Init the table of an aircraft for the CBF algorithm. If the nei_id is equal to zero, then you wipe out (clean) the whole table of the aircraft.</description>
       <field name="ac_id" type="uint8">ID of the table's aircraft to be updated</field>
       <field name="nei_id" type="uint8">ID of the neighbor for the table</field>
       <field name="desired_sigma" type="int16">Desired angle to have w.r.t. the neighbor</field>
@@ -2936,6 +2979,19 @@
       <field name="ac_id" type="uint8"/>
       <field name="fd" type="uint8" values="ALL|FLIGHT_RECORDER|PPRZLOG">where the message will be logged</field>
       <field name="msg" type="char[]"/>
+    </message>
+    
+     <message name="CBF_REG_TABLE" id="186" link="forwarded">
+      <description>Init the table of an aircraft for the Distributed Circular Formation algorithm. If the nei_id is equal to zero, then you wipe out (clean) the whole table of the aircraft.</description>
+      <field name="ac_id" type="uint8">ID of the table's aircraft to be updated</field>
+      <field name="nei_id" type="uint8">ID of the neighbor for the table</field>
+      <field name="x_enu"  type="float"/>
+      <field name="y_enu"  type="float"/>
+      <field name="vx_enu" type="float"/>
+      <field name="vy_enu" type="float"/>
+      <field name="speed"  type="float"/>
+      <field name="course" type="float"/>
+      <field name="uref"   type="float"/>
     </message>
     
   </msg_class>

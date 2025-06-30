@@ -21,14 +21,18 @@
       <module name="fdm"           type="rover"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <module name="telemetry_nps" dir="datalink" />
+       <!-- Multiple agents simulation -->
+      <configure name="MODEM_PORT_OUT" value="4252"/>
+      <configure name="MODEM_PORT_IN"  value="4253"/>
     </target>    
     
-    <!-- Same board module as matek_f405 but with another IMU -->
-    <module name="board" type="matek_f405v2_car"/> <!-- IMU included -->
+    <!-- Same board module as matek_f765_wing but without OSD -->
+    <module name="board" type="matek_f405_car"/> <!-- IMU included -->
     
     <module name="actuators" type="pwm"/>
 
-    <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
+<!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
 
     <module name="gps" type="ublox">
     	<configure name="GPS_PORT"  value="UART4"/>
@@ -37,18 +41,18 @@
 
 
     <!-- Pos estimated with Kalman Filter -->
-    <!-- <module name="ins"/>  --> 
-    <!-- <module name="ins" type="kf"/> -->
+    <!--module name="ins"/--> 
+    <!-- <module name="ins_kf"/> -->
     <module name="ins" type="ekf"/>
-    <!-- <module name="ins" type="slam"/> -->
-    
+
+
     <!-- Este modulo le hago un bypass cuando uso el ekf -->
     <module name="ahrs" type="float_dcm">
       <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.3"/>
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.5"/>
     </module>
     
-    <module name="telemetry" type="xbee_api">
+   <module name="telemetry" type="xbee_api">
     	<configure name="MODEM_PORT"  value="UART1"/>
     </module>
     
@@ -76,13 +80,18 @@
     <module name="gvf_parametric_bare">
       <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
     </module>
+    <!-- CBF module-->
+    <module name="gvf_cbf">
+       <define name="CBF_NEI_AC_IDS" value="{9,10,11}"/>
+    </module>
+    
+    <module name="traffic_info"/>
+    
+    
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-    <module name="gvf_cbf">
-   <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
-       <define name="CBF_NEI_AC_IDS" value="{1,3,4,5}"/>
-    </module>
+
     <!-- Obstacle grid -->
     <!--
     <module name="obstacle_rover">
@@ -106,8 +115,7 @@
 
   <!-- COMMANDS SECTION ..................................................................... -->
    <servos> 
-    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry...
-          On the board is the S3 and S4 -->
+    <!-- "no" 1 and 2 but no 0 because our board don't have S0 actuator entry... -->
     <servo name="MOTOR_THROTTLE" no="2" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_STEERING" no="3" min="1000" neutral="1500" max="2000"/>
     <servo name="MOTOR_LIDAR" no="1" min="500" neutral="1500" max="2500"/>

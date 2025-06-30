@@ -64,6 +64,8 @@ typedef struct {
   float w;
   float delta_T;
   int8_t s;
+  float k_roll;
+  float k_climb;
   float k_psi;
   float L;
   float beta;

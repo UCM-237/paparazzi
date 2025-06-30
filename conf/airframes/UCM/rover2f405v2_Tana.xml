@@ -88,9 +88,9 @@
 
     <!-- CBF module-->
     <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
-    <!-- <module name="gvf_cbf">
-      <define name="CBF_NEI_AC_IDS" value="{3,4,5,6}"/>
-    </module> -->
+    <module name="gvf_cbf">
+       <define name="CBF_NEI_AC_IDS" value="{3,4,5,6}"/>
+    </module>
 
     <!-- <module name="traffic_info"/> -->
     

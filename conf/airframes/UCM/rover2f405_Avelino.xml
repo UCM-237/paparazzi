@@ -1,5 +1,5 @@
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
-
+<!--Rover Avelino -->
 <airframe name="boat">
 
   <firmware name="rover"> 
@@ -28,24 +28,16 @@
     
     <module name="actuators" type="pwm"/>
 
-<!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
-
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART3"/>
+    	<configure name="GPS_PORT"  value="UART4"/>
     </module>
     <module name="gps_ubx_ucenter"/>
-
-
-    <!-- Pos estimated with Kalman Filter -->
-    <!--module name="ins"/--> 
-    <!-- <module name="ins_kf"/> -->
-    <module name="ins" type="ekf"/>
-
-
-    <!-- Este modulo le hago un bypass cuando uso el ekf -->
+    
+    
+    <module name="ins"/> <!-- Speed estimated from GPS -->
+    
     <module name="ahrs" type="float_dcm">
-      <!-- <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
-      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.5"/>
+      <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/>
     </module>
     
    <module name="telemetry" type="xbee_api">
@@ -53,11 +45,11 @@
     </module>
     
     <!-- Compass ublox m8n -->
-    <!--F405-WSE GPS and Compass connector are mapped to ports UART4 and I2C2 -->
     <module name="mag_hmc58xx">
-    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C2"/>
+    	<configure name="MAG_HMC58XX_I2C_DEV" value="I2C1"/>
     	<define  name="MODULE_HMC58XX_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_HMC58XX_UPDATE_AHRS" value="TRUE"/>
+    	
     </module>
     
     
@@ -76,22 +68,20 @@
     <module name="gvf_parametric_bare">
       <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
     </module>
+    
+   <module name="gvf_cbf">
+   <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
+       <define name="CBF_NEI_AC_IDS" value="{1,3,5,6}"/>
+    </module>
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
     </module-->
-
-    <!--Tana:1, Satur:3, Avelino:4, Pepa:5,Anibal: 6-->
-    <!-- <module name="gvf_cbf">
-       <define name="CBF_NEI_AC_IDS" value="{1,3,5,6}"/>
-    </module> -->
     
     <!-- Obstacle grid -->
-    <!--
     <module name="obstacle_rover">
     	<define name="N_COL_GRID" value="50"/>
     	<define name="N_ROW_GRID" value="50"/>
     </module>
-    -->
     
     <module name="guidance" type="rover_steering">
       <define name="MAX_DELTA"            value="15.0"/>
