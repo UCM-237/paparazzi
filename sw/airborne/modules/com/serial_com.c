@@ -271,7 +271,7 @@ static void message_OK_parse(void){
 	
 	if (serial_msg.error == 1){
 		serial_msg_test = false;
-		bloqued_probe = true;
+		bloqued_probe = false;
 	}
 }
   
@@ -586,7 +586,7 @@ void serial_ping()
 	}
 
 
-	// Comprueba si esta en modo auto test
+	// Comprueba si esta en modo auto test (falta comprobacion de que este en manual??)
 	if(radio_control_get(7)<=0){
 		malacate_state = TEST;
 	}
@@ -600,8 +600,13 @@ void serial_ping()
 	}
 
 	// Si hay cualquier problema, deshabilita el mando
-	if((serial_msg.error != 0) || (serial_snd.error != 0)){
+	if(serial_msg.error != 0){
 		malacate_state = CHECK;
+	}
+
+	// Si esta midiendo en auto, no tocar
+	if (bloqued_probe == true){
+		malacate_state = BLOCKED;
 	}
 
 	// ---------------- Comprobación de la sonda ----------------
@@ -680,7 +685,6 @@ void serial_ping()
 	case AUTO:
 		if(serial_msg_test == true){
 			SET_BIT(msg_buffer, MEASURE_SN);
-			// AQUI CREO QUE FALTA ALGO
 			bloqued_probe = true; 
 		}
 		else{
@@ -688,15 +692,13 @@ void serial_ping()
 		}
 		break;
 
-	// Sonda bloqued (REVISAR) ------------------------------------------------------------------
+	// Sonda bloqued  ---------------------------------------------------------------------------
 	case BLOCKED:
 		serial_snd.error = 1;
 		SET_BIT(msg_buffer, SONDA_CENTER);
-		if(radio_control_get(7)>0){
-			malacate_state = READING;
+		if(serial_msg_test == false){
 			bloqued_probe = false;
-			serial_msg.error = 0;
-			serial_snd.error = 0;
+			// serial_response = 1; // Esto no deberia hacer falta
 		}
 		break;
 
@@ -960,6 +962,7 @@ void serial_ping()
 
 void send_measure_msg(uint8_t wp){
 	
+	// Esto no funciona aun
 	probe_depth = WaypointX(wp);
 	probe_time = WaypointY(wp);
 
