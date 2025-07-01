@@ -1770,6 +1770,7 @@
       <field name="Xi_CBF_y"    	type="float"/>
       <field name="Num_neig"         type="uint8"/>
       <field name="Active_conds"  type="uint8"/>
+      <field name="d"         type="float[]" />
       <field name="R"         type="float"/>
       <field name="alpha"     type="float"/>
     </message>

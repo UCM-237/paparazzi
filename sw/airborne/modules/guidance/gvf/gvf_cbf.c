@@ -66,11 +66,15 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
     cbf_telemetry.acs_available[i] = cbf_obs_tables[i].available;
   }
   
- pprz_msg_send_CBF(trans, dev, AC_ID, &cbf_ac_state.xi_x,&cbf_ac_state.xi_y,
+ pprz_msg_send_CBF(trans, dev, AC_ID, 
+          &cbf_ac_state.xi_x,&cbf_ac_state.xi_y,
   				&cbf_ac_state.xicbf_x,&cbf_ac_state.xicbf_y,
   				&cbf_control.n_neighborns,
           &cbf_ac_state.active_conds,
-  				&cbf_ac_state.r,&cbf_ac_state.alpha);
+          & cbf_control.n_neighborns,
+          &(cbf_ac_state.d[0]),
+  				&cbf_ac_state.r,
+          &cbf_ac_state.alpha);
 }
 
 static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
@@ -104,9 +108,9 @@ static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 void cbf_init(void)
 {
 
-  cbf_param.r = 3.0;
+  cbf_param.r = 5.0;
   cbf_param.alpha =10;
-  cbf_ac_state.r=3.0;
+  cbf_ac_state.r=5.0;
   cbf_ac_state.alpha=10;
   cbf_ac_state.nei=0;
   cbf_ac_state.active_conds=(uint8_t)0;
@@ -121,6 +125,7 @@ void cbf_init(void)
   for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
     cbf_obs_tables[i].available = 0; // Initialize as not available
     cbf_obs_tables[i].omega_safe = 0.0;
+    cbf_ac_state.d[i] = 0.0; // Initialize distances to zero
   }
   // Initialize the obstacles tables with the ac_id of the neighborns
   for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
@@ -229,8 +234,8 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
   
   cbf_obs_tables[i].available = (uint8_t) 1;
   cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
-  sprintf(msg,"Sender %u, Table pos %u",cbf_obs_tables[i].ac_id,i);
-  //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
+  cbf_ac_state.d[i] = sqrt(pow(cbf_obs_tables[i].state.x - cbf_ac_state.x, 2) + 
+                        pow(cbf_obs_tables[i].state.y - cbf_ac_state.y, 2));
   }  
 }
 
@@ -283,27 +288,32 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
 // Send the AC CBF_STATE to the neighborns network
 static void send_cbf_state_to_nei(void)
 {
+   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   struct pprzlink_msg msg;
   if (cbf_control.n_neighborns > CBF_MAX_NEIGHBORS) {
    cbf_control.n_neighborns = CBF_MAX_NEIGHBORS;
   } // Limit the number of neighbors to CBF_MAX_NEIGHBORS 
   for (int i = 0; i < cbf_control.n_neighborns; i++){
     if (cbf_obs_tables[i].ac_id>0 && cbf_obs_tables[i].ac_id<255) {
+    // Check if AC is in the CBF_NEI_AC_IDS
+    // If the AC is in the CBF_NEI_AC_IDS, send the state to it
+    for (int j = 0; j < CBF_MAX_NEIGHBORS; j++) {
+      if (cbf_obs_tables[i].ac_id == cbf_nei_ac_ids[j]){
         if(cbf_obs_tables[i].available==1){// send state to the ACs in CBF_NEI_AC_IDS
-        msg.trans = &(DefaultChannel).trans_tx;
-        msg.dev = &(DefaultDevice).device;
-        msg.sender_id = AC_ID;
-        msg.receiver_id = cbf_obs_tables[i].ac_id;
-        msg.component_id = 0;
-        
-        // The information sended is redundant
-      pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
-                                          &cbf_ac_state.vx, &cbf_ac_state.vy, 
-                                          &cbf_ac_state.speed, &cbf_ac_state.course,
-                                          &cbf_ac_state.uref);
-        /*char m[30]; 
-        sprintf(m,"Enviado a %u",msg.receiver_id);
-        DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(m), m);*/
+          msg.trans = &(DefaultChannel).trans_tx;
+          msg.dev = &(DefaultDevice).device;
+          msg.sender_id = AC_ID;
+          msg.receiver_id = cbf_obs_tables[i].ac_id;
+          msg.component_id = 0;
+          
+          // The information sended is redundant
+        pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
+                                            &cbf_ac_state.vx, &cbf_ac_state.vy, 
+                                            &cbf_ac_state.speed, &cbf_ac_state.course,
+                                            &cbf_ac_state.uref);
+                                          }
+        break; // Break the inner loop if we found the AC in CBF_NEI_AC_IDS
+            }
       }
     }
     }
@@ -404,12 +414,13 @@ int nid=(int) AC_ID;
           c[i]=Aa[i][0]*gvf_c_field.xi_x+Aa[i][1]*gvf_c_field.xi_y-b[i];
         for   (uint8_t l=0;l<active_conds;l++){
           Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
-      //    printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
+          printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
         }
         if(!lu_factorization(Aact, L,U,P, active_conds)){
           printf("LU factorization failed\n");
           return false;
         }
+      
          if(!apply_permutation(c, bp, P, active_conds)){
           printf("Apply permutation failed\n");
           return false;

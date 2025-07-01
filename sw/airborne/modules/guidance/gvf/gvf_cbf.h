@@ -88,6 +88,7 @@ typedef struct{
   float xi_y;
   uint8_t nei;
   uint8_t active_conds;
+  float d[CBF_MAX_NEIGHBORS];
   float xicbf_x;
   float xicbf_y;
   float r;
