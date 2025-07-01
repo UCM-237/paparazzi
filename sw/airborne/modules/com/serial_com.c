@@ -200,7 +200,7 @@ void serial_init(void)
 	serial_button_check = false;
 
 	malacate_state = INIT;
-	serial_msg.depth = 1.0; // Evito que se bloquee al principio
+	serial_msg.depth = 1.0*1000; // Evito que se bloquee al principio
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -297,14 +297,14 @@ void serial_read_message(void){
 	switch (serial_msg.msg_id){
 		case SR_WAYPOINT:	// Este es para procesar los waypoints (aqui no se usa seguramente)
 			parse_MOVE_WP();
-			serial_msg.error = SERIAL_BR_ERR_NONE;
+			// serial_msg.error = SERIAL_BR_ERR_NONE;
 			// Ahora que puedo mandar multiples mensajes ¿poner un ACK?
  			break;
 
 		case SR_HOME:	// Este es para procesar el home request (unused) (ver Rovers)
 			// parse_HOME();		// REVISAR ESTO 
 			SET_BIT(msg_buffer, HOME_RESPONSE);
-			serial_msg.error = SERIAL_BR_ERR_NONE;
+			// serial_msg.error = SERIAL_BR_ERR_NONE;
  			break;
  		
 		case SR_OK:	 // Este es el mensaje de respuesta de medida
@@ -318,12 +318,12 @@ void serial_read_message(void){
  		
 
  		default:
- 			serial_msg.error = SERIAL_ERR_UNEXPECTED;
+ 			// serial_msg.error = SERIAL_ERR_UNEXPECTED;
  			break;
  		};
 
  	if(chks!=(unsigned int) serial_msg.ck){
-		serial_msg.error=SERIAL_BR_ERR_CHECKSUM;
+		// serial_msg.error=SERIAL_BR_ERR_CHECKSUM;
 		serial_msg.error_cnt++;
 		}
 }
@@ -579,6 +579,19 @@ void serial_ping()
 	uint8_t msg_gps[5]={0,0,0,0,0};
 	// uint8_t msg_dist[5]={0,0,0,0,0};
 
+
+	// Estado por defecto (si ya ha hecho el INIT)
+	if(malacate_state > 1){
+		malacate_state = READING;
+	}
+
+
+	// Comprueba si esta en modo auto test
+	if(radio_control_get(7)<=0){
+		malacate_state = TEST;
+	}
+
+	// Comprueba si esta en manual o automatico
 	if (malacate_state == READING){
 		if (autopilot.mode == 0)
 			malacate_state = MANUAL;
@@ -586,7 +599,12 @@ void serial_ping()
 			malacate_state = AUTO;
 	}
 
-	// Comprobación de la sonda
+	// Si hay cualquier problema, deshabilita el mando
+	if((serial_msg.error != 0) || (serial_snd.error != 0)){
+		malacate_state = CHECK;
+	}
+
+	// ---------------- Comprobación de la sonda ----------------
 	switch (malacate_state)
 	{
 	case INIT:
@@ -598,8 +616,12 @@ void serial_ping()
 	case CHECK:
 		serial_snd.error = 2;
 		RESET_BUFFER(msg_buffer);
+		SET_BIT(msg_buffer, SONDA_CENTER);
 		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
-			malacate_state = READING;
+			if (serial_msg.error == 0){
+				malacate_state = READING;
+				serial_snd.error = 0;
+			}
 		}
 		break;
 
@@ -609,41 +631,49 @@ void serial_ping()
 		SET_BIT(msg_buffer, SONDA_MANUAL);
 		int gain2 = radio_control_get(RADIO_GAIN2);
 
+		// serial_msg.depth = 1.0*1000; //DEBUG, pendiente de revisar
+
+		// if(serial_msg.error == 1){
+		// 	malacate_state = CHECK;
+		// 	SET_BIT(msg_buffer, SONDA_CENTER);
+		// 	break;
+		// }
+
 		// Subir --
 		if (gain2>0){
-			if (serial_msg.depth <= MIN_DEPTH){
-				RESET_BUFFER(msg_buffer);
-				SET_BIT(msg_buffer, SONDA_CENTER);
-				serial_snd.error = 4; // Error de profundidad minima
-			}
-			else{
-				CLEAR_BIT(msg_buffer, SONDA_CENTER);
-				SET_BIT(msg_buffer, SONDA_UP);
-			}
+			//if (serial_msg.depth <= MIN_DEPTH){
+			//	RESET_BUFFER(msg_buffer);
+			//	SET_BIT(msg_buffer, SONDA_CENTER);
+			//	serial_snd.error = 4; // Error de profundidad minima
+			//}
+			// else{
+			CLEAR_BIT(msg_buffer, SONDA_CENTER);
+			SET_BIT(msg_buffer, SONDA_UP);
+			// }
 		}	
 		// Bajar --
 		else if (gain2<0){
-			if (serial_msg.depth >= MAX_DEPTH){
-				RESET_BUFFER(msg_buffer);
-				SET_BIT(msg_buffer, SONDA_CENTER);
-				serial_snd.error = 3; // Error de profundidad maxima
-			}
-			else{
+			//if (serial_msg.depth >= MAX_DEPTH){
+			//	RESET_BUFFER(msg_buffer);
+			//	SET_BIT(msg_buffer, SONDA_CENTER);
+			//	serial_snd.error = 3; // Error de profundidad maxima
+			//}
+			//else{
 				CLEAR_BIT(msg_buffer, SONDA_CENTER);
 				SET_BIT(msg_buffer, SONDA_DOWN);
-			}
+			//}
 		}
 		// Quieto --
 		else{
 			RESET_BUFFER(msg_buffer);
 			SET_BIT(msg_buffer, SONDA_CENTER);
 		}
-		malacate_state == READING
 		break;
 
 	// Auto-Manual mode --------------------------------------------------------------------------
 	case TEST:
 		SET_BIT(msg_buffer, SONDA_TEST);
+		malacate_state = TEST;
 		break;
 	
 	// Full Auto mode ----------------------------------------------------------------------------
@@ -656,10 +686,9 @@ void serial_ping()
 		else{
 			SET_BIT(msg_buffer, SONDA_AUTO);
 		}
-		malacate_state == READING
 		break;
 
-	// Sonda bloqued (REVISAR)
+	// Sonda bloqued (REVISAR) ------------------------------------------------------------------
 	case BLOCKED:
 		serial_snd.error = 1;
 		SET_BIT(msg_buffer, SONDA_CENTER);
@@ -675,6 +704,7 @@ void serial_ping()
 		break;
 	}
 	
+	// BORRAR TODO ESTO
 	// serial_msg.depth = MIN_DEPTH + 1;	// DEBUG (hay que borrarlo cuando llegue el momento)
 	// if ((autopilot.mode == 0) && (bloqued_probe == false)){
 	// 	// Modo Automatico-Manual
@@ -752,6 +782,7 @@ void serial_ping()
 	// 		serial_snd.error = 0;
 	// 	}
 	// }
+	// BORRAR TODO ESTO
 
 
 	if (now_s > (last_s + SEND_INTERVAL)) {

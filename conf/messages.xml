@@ -1748,24 +1748,41 @@
     </message>
     
     <!-- Obstacle telemetry -->
-    <!--
     <message name="OBSTACLE_GRID" id="183">
     	<description>
     		Obstacle grid telemetry
     	</description>
-    	<field name="cell width" type="float"/>
-    	<field name="cell height" type="float"/>
+    	<field name="cell_width" type="float"/>
+    	<field name="cell_height" type="float"/>
     	<field name="xmin" type="float"/>
     	<field name="xmax" type="float"/>
     	<field name="ymin" type="float"/>
     	<field name="ymax" type="float"/>
     	<field name="row_number" type="uint16"/>
-    	<field name="columns" type="uint8[]"/>
+    	<field name="columns" type="int8[]"/>
     </message>
-    -->
-    
-    <!-- 183 is free -->
-    <!-- 184 is free -->
+
+    <message name="GRID_CHANGES" id="184">
+    	<description>
+    		Send just the grid that has changed
+    	</description>
+    	<field name="row"   type="uint8"/>
+      <field name="column" type="uint8"/>
+    	<field name="value" type="int8"/>
+    </message>
+
+    <message name="GRID_INIT" id="185">
+    	<description>
+    		Obstacle grid data
+    	</description>
+    	<field name="cell_width" type="float"/>
+    	<field name="cell_height" type="float"/>
+    	<field name="xmin" type="float"/>
+    	<field name="xmax" type="float"/>
+    	<field name="ymin" type="float"/>
+    	<field name="ymax" type="float"/>
+    </message>
+
     <!-- 185 is free -->
     <!-- 186 is free -->
     <!-- 187 is free -->
