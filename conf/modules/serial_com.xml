@@ -10,14 +10,18 @@
     <configure name="SERIAL_UART" value="UARTX" description="SERIAL on which other device is connected"/>
     <configure name="SERIAL_BAUD" value="B115200" description="UART Baudrate, default to 115200"/>
   </doc>
+
   <settings>
     <dl_settings>
       <dl_settings NAME="SR_Com">
-        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_setting" shortname="stream" module="modules/com/serial_com" values="FALSE|TRUE"/>
-        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_test" shortname="test" module="modules/com/serial_com" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_setting" shortname="stream" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_test" shortname="test" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_response" shortname="response" values="FALSE|TRUE"/>
       </dl_settings>
     </dl_settings>
   </settings>
+
+
   <dep>
     <depends>uart</depends>
     <provides>navigation,datalink,telemetry</provides>

@@ -268,9 +268,9 @@ static void message_OK_parse(void){
 	msgBytes[1]=serial_msg.msgData[6];
 	serial_msg.depth=serial_byteToint(msgBytes,2)*300;	// Es un int (en mm)
 
-	serial_response = 1;
 	
 	if (serial_msg.error == 1){
+		serial_response = 1;
 		serial_msg_test = false;
 		bloqued_probe = false;
 	}
@@ -689,6 +689,7 @@ void serial_ping()
 			SET_BIT(msg_buffer, MEASURE_SN); 
 		}
 		else{
+			serial_response = 0;
 			SET_BIT(msg_buffer, SONDA_AUTO);
 		}
 		break;
