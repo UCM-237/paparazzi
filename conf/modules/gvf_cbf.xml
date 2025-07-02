@@ -23,6 +23,10 @@ No Eigen is needed
           <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_bare_2d_bezier_par.ky" shortname="2d_bezier_ky" param="GVF_PARAMETRIC_BARE_2D_BEZIER_KY"/>
         </dl_settings>   
       </dl_settings>
+      <dl_settings NAME="CBF">
+        <dl_setting MAX="10" MIN="1.0" STEP="0.1" VAR="cbf_param.r" shortname="cbf_r" param="CBF_R"/>
+        <dl_setting MAX="10" MIN="0.01" STEP="0.05" VAR="cbf_param.alpha" shortname="cbf_alpha" param="CBF_ALPHA"/>
+    </dl_settings>
     </dl_settings>
   </settings>
   

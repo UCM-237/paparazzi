@@ -47,7 +47,7 @@ struct cbf_tel cbf_telemetry;
 
 #define N1 CBF_MAX_NEIGHBORS // Number of active conditions, maximum number of neighbors
 
-
+double Aactivas[N1][N1]; // Matrix of active conditions
 
 #if PERIODIC_TELEMETRY
 
@@ -71,10 +71,10 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
   				&cbf_ac_state.xicbf_x,&cbf_ac_state.xicbf_y,
   				&cbf_control.n_neighborns,
           &cbf_ac_state.active_conds,
-          & cbf_control.n_neighborns,
+          cbf_control.n_neighborns,
           &(cbf_ac_state.d[0]),
-  				&cbf_ac_state.r,
-          &cbf_ac_state.alpha);
+  				&cbf_param.r,
+          &cbf_param.alpha);
 }
 
 static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
@@ -109,9 +109,7 @@ void cbf_init(void)
 {
 
   cbf_param.r = 5.0;
-  cbf_param.alpha =10;
-  cbf_ac_state.r=5.0;
-  cbf_ac_state.alpha=10;
+  cbf_param.alpha =1;
   cbf_ac_state.nei=0;
   cbf_ac_state.active_conds=(uint8_t)0;
   cbf_ac_state.xicbf_y=0;
@@ -403,20 +401,37 @@ int nid=(int) AC_ID;
     }
     else{
     //  printf("Active conditions: %d\n", active_conds);
-      double Aact[active_conds][active_conds];
-      float c[active_conds];
-      float bp[active_conds];  // b permuted
-      float L[active_conds][active_conds], U[active_conds][active_conds];
-      float y[active_conds], lambda_A[active_conds];
-      int P[active_conds];
+      double Aact[N1][N1];
+      float c[N1];
+      float bp[N1];  // b permuted
+      float L[N1][N1];
+      float U[N1][N1];
+      float y[N1], lambda_A[N1];
+      int P[N1];
+      for (int i = 0; i < N1; i++) {
+        for (int j = 0; j < N1; j++) {
+          Aactivas[i][j] = 0.0f;
+          L[i][j] = 0.0f;
+          U[i][j] = 0.0f;
+      }
+      P[i] = i;  // inicialización por si acaso
+      c[i] = 0.0f; // Initialize c
+      lambda_A[i] = 0.0f; // Initialize lambda_A
+      y[i] = 0.0f; // Initialize y
+      bp[i] = 0.0f; // Initialize bp
+    }
 
       for (uint8_t i=0;i<active_conds;i++){
           c[i]=Aa[i][0]*gvf_c_field.xi_x+Aa[i][1]*gvf_c_field.xi_y-b[i];
         for   (uint8_t l=0;l<active_conds;l++){
           Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
+          Aactivas[i][l]=Aact[i][l]; 
+          printf("A[%d][%d] = %f\n", i, l, Aactivas[i][l]); 
           printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
+
         }
-        if(!lu_factorization(Aact, L,U,P, active_conds)){
+      }
+        if(!lu_factorization(Aactivas, L,U,P, active_conds)){
           printf("LU factorization failed\n");
           return false;
         }
@@ -434,8 +449,7 @@ int nid=(int) AC_ID;
           return false;
         }
 
-      
-      }  
+        
       float cx=0,cy=0;
       for (uint8_t i=0;i<active_conds;i++){
         printf("lambda_A[%d] = %f\n", i, lambda_A[i]);
@@ -471,63 +485,41 @@ void parse_CBF_STATE(uint8_t *buf)
 }
 
 
-bool lu_factorization(float A[N1][N1], float L[N1][N1], float U[N1][N1], int P[N1], int n) {
-    // Initialize permitation vector P and matrices L and U
+bool lu_factorization(float Alu[N1][N1], float L[N1][N1], float U[N1][N1], int P[N1], int n) {
+  
     for (int i = 0; i < n; i++) {
-        P[i] = i;
-        for (int j = 0; j < n; j++) {
-            L[i][j] = 0.0f;
-            U[i][j] = 0.0f;
-        }
-    }
 
-    for (int k = 0; k < n; k++) {
-        //Partial pivoting: find the row with the maximum value in column k
-        // and swap it with the current row k to avoid numerical instability
-        float max = fabsf(A[k][k]);
-        int maxRow = k;
-        for (int i = k + 1; i < n; i++) {
-            if (fabsf(A[i][k]) > max) {
-                max = fabsf(A[i][k]);
-                maxRow = i;
-            }
-        }
-        // Exchange rows in the permutation vector P and matrix A
-        if (maxRow != k) {
-            int temp = P[k];
-            P[k] = P[maxRow];
-            P[maxRow] = temp;
-            for (int j = 0; j < n; j++) {
-                float tmp = A[k][j];
-                A[k][j] = A[maxRow][j];
-                A[maxRow][j] = tmp;
-            }
+        // U[i][k]
+        for (int k = i; k < n; k++) {
+            double sum = 0.0;
+            printf("A[%d][%d] = %.12f\n", i, k, Alu[i][k]);
+            for (int j = 0; j < i; j++)
+                sum += L[i][j] * U[j][k];
+            U[i][k] = Alu[i][k] - sum;
+          printf("A[%d][%d] = %.12f\n", i, k, Alu[i][k]);
+          printf("U[%d][%d] = %.12f\n", i, k,U[i][k]);
+          }
+        
+        if (fabs(U[i][i]) < 1e-12) {
+            printf("Error: Pivote cercano a cero en fila %d, columna %d: %.12f\n", i, i, U[i][i]);
+            return false; // Error: pivot close to zero
         }
 
-        // Build L and U
-        for (int i = 0; i < n; i++) {
-            if (i <= k) {
-                float sum = 0.0f;
-                for (int p = 0; p < i; p++) sum += L[i][p] * U[p][k];
-                U[i][k] = A[i][k] - sum;
-            }
-            if (i >= k) {
-                float sum = 0.0f;
-                for (int p = 0; p < k; p++) sum += L[i][p] * U[p][k];
-                if (fabsf(U[k][k]) < 1e-6) {
-                    printf("Pivot close to zero\n");
-                    return false;
-                }
-                L[i][k] = (A[i][k] - sum) / U[k][k];
+        // L[k][i]
+        for (int k = i; k < n; k++) {
+            if (i == k)
+                L[i][i] = 1.0;
+            else {
+                double sum = 0.0;
+                for (int j = 0; j < i; j++)
+                    sum += L[k][j] * U[j][i];
+                L[k][i] = (Alu[k][i] - sum) / U[i][i];
             }
         }
     }
-
-    // Set 1 on the diagonal of L
-    for (int i = 0; i < n; i++) {
-        L[i][i] = 1.0f;
-    }
-  return true;
+ 
+   printf("LU factorization successful\n");
+    return true; // Successful LU factorization
 }
 
 bool apply_permutation(float b[N1], float bp[N1], int P[N1], int n) {
