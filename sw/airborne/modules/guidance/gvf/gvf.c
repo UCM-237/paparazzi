@@ -34,6 +34,8 @@
 #include "autopilot.h"
 #include "../gvf_common.h"
 
+#include "modules/com/serial_com.h"
+
 
 
 
@@ -775,5 +777,14 @@ bool increase_bz_pointer(void){
   gvf_c_stopwp.next_wp++;
   if (gvf_c_stopwp.next_wp>3) 
     gvf_c_stopwp.next_wp=0;
+  send_measure_msg();
+  return false;
+}
+
+bool increase_bz_pointer_malacate(void){
+  gvf_c_stopwp.next_wp++;
+  if (gvf_c_stopwp.next_wp>3) 
+    gvf_c_stopwp.next_wp=0;
+  send_measure_msg();
   return false;
 }

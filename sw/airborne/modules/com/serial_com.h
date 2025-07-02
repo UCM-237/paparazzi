@@ -120,7 +120,6 @@ void set_gps_message(uint8_t start_byte);
 void set_imu_message(uint8_t start_byte);
 void set_telemetry_message(uint8_t start_byte);
 void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time);
-void send_measure_msg(uint8_t wp);
 
   
 /* External functions (called by the autopilot)*/
@@ -128,5 +127,6 @@ extern void serial_init(void);
 extern void serial_ping(void);
 extern void serial_event(void);
 extern bool check_malacate(void);
+extern void send_measure_msg(void);
 
 #endif //SERIAL_COM_H

@@ -64,6 +64,7 @@ bool serial_msg_setting;
 bool serial_msg_test = false;
 bool serial_response;
 bool serial_button_check;
+bool check_status = true;
 
 // Sonar msg header bytes (and checksum)
 const uint8_t headerLength = 2;
@@ -600,7 +601,7 @@ void serial_ping()
 	}
 
 	// Si hay cualquier problema, deshabilita el mando
-	if(serial_msg.error != 0){
+	if((serial_msg.error != 0) || (check_status == true)){
 		malacate_state = CHECK;
 	}
 
@@ -620,12 +621,14 @@ void serial_ping()
 	// Buttons not in init position ---------------------------------------------------------------
 	case CHECK:
 		serial_snd.error = 2;
+		check_status = true;
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_CENTER);
-		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
+		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0)){
 			if (serial_msg.error == 0){
 				malacate_state = READING;
 				serial_snd.error = 0;
+				check_status = false;
 			}
 		}
 		break;
@@ -678,14 +681,12 @@ void serial_ping()
 	// Auto-Manual mode --------------------------------------------------------------------------
 	case TEST:
 		SET_BIT(msg_buffer, SONDA_TEST);
-		malacate_state = TEST;
 		break;
 	
 	// Full Auto mode ----------------------------------------------------------------------------
 	case AUTO:
 		if(serial_msg_test == true){
-			SET_BIT(msg_buffer, MEASURE_SN);
-			bloqued_probe = true; 
+			SET_BIT(msg_buffer, MEASURE_SN); 
 		}
 		else{
 			SET_BIT(msg_buffer, SONDA_AUTO);
@@ -698,6 +699,7 @@ void serial_ping()
 		SET_BIT(msg_buffer, SONDA_CENTER);
 		if(serial_msg_test == false){
 			bloqued_probe = false;
+			// serial_msg.error = 0;
 			// serial_response = 1; // Esto no deberia hacer falta
 		}
 		break;
@@ -922,6 +924,7 @@ void serial_ping()
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_TEST); 
+				check_status = true;
 			}
 			
 			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
@@ -932,6 +935,7 @@ void serial_ping()
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, MEASURE_SN);
+				bloqued_probe = true;
     	}
 
 			else{	 
@@ -960,14 +964,14 @@ void serial_ping()
 // ------------------------------------------------------
 // FUNCIONES para el flight plan
 
-void send_measure_msg(uint8_t wp){
+void send_measure_msg(){
 	
 	// Esto no funciona aun
-	probe_depth = WaypointX(wp);
-	probe_time = WaypointY(wp);
+	// probe_depth = WaypointX(wp);
+	// probe_time = WaypointY(wp);
 
 	SET_BIT(msg_buffer, MEASURE_SN);
-	// serial_response = 0;
+	serial_response = 0;
 	serial_msg_test = true;
 
 }

@@ -122,7 +122,7 @@
     <block name="static_malacate">
       <set var="gvf_c_stopwp.stay_still" value="1"/>
       <call_once fun="send_measure_msg(WP_BZ0)"/>
-      <call_once fun="increase_bz_pointer()"/>
+      <call_once fun="increase_bz_pointer_malacate()"/>
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
       <exception cond="serial_response == 0" deroute="mision_malacate"/>  
