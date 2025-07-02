@@ -709,87 +709,7 @@ void serial_ping()
 		break;
 	}
 	
-	// BORRAR TODO ESTO
-	// serial_msg.depth = MIN_DEPTH + 1;	// DEBUG (hay que borrarlo cuando llegue el momento)
-	// if ((autopilot.mode == 0) && (bloqued_probe == false)){
-	// 	// Modo Automatico-Manual
-	// 	if(radio_control_get(7)<=0){
-	// 		SET_BIT(msg_buffer, SONDA_TEST);
-	// 		CLEAR_BIT(msg_buffer, SONDA_UP);
-	// 		CLEAR_BIT(msg_buffer, SONDA_DOWN);
-	// 		CLEAR_BIT(msg_buffer, SONDA_CENTER);
-	// 	}
-	// 	// Modo Manual
-	// 	else{
-	// 		serial_snd.error = 0;
-	// 		SET_BIT(msg_buffer, SONDA_MANUAL);
-	// 		// Subir --
-	// 		if (radio_control_get(RADIO_GAIN2)>0){
-	// 			if (serial_msg.depth <= MIN_DEPTH){
-	// 				RESET_BUFFER(msg_buffer);
-	// 				SET_BIT(msg_buffer, SONDA_CENTER);
-	// 				serial_snd.error = 4; // Error de profundidad minima
-	// 			}
-	// 			else{
-	// 				CLEAR_BIT(msg_buffer, SONDA_CENTER);
-	// 				SET_BIT(msg_buffer, SONDA_UP);
-	// 			}
-	// 		}	
-	// 		// Bajar --
-	// 		else if (radio_control_get(RADIO_GAIN2)<0){
-	// 			if (serial_msg.depth >= MAX_DEPTH){
-	// 				RESET_BUFFER(msg_buffer);
-	// 				SET_BIT(msg_buffer, SONDA_CENTER);
-	// 				serial_snd.error = 3; // Error de profundidad maxima
-	// 			}
-	// 			else{
-	// 				CLEAR_BIT(msg_buffer, SONDA_CENTER);
-	// 				SET_BIT(msg_buffer, SONDA_DOWN);
-	// 			}
-	// 		}
-	// 		// Quieto --
-	// 		else{
-	// 			RESET_BUFFER(msg_buffer);
-	// 			SET_BIT(msg_buffer, SONDA_CENTER);
-	// 		}
-	// 	}		
-	// }
-	// else if (bloqued_probe == true){
-	// 	serial_snd.error = 1;
-	// 	SET_BIT(msg_buffer, SONDA_CENTER);
-	// 	if(radio_control_get(7)>0){
-	// 		SET_BIT(msg_buffer, SONDA_MANUAL);
-	// 		bloqued_probe = false;
-	// 		serial_msg.error = 0;
-	// 		serial_snd.error = 0;
-	// 	}
-	// }
-	// else {
-	// 	// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
-	// 	if(serial_msg_test == true){
-	// 		SET_BIT(msg_buffer, MEASURE_SN);
-	// 		// AQUI CREO QUE FALTA ALGO
-	// 		bloqued_probe = true; 
-	// 	}
-	// 	else{
-	// 		SET_BIT(msg_buffer, SONDA_AUTO);
-	// 	}
-	// }
-
-
-	// // Comprobación inicial de los botones
-	// if(serial_button_check == false){
-	// 	serial_snd.error = 2; // Esto ya se comprobara
-	// 	RESET_BUFFER(msg_buffer);
-	// 	SET_BIT(msg_buffer, SONDA_CENTER);
-	// 	if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
-	// 		serial_button_check = true;
-	// 		serial_snd.error = 0;
-	// 	}
-	// }
-	// BORRAR TODO ESTO
-
-
+	
 	if (now_s > (last_s + SEND_INTERVAL)) {
 		
 		last_s = now_s;
@@ -978,6 +898,7 @@ void send_measure_msg(){
 }
 
 // Paparazzi cant check a variable directly, so we use a function to check the response
+// Dont seem to work either, but you can use an and operation.
 bool check_malacate(){
   return serial_response;
 }

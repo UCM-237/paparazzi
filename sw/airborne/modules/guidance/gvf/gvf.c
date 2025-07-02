@@ -34,7 +34,14 @@
 #include "autopilot.h"
 #include "../gvf_common.h"
 
+
+#ifdef SERIAL_NPS_H
 #include "modules/com/serial_com.h"
+#endif
+
+#ifdef SERIAL_COM_H
+#include "modules/com/serial_com.h"
+#endif
 
 
 
@@ -777,14 +784,17 @@ bool increase_bz_pointer(void){
   gvf_c_stopwp.next_wp++;
   if (gvf_c_stopwp.next_wp>3) 
     gvf_c_stopwp.next_wp=0;
-  send_measure_msg();
   return false;
 }
 
+#ifdef SERIAL_COM_H
+// Same, but send the signal to the Raspberry
 bool increase_bz_pointer_malacate(void){
-  gvf_c_stopwp.next_wp++;
-  if (gvf_c_stopwp.next_wp>3) 
-    gvf_c_stopwp.next_wp=0;
   send_measure_msg();
-  return false;
+  return increase_bz_pointer();
 }
+#else
+bool increase_bz_pointer_malacate(void){
+  return increase_bz_pointer();
+}
+#endif

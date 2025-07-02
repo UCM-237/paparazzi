@@ -50,7 +50,7 @@ extern struct serial_parse_t serial_msg;
 // Funciones simuladas
 extern void serial_nps_init(void);
 extern void serial_nps_ping(void);
-extern void send_measure_msg(uint8_t wp);
+extern void send_measure_msg(void);
 extern bool check_malacate(void);
 
 #endif // SERIAL_NPS_H

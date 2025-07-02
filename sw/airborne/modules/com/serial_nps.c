@@ -74,13 +74,14 @@ void serial_nps_init(void)
 }
 
 // Same as AP but without sending the message
-void send_measure_msg(uint8_t wp)
+void send_measure_msg(void)
 {
   printf("[SIM] Llegada al static ctrl \n");
-  int probe_depth = WaypointX(wp);
-  int probe_time = WaypointY(wp);
+  // int probe_depth = WaypointX(wp);
+  // int probe_time = WaypointY(wp);
 
   serial_msg_test = true;
+  serial_response = false;
 }
 
 // Paparazzi cant check a variable directly, so we use a function to check the response
