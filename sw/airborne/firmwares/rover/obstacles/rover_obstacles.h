@@ -16,9 +16,10 @@
 
 
 typedef struct{
-	int8_t threshold;
-	int8_t occ;
-	int8_t free;
+	int8_t LT;					// Threshold for occupied/cells (log-odds)
+	float threshold;		// Threshold for occupied/free cells
+	float occ;					// Occupied cells probability
+	float free;					// Free cells probability
 } bayesian_map;
 
 

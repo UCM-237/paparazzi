@@ -13,12 +13,20 @@ PRINT_CONFIG_VAR(N_ROW_GRID)
 PRINT_CONFIG_VAR(N_COL_GRID)
 
 // Mapa de Probabilidades
-#define L_FREE    -10  // celda observada libre (log-odds negativo)
-#define L_OCC     20   // celda observada ocupada (log-odds positivo)
-#define L_MIN    -127  // saturación mínima
-#define L_MAX     127  // saturación máxima
-#define L0         0   // valor inicial (desconocido)
-#define L_T				100  // Threeshold para considerar una celda ocupada/libres
+#define P_FREE    0.2   // celda observada libre (log-odds negativo)
+#define P_OCC     0.8   // celda observada ocupada (log-odds positivo)
+#define L_MIN    -127   // saturación mínima
+#define L_MAX     127   // saturación máxima
+#define L0         0    // valor inicial (desconocido)
+#define P_T				0.9   // Threeshold para considerar una celda ocupada/libres
+
+#define SCALE    30.0f   // escalado de log-odds float a int8_t
+
+// Variables globales (para evitar estar calculando todo el rato log)
+float POCC = 0;
+float PT = 0;
+
+int8_t LT, LOCC, LFREE;
 
 world_grid obstacle_grid;
 
@@ -48,7 +56,7 @@ static void send_grid_init(struct transport_tx *trans, struct link_device *dev)
   				&obstacle_grid.xmax,
   				&obstacle_grid.ymin,
   				&obstacle_grid.ymax,
-					&obstacle_grid.map.threshold
+					&obstacle_grid.map.LT
 					);
 }
 #endif
@@ -96,9 +104,9 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
   obstacle_grid.now_row = 0;
   obstacle_grid.is_ready = 1;
 
-	obstacle_grid.map.threshold = (int8_t) L_T; 
-	obstacle_grid.map.occ = (int8_t) L_OCC; 
-	obstacle_grid.map.free = (int8_t) L_FREE; 
+	obstacle_grid.map.threshold = (float) P_T; 
+	obstacle_grid.map.occ = (float) P_OCC; 
+	obstacle_grid.map.free = (float) 1- P_OCC; 
 
   memset(obstacle_grid.world, 0, sizeof(obstacle_grid.world));
 
@@ -117,7 +125,7 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
 		&obstacle_grid.xmax,
 		&obstacle_grid.ymin,
 		&obstacle_grid.ymax,
-		&obstacle_grid.map.threshold
+		&obstacle_grid.map.LT
 	);
 }
 
@@ -226,23 +234,50 @@ void update_cell_bayes(int x, int y, bool is_occupied) {
 			return;
 		}
     int8_t *cell = &obstacle_grid.world[y][x];
-    int delta = is_occupied ? L_OCC : L_FREE;
+
+		obstacle_grid.map.free = 1 - obstacle_grid.map.occ;
+		check_probs(&LOCC, &LFREE, &LT);
+		// printf("LOCC: %d, LFREE: %d\n", LOCC, LFREE);
+		
+    int delta = is_occupied ? LOCC : LFREE;
     int updated = *cell + delta;
     if (updated > L_MAX) updated = L_MAX;
     if (updated < L_MIN) updated = L_MIN;
 
 		// Decide si enviar esta celda (0 unknown, 1 ocupado, 2 libre)
 		int8_t old_value = *cell;
-		int8_t LT = obstacle_grid.map.threshold;
+		
     uint8_t old_state = (old_value > LT) ? 1 : (old_value < -LT) ? 2 : 0;
     uint8_t new_state = (updated > LT) ? 1 : (updated < -LT) ? 2 : 0;
+		obstacle_grid.map.LT = LT; // For the GCS
+
+		*cell = (int8_t)updated;
 
 		if(old_state != new_state){
 			DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, &y, &x, &updated);
+			// printf("Cell (%d, %d) updated from %d to %d (delta: %d)\n", x, y, old_value, *cell, delta);
 		}
-
-		*cell = (int8_t)updated;
 }
+
+
+void check_probs(int8_t *LOCC, int8_t *LFREE, int8_t *LT){
+
+	if (obstacle_grid.map.occ != POCC){
+		*LOCC = (int8_t) (SCALE*logf(obstacle_grid.map.occ / (1.0f - obstacle_grid.map.occ)));
+		*LFREE = (int8_t) (SCALE*logf(obstacle_grid.map.free / (1.0f - obstacle_grid.map.free)));
+		POCC = obstacle_grid.map.occ;
+		printf("Changed LOCC: %d, LFREE: %d\n", *LOCC, *LFREE);
+	}
+
+	if (obstacle_grid.map.threshold != PT){
+		*LT = (int8_t) (SCALE*logf(obstacle_grid.map.threshold / (1.0f - obstacle_grid.map.threshold)));
+		PT = obstacle_grid.map.threshold;
+		printf("Changed LT: %d\n", *LT);
+	}
+}
+
+
+
 
 
 

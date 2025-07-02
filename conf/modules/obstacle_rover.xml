@@ -11,9 +11,8 @@
   <settings name="Obstacle Grid">
     <dl_settings>
       <dl_settings NAME="Obstacle Grid">
-          <dl_setting MAX="127" MIN="0" STEP="1" VAR="obstacle_grid.map.threshold" shortname="threshold"/>
-          <dl_setting MAX="127" MIN="0" STEP="1" VAR="obstacle_grid.map.free" shortname="free"/>
-          <dl_setting MAX="127" MIN="0" STEP="1" VAR="obstacle_grid.map.occ" shortname="occupied"/>
+          <dl_setting MAX="1" MIN="0.5" STEP="0.05" VAR="obstacle_grid.map.threshold" shortname="threshold"/>
+          <dl_setting MAX="1" MIN="0.5" STEP="0.05" VAR="obstacle_grid.map.occ" shortname="occupied"/>
       </dl_settings>
     </dl_settings>
   </settings>

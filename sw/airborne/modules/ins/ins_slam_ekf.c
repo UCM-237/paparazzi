@@ -56,7 +56,7 @@ static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 // Parámetros de corrección
 #define MIN_LIDAR_DISTANCE 0.1f
 #define MAX_LIDAR_DISTANCE 5.0f
-#define MAX_WALL_DISTANCE 5.0f   // No se corrige si el obstáculo está muy lejos
+#define MAX_WALL_DISTANCE 1.5f   // No se corrige si el obstáculo está muy lejos (no subir mucho, si no se vuelve loco)
 #define ALPHA 0.5f               // Factor de suavizado
 #define BETA 0.95f                // Factor de suavizado
 
