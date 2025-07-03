@@ -47,8 +47,6 @@ struct cbf_tel cbf_telemetry;
 
 #define N1 CBF_MAX_NEIGHBORS // Number of active conditions, maximum number of neighbors
 
-double Aactivas[N1][N1]; // Matrix of active conditions
-
 #if PERIODIC_TELEMETRY
 
 
@@ -57,7 +55,7 @@ double Aactivas[N1][N1]; // Matrix of active conditions
 static void send_cbf(struct transport_tx *trans, struct link_device *dev)
 {
   uint8_t n = 1;
-  //uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
+  // This is the array of the ac_ids of the neighbors
   if (cbf_control.n_neighborns > 0) { // n = 0 doesn't make sense
     n = cbf_control.n_neighborns;
   }
@@ -79,7 +77,7 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
 
 static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 {
-  uint8_t n = 1;
+ uint8_t n = 0;
   // This is the array of the ac_ids of the neighbors
   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   if (cbf_control.n_neighborns > 0) { // n = 0 doesn't make sense
@@ -182,13 +180,11 @@ static void cbf_low_level_getState(void)
     if (state.utm_origin_f.zone == 0) {
         struct UtmCoor_f utm_origin = { .north = 500000.0f, .east = 0.0f, .alt = 0.0f, .zone = 30 };
         stateSetLocalUtmOrigin_f(MODULE_GVF_CBF_ID, &utm_origin);
-       // DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM origin set manually"), "UTM origin set manually");
-    }
+        }
 
     // Forzar el cálculo de las coordenadas LLA si no están disponibles
     if (!bit_is_set(state.pos_status, POS_LLA_F)) {
         stateCalcPositionLla_f();
-        //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("LLA position calculated"), "LLA position calculated");
     }
   // Forzar el cálculo de las coordenadas UTM
     stateCalcPositionUtm_f();
@@ -196,20 +192,15 @@ static void cbf_low_level_getState(void)
     // Verificar si las coordenadas UTM están inicializadas
     
     if (!state.utm_initialized_f) {
-        //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM not initialized"), "UTM not initialized");
         return;
     }
 
     // Obtener las coordenadas UTM
     struct UtmCoor_f *utm_pos = stateGetPositionUtm_f();
-    if (utm_pos->north == 0.0f && utm_pos->east == 0.0f) {
-    //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM position is zero"), "UTM position is zero");
-    }
     cbf_ac_state.x = utm_pos->north;
     cbf_ac_state.y = utm_pos->east;
     cbf_ac_state.speed = stateGetHorizontalSpeedNorm_f();
-    //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen("UTM OK"), "UTM OK");
-
+    
   
     // Obtener otros estados
     cbf_ac_state.course = 90 - stateGetNedToBodyEulers_f()->psi; // ENU course
@@ -220,7 +211,7 @@ static void cbf_low_level_getState(void)
 // Fill the i'th obstacle table with the info contained in the buffer  
 static void write_cbf_table(uint16_t i, uint8_t *buf) 
 {
-  char msg[35];
+ 
   if (i<CBF_MAX_NEIGHBORS){
   cbf_obs_tables[i].state.x = DL_CBF_STATE_x_enu(buf);
   cbf_obs_tables[i].state.y = DL_CBF_STATE_y_enu(buf);
@@ -244,9 +235,6 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
       uint8_t nei_id = DL_CBF_REG_TABLE_nei_id(buf);
     
       if (nei_id == 0) {
-        for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
-          //cbf_obs_tables[i].available = 0;
-        }
       } 
       else {
         for (int i = 0; i < CBF_MAX_NEIGHBORS; i++){
@@ -317,6 +305,16 @@ static void send_cbf_state_to_nei(void)
     }
 }
 
+
+
+void print_array(float *array, int size, int ncols, int nrows) {
+    for (int i = 0; i < nrows; i++) {
+      for (int j=0; j < ncols; j++) {
+        printf("%f ", array[i * size + j]);
+    }
+  }
+    printf("\n");
+}
 //---------------------------------------------------------------------------------
 /* External functions --------------------------- */
 
@@ -328,7 +326,7 @@ float Aa[CBF_MAX_NEIGHBORS][2];
 float b[CBF_MAX_NEIGHBORS];
 int j=0; 
 uint32_t now = get_sys_time_msec();
-int nid=(int) AC_ID;
+// Get the current state of the AC
 
  cbf_low_level_getState();
  send_cbf_state_to_nei();
@@ -400,8 +398,7 @@ int nid=(int) AC_ID;
 
     }
     else{
-    //  printf("Active conditions: %d\n", active_conds);
-      double Aact[N1][N1];
+      float Aact[N1][N1];
       float c[N1];
       float bp[N1];  // b permuted
       float L[N1][N1];
@@ -410,7 +407,6 @@ int nid=(int) AC_ID;
       int P[N1];
       for (int i = 0; i < N1; i++) {
         for (int j = 0; j < N1; j++) {
-          Aactivas[i][j] = 0.0f;
           L[i][j] = 0.0f;
           U[i][j] = 0.0f;
       }
@@ -425,34 +421,26 @@ int nid=(int) AC_ID;
           c[i]=Aa[i][0]*gvf_c_field.xi_x+Aa[i][1]*gvf_c_field.xi_y-b[i];
         for   (uint8_t l=0;l<active_conds;l++){
           Aact[i][l]=Aa[i][0]*Aa[l][0]+Aa[i][1]*Aa[l][1];
-          Aactivas[i][l]=Aact[i][l]; 
-          printf("A[%d][%d] = %f\n", i, l, Aactivas[i][l]); 
-          printf("Aact[%d][%d] = %f\n", i, l, Aact[i][l]);
-
         }
+
       }
-        if(!lu_factorization(Aactivas, L,U,P, active_conds)){
-          printf("LU factorization failed\n");
+        if(!lu_factorization(Aact, L,U,P, active_conds)){
           return false;
         }
       
          if(!apply_permutation(c, bp, P, active_conds)){
-          printf("Apply permutation failed\n");
           return false;
          }
          if(!forward_substitution(L, bp, y, active_conds)){
-          printf("Forward substitution failed\n");
           return false;
          }
          if(!backward_substitution(U, y, lambda_A, active_conds)){
-          printf("Backward substitution failed\n");
           return false;
         }
 
         
       float cx=0,cy=0;
       for (uint8_t i=0;i<active_conds;i++){
-        printf("lambda_A[%d] = %f\n", i, lambda_A[i]);
         // Calculate the modified field
         cx=cx+Aact[i][0]*lambda_A[i];
         cy=cy+Aact[i][1]*lambda_A[i];
@@ -473,9 +461,6 @@ int nid=(int) AC_ID;
 void parse_CBF_STATE(uint8_t *buf)
 {
   int16_t sender_id = (int16_t) pprzlink_get_msg_sender_id(buf);
-  char msg[15];
-  sprintf(msg,"Sender %u",sender_id);
-  //DOWNLINK_SEND_INFO_MSG(DefaultChannel, DefaultDevice, strlen(msg), msg);
   for (uint16_t i = 0; i < CBF_MAX_NEIGHBORS; i++){
     if (cbf_obs_tables[i].ac_id == sender_id) {
       write_cbf_table(i, buf);
@@ -492,16 +477,12 @@ bool lu_factorization(float Alu[N1][N1], float L[N1][N1], float U[N1][N1], int P
         // U[i][k]
         for (int k = i; k < n; k++) {
             double sum = 0.0;
-            printf("A[%d][%d] = %.12f\n", i, k, Alu[i][k]);
             for (int j = 0; j < i; j++)
                 sum += L[i][j] * U[j][k];
             U[i][k] = Alu[i][k] - sum;
-          printf("A[%d][%d] = %.12f\n", i, k, Alu[i][k]);
-          printf("U[%d][%d] = %.12f\n", i, k,U[i][k]);
           }
         
         if (fabs(U[i][i]) < 1e-12) {
-            printf("Error: Pivote cercano a cero en fila %d, columna %d: %.12f\n", i, i, U[i][i]);
             return false; // Error: pivot close to zero
         }
 
@@ -518,7 +499,6 @@ bool lu_factorization(float Alu[N1][N1], float L[N1][N1], float U[N1][N1], int P
         }
     }
  
-   printf("LU factorization successful\n");
     return true; // Successful LU factorization
 }
 

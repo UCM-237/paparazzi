@@ -125,6 +125,7 @@ bool lu_factorization(float Alu[N1][N1], float L[N1][N1], float U[N1][N1], int P
 bool apply_permutation(float b[N1], float bp[N1], int P[N1], int n);
 bool forward_substitution(float L[N1][N1], float b[N1], float y[N1], int n);
 bool backward_substitution(float U[N1][N1], float y[N1], float lambda_A[N1], int n);
+void print_array(float *array, int size, int ncols, int nrows);
 void parseCBFTable(uint8_t *buf);
 /* External functions --------------------------- */
 extern void cbf_init(void);
