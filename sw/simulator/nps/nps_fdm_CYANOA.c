@@ -113,9 +113,9 @@ struct PhysicalParams physical_params = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0
 // Función para inicializar los parámetros de perturbación
 void physical_params_init(void) {
   // Valores predeterminados en caso de que el XML no lo configure
-  physical_params.mu_x_sim = 1;
-  physical_params.mu_y_sim = 1;
-  physical_params.mu_w_sim = 1;
+  physical_params.mu_x_sim = 2;
+  physical_params.mu_y_sim = 3.5;
+  physical_params.mu_w_sim = 0.8;
      
   // Variables para almacenar viento y marea base (configurables)
   physical_params.wind_north_base = 0.50;
@@ -135,7 +135,7 @@ void physical_params_init(void) {
   physical_params.current_y = 0;   
   
   physical_params.mass = 50; //Masa del barco = 50kg
-  physical_params.motor_separation = 0.1; //Separación lateral en metros
+  physical_params.motor_separation = 0.75; //Separación lateral en metros
   physical_params.motor_longitudinal_offset = 0.1; //Separación longitudinal en metros
 }
 
@@ -166,13 +166,12 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   //Esta es la fuerza de los motores. La función está extraida de las especificaciones del motor
   double f_right = calculo_motor_dcho(commands[COMMAND_MRIGHT]);
   double f_left = calculo_motor_izq(commands[COMMAND_MLEFT]);
-
   // Posiciones respecto al CM
   double dx = physical_params.motor_separation / 2.0;
   double l  = physical_params.motor_longitudinal_offset;
   
   double phi = fdm.ltpprz_to_body_eulers.psi;
-  //Vamos a calcular primero la fuerza de los motores
+  //Parámetros físicos
   double a = cos(phi);
   double b = sin(phi);
 
@@ -186,12 +185,19 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
   //printf("tau = %f\n", tau);
   double fa = (f_right+f_left);
   update_environment_perturbations(fdm.curr_dt);
-  
 
   //printf("psi ltp %f\n psi ltpprz %f\n", fdm.ltp_to_body_eulers.psi, fdm.ltpprz_to_body_eulers.psi);
+//MODELO FÍSICO, EL PRIMERO COMENTADO Y EL SEGUNDO SON IGUALES PERO ORGANIZADO DE DISTINTA FORMA (SE HIZO PARA REALIZAR UNA COMPROBACIÓN)////////////
   // Setting accelerations
-  rover_acc.x = fa * a - (pow(a,2)*physical_params.mu_x_sim*(rover_vel.x-fdm.n_x) +  pow(b,2)*physical_params.mu_y_sim*(rover_vel.x-fdm.n_x) + a*b*(rover_vel.y-fdm.n_y)*(physical_params.mu_x_sim-physical_params.mu_y_sim));
-  rover_acc.y = fa * b - (pow(b,2)*physical_params.mu_x_sim*(rover_vel.y-fdm.n_y) +  pow(a,2)*physical_params.mu_x_sim*(rover_vel.y-fdm.n_y) + a*b*(rover_vel.x-fdm.n_x)*(physical_params.mu_x_sim-physical_params.mu_y_sim));
+  //rover_acc.x = fa * a - (pow(a,2)*physical_params.mu_x_sim*(rover_vel.x-fdm.n_x) +  pow(b,2)*physical_params.mu_y_sim*(rover_vel.x-fdm.n_x) + a*b*(rover_vel.y-fdm.n_y)*(physical_params.mu_x_sim-physical_params.mu_y_sim));
+  //rover_acc.y = fa * b - (pow(b,2)*physical_params.mu_x_sim*(rover_vel.y-fdm.n_y) +  pow(a,2)*physical_params.mu_y_sim*(rover_vel.y-fdm.n_y) + a*b*(rover_vel.x-fdm.n_x)*(physical_params.mu_x_sim-physical_params.mu_y_sim));
+  
+  //ax=f_a*a - (ab*(u_x-u_y)(v_y-n_y)+(a²u_x+b²u_y)(v_x-n_x))
+  rover_acc.x = fa * a - ((physical_params.mu_x_sim*pow(a,2) + physical_params.mu_y_sim*pow(b,2))*(rover_vel.x-fdm.n_x) + (physical_params.mu_x_sim-physical_params.mu_y_sim)*a*b*(rover_vel.y-fdm.n_y));
+  
+  //ay=f_a*b - ((b²u_x+a²u_y)(v_y-n_y)+ab(u_x-u_y)(v_x-n_x))
+  rover_acc.y = fa * b - ((physical_params.mu_x_sim-physical_params.mu_y_sim)*b*a*(rover_vel.x-fdm.n_x) + (physical_params.mu_x_sim*pow(b,2) + physical_params.mu_y_sim*pow(a,2))*(rover_vel.y-fdm.n_y));
+  
   // No se ha añadido η, este término hace referencia a resistencias o correcciones del modelo. 
   //printf("phi_d %f\n", fdm.phi_d);
   double phi_dd = tau - physical_params.mu_w_sim*fdm.phi_d; //aceleracion angular

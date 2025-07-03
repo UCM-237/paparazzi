@@ -8,18 +8,15 @@
   
   
   <waypoints>
-    <waypoint x="33.7" y="42.1" name="L0"/>
-    <waypoint x="26.8" y="-4.4" name="L1"/>
-    <waypoint x="-42.5" y="-0.1" name="L2"/>
-    <waypoint x="-151.70125" y="-15.992513" name="L3"/>
-    <waypoint x="-163.56749" y="-15.992513" name="L4"/>
-    <waypoint x="-151.70125" y="-1.6850263" name="L5"/>
-    <waypoint x="-163.56749" y="-1.6850263" name="L6"/>
-    <waypoint x="-175.43375" y="-1.6850263" name="L7"/>
-    <waypoint x="-189.4" y="42.7" name="L8"/>
-    <waypoint x="-144.45619" y="-112.44049" name="L9"/>
-    <waypoint x="-7.2" y="-116.9" name="L10"/>
-    <waypoint name="HOME" x="58.9" y="26.4"/>
+    <waypoint x="-31.5" y="7.6" name="L0"/>
+    <waypoint x="-52.6" y="19.1" name="L1"/>
+    <waypoint x="-82.1" y="-28.4" name="L2"/>
+    <waypoint x="-161.7" y="0.56666666" name="L3"/>
+    <waypoint x="-174.5" y="0.56666666" name="L4"/>
+    <waypoint x="-161.7" y="-14.866667" name="L5"/>
+    <waypoint x="-190.4" y="-42.2" name="L6"/>
+    <waypoint x="-135.0" y="-101.4" name="L7"/>
+    <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="STDBY" x="-100.3" y="161.3"/>
     <waypoint name="ELLIPSE" x="-69.5" y="82.6"/>
     <waypoint name="_N1" x="1002.3" y="1242.1"/>
@@ -77,10 +74,10 @@
     <waypoint name="L48" x="956.2" y="770.4"/>
     <waypoint name="L49" x="956.2" y="770.4"/>
     <waypoint name="L50" x="956.2" y="766.7"/>
-    <waypoint name="_ZP1" x="16.6" y="-58.7"/>
-    <waypoint name="_ZP2" x="-89.6" y="-63.1"/>
-    <waypoint name="_ZP3" x="-96.9" y="-97.0"/>
-    <waypoint name="_ZP4" x="24.4" y="-89.8"/>
+    <waypoint name="_ZP1" x="-114.8" y="-25.3"/>
+    <waypoint name="_ZP2" x="-75.8" y="-61.1"/>
+    <waypoint name="_ZP3" x="-91.7" y="-86.0"/>
+    <waypoint name="_ZP4" x="-200.7" y="-80.9"/>
     <waypoint name="_c1" x="-162.5" y="16.0"/>
     <waypoint name="_c2" x="-187.3" y="-3.5"/>
     <waypoint name="_c3" x="-155.4" y="-30.3"/>
@@ -89,7 +86,25 @@
   <sectors>
     
     
-    <sector color="red" name="Zona_prohibida1">
+    <sector color="red" name="Net">
+      
+      
+      <corner name="_N1"/>
+      
+      
+      <corner name="_N2"/>
+      
+      
+      <corner name="_N3"/>
+      
+      
+      <corner name="_N4"/>
+      
+    
+    </sector>
+    
+    
+    <sector color="red" name="Zona_prohibida2">
       
       
       <corner name="_ZP1"/>
@@ -107,7 +122,7 @@
     </sector>
     
     
-    <sector color="red" name="ZigZag2_5">
+    <sector color="red" name="ZigZag3_4">
       
       
       <corner name="_c1"/>

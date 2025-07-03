@@ -27,6 +27,7 @@
 #include "state.h"
 #include "modules/datalink/downlink.h"
 #include "generated/flight_plan.h"
+#include "firmwares/rover/navigation.h"
 
 const uint8_t nb_waypoint = NB_WAYPOINT;
 struct Waypoint waypoints[NB_WAYPOINT];
@@ -34,7 +35,6 @@ struct Waypoint waypoints[NB_WAYPOINT];
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
 
-uint8_t num_wp_moved;
 
 static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
@@ -48,13 +48,14 @@ static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
                              &(waypoints[i].enu_i.z));
 }
 
-
+// uint8_t num_wp_moved;
+// uint8_t *flag_stop;
 static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
-  
-  
   pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
-                             &num_wp_moved);
+                             &num_wp_moved,
+                             150,
+                             flag_stop);
 
 }
 /*

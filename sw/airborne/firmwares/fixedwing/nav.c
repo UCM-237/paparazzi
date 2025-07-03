@@ -527,10 +527,13 @@ static void send_survey(struct transport_tx *trans, struct link_device *dev)
 
 
 uint8_t num_wp_moved;
+char flag_stop;
 static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
   pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
-                             &num_wp_moved);
+                             &num_wp_moved,
+                             150,
+                             &flag_stop);
 }
 
 #endif

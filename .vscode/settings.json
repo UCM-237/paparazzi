@@ -50,4 +50,5 @@
         "kind": "global"
     },
     "C_Cpp.errorSquiggles": "disabled",
+    "workbench.colorTheme": "Default Light+",
 }

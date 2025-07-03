@@ -33,12 +33,11 @@
 #include "modules/guidance/gvf/trajectories/gvf_sin.h"
 #include "autopilot.h"
 #include "../gvf_common.h"
-
+#include "firmwares/rover/navigation.h"
 #include "../../../firmwares/rover/guidance/boat_guidance.h"
 
 
 
-uint8_t num_pnts;
 
 
 // Control
@@ -108,6 +107,8 @@ static void send_gvf(struct transport_tx *trans, struct link_device *dev)
 
   }
 }
+
+
 static void send_static_control(struct transport_tx *trans, struct link_device *dev){
     pprz_msg_send_STATIC_CONTROL(trans,dev,AC_ID,
     &gvf_c_stopwp.stay_still, &dist_WP,&gvf_c_stopwp.next_wp,&gvf_c_stopwp.pxd,&gvf_c_stopwp.pyd,
@@ -116,11 +117,15 @@ static void send_static_control(struct transport_tx *trans, struct link_device *
 
 }
 
+
 static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
+  
   pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
-                             &num_wp_moved);
-  num_pnts = num_wp_moved;
+                             &num_wp_moved,
+                             150,
+                             flag_stop);
+
 }
 
 #endif // PERIODIC_TELEMETRY
@@ -469,6 +474,8 @@ bool gvf_segment_wp1_wp2(uint8_t wp1, uint8_t wp2)
   return gvf_segment_XY1_XY2(x1, y1, x2, y2);
 }
 
+uint8_t num_pnts;
+
 bool gvf_line_wp_heading(uint8_t wp, float heading)
 {
   gvf_trajectory.p[3] = wp;
@@ -555,7 +562,6 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
     return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
     
 }
-
 
 
 bool gvf_lines_array_wp_v3(uint8_t wp0, float d1, float d2)

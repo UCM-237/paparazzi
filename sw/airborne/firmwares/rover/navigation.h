@@ -190,6 +190,10 @@ extern void nav_set_heading_current(void);
 
 extern void nav_set_failsafe(void);
 
+/*Mensaje num_wp_moved*/
+extern uint8_t num_wp_moved;
+extern uint8_t flag_stop[150];
+
 /* switching motors on/off */
 static inline void NavKillThrottle(void)
 {

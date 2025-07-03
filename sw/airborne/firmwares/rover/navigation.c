@@ -75,11 +75,15 @@ static void send_wp_moved(struct transport_tx *trans, struct link_device *dev)
                              &(waypoints[i].enu_i.z));
 }
 
+uint8_t num_wp_moved;
+uint8_t flag_stop[150] = {0};
 
 static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
 {
   pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
-                             &num_wp_moved);
+                             &num_wp_moved,
+                             150,
+                             flag_stop);
 }
 
 //static void send_num_wp_moved_datalink(struct transport_tx *trans, struct link_device *dev)
@@ -97,7 +101,7 @@ void nav_init(void)
 {
   waypoints_init();
   common_flight_plan_init();
-
+  //printf("En el init");
   nav.mode = NAV_MODE_WAYPOINT;
 
   VECT3_COPY(nav.target, waypoints[WP_HOME].enu_f);
@@ -162,11 +166,23 @@ void nav_parse_MOVE_WP(uint8_t *buf)
 
 void nav_parse_NUM_WAYPOINT_MOVED_DATALINK(uint8_t *buf)
 {
+    uint8_t num = DL_NUM_WAYPOINT_MOVED_DATALINK_num(buf);
+    uint8_t *flag = DL_NUM_WAYPOINT_MOVED_DATALINK_flag(buf);
 
-  uint8_t num = DL_NUM_WAYPOINT_MOVED_DATALINK_num(buf);
-  //printf("num = %d\n", num);
-  num_wp_moved = num;
+    // Aquí asumimos que flag tiene siempre 150 elementos válidos:
+    int length = 150;
 
+    printf("flag = [");
+    for (int i = 0; i < length; i++) {
+        printf("%d", flag[i]);
+        if (i < length - 1) printf(", ");
+    }
+    printf("]\n");
+
+    num_wp_moved = num;
+
+    // Si quieres guardar localmente:
+    memcpy(flag_stop, flag, length);
 }
 
 

@@ -1775,7 +1775,8 @@
     
     <message name="NUM_WP_MOVED" id="191">
       <field name="num_wp_moved" type="uint8"/>
-     </message>
+      <field name="flag_stop" type="uint8[]"/>
+    </message>
 
     <message name="AHRS_LKF" id="193">
       <field name="phi"   type="float" unit="rad"   alt_unit="deg"   alt_unit_coef="57.29578" />
@@ -2913,6 +2914,7 @@
     
     <message name="NUM_WAYPOINT_MOVED_DATALINK" id="161" link="broadcasted">
       <field name="num" type="uint8"/>
+      <field name="flag" type="uint8[]"/>
     </message>
     
   </msg_class>
