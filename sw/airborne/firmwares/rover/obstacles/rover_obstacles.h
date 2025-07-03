@@ -48,5 +48,8 @@ extern void fill_cell(float px, float py);
 extern void fill_bayesian_cell(float px, float py);
 extern void fill_free_cells();
 
+#ifdef GVF_CBF_H
+extern void get_occupied_cells(int max_cells, int radius);
+#endif
 
 #endif // ROVER_OBSTACLES_H

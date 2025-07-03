@@ -50,7 +50,11 @@
         "std.h": "c",
         "ins_slam_ekf.h": "c",
         "math.h": "c",
-        "rover_obstacles.h": "c"
+        "rover_obstacles.h": "c",
+        "hash_map": "c",
+        "hash_set": "c",
+        "algorithm": "c",
+        "gvf_low_level_control.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",

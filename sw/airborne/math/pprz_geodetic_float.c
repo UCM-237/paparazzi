@@ -29,6 +29,7 @@
 
 #include "pprz_algebra_float.h"
 #include <math.h>
+#include <state.h>
 
 /* for ecef_of_XX functions the double versions are needed */
 #include "pprz_geodetic_double.h"
@@ -366,3 +367,33 @@ void lla_of_utm_f(struct LlaCoor_f *lla, struct UtmCoor_f *utm)
   // copy alt above reference ellipsoid
   lla->alt = utm->alt;
 }
+
+
+/* Convert enu to utm (float).
+ * Note this conversion is not very accurate.
+ * It's also very inneficient
+ * @param[out] utm position in m, alt is copied directly from utm
+ * @param[in]  enu position in m, alt in m
+ */
+void utm_of_enu_f(struct UtmCoor_f *utm, const struct EnuCoor_f *enu)
+{
+
+  struct LtpDef_f *origin = stateGetNedOrigin_f();
+  if (origin == NULL) {
+    return;
+  }
+
+  // ENU --> ECEF
+  struct EcefCoor_f ecef;
+  ecef_of_enu_point_f(&ecef, origin, enu);
+
+  // ECEF --> LLA
+  struct LlaCoor_f lla;
+  lla_of_ecef_f(&lla, &ecef);
+  lla.alt = 0.0f; // Altura opcional, puede omitirse
+
+  // LLA --> UTM
+  utm->zone = 0; // Automatic
+  utm_of_lla_f(utm, &lla);
+}
+
