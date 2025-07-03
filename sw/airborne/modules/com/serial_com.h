@@ -80,7 +80,8 @@ struct serial_send_t {
   
   uint16_t ck;
   uint16_t time;
-  uint16_t depth;
+  int16_t depth;
+  bool limit_depth;
 
 };
 

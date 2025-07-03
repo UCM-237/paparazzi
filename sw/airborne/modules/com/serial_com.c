@@ -105,7 +105,7 @@ uint32_t msg_buffer = 0;
 #define READING 6
 uint8_t malacate_state = INIT;
 
-int16_t probe_depth = 5000; // En mm
+// int16_t probe_depth = 5000; // En mm
 uint16_t probe_time = 180; // En s
 uint8_t probe_error = 0; // 0: OK
 
@@ -201,7 +201,8 @@ void serial_init(void)
 	serial_button_check = false;
 
 	malacate_state = INIT;
-	serial_msg.depth = 1.0*1000; // Evito que se bloquee al principio
+	serial_msg.depth = 1.0*1000; // Evito que se bloquee al principio (quitar)
+	serial_snd.limit_depth = 1;
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -537,7 +538,16 @@ void set_telemetry_message(uint8_t start_byte){
 }
 
 // Mensajes de la sonda
+
+int16_t bound_depth(int16_t depth){
+  return (depth < (int16_t)(br_sonar.distance - 0.5)) ? depth : (int16_t)(br_sonar.distance - 0.5);
+}
+
+
 void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
+
+	if(serial_snd.limit_depth)
+		depth = bound_depth(depth);
 
 	serial_snd.msgData[start_byte] = probe_error;
 	if((serial_snd.msg_id == PPZ_MEASURE_BYTE) || (serial_snd.msg_id == PPZ_SONDA_TEST_BYTE)){
@@ -546,6 +556,7 @@ void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
 	}
 	
 	uint8_t msg_data[3] = {0,0,0};
+
 	itoh(depth, msg_data, 3);
 	serial_snd.msgData[start_byte+1] = msg_data[0];
 	serial_snd.msgData[start_byte+2] = msg_data[1];
@@ -789,7 +800,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_CENTER_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_CENTER);
@@ -809,7 +820,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_UP_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_UP);
@@ -819,7 +830,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_DOWN_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_DOWN);
@@ -852,7 +863,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_MEASURE_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, MEASURE_SN);
