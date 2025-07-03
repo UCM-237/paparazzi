@@ -71,3 +71,49 @@ extern void ins_int_propagate(struct Int32Vect3 *accel, float dt);
 extern void ins_int_update_gps(struct GpsState *gps_s);
 
 #endif /* INS_INT_H */
+
+#ifdef USE_KF_FILTER
+  #include "filters/linear_kalman_filter.h"
+  #ifndef KALMAN_FILTER_H
+  #define KALMAN_FILTER_H
+  extern struct linear_kalman_filter kalman_filter;
+  #endif
+#endif
+
+
+#ifdef USE_EKF_FILTER
+  #include "filters/extended_kalman_filter.h"
+  #ifndef KALMAN_FILTER_H
+    #define KALMAN_FILTER_H
+    extern bool enable_ekf_filter;
+    struct KalmanVariance {
+      float imu;
+      float pos;
+      float vel;
+      float att;
+    };
+    extern struct KalmanVariance kalman_variance;
+    extern struct extended_kalman_filter kalman_filter;
+    #ifndef R2_IMU
+      #define R2_IMU 1 // *10^-5
+    #endif
+    #ifndef RP_GPS
+      #define RP_GPS 100 // *10^-3
+    #endif
+    #ifndef RV_GPS
+      #define RV_GPS 50 // *10^-3
+    #endif
+    #ifndef RT
+      #define RT 0.001 // *10^-3, we hace compassin the boat
+    #endif
+  #endif
+#endif
+// extern struct InsInt ins_int;
+
+
+
+
+
+
+
+

@@ -40,9 +40,11 @@
     	<configure name="GPS_PORT"  value="UART6"/>
     </module>
     <module name="gps_ubx_ucenter"/>
+    
     <module name="ins"/>
+    <!-- Untested -->
     <!-- <module name="ins_ekf"/> -->
- 
+  
 
     <!-- Use magnetometers on ground, on fly and do not use gps for heading    -->
     <configure name="USE_MAGNETOMETER" value="TRUE"/>

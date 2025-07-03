@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Gautier Hattenberger <gautier.hattenberger@enac.fr>
+ * Copyright (C) 2024 Alejandro Rochas Fernandez <alrochas@ucm.es>
  *
  * This file is part of paparazzi
  *
@@ -18,9 +18,9 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "filters/linear_kalman_filter.c"
+ * @file "filters/extended_kalman_filter.c"
  *
- * Generic discrete Linear Kalman Filter
+ * Extended Kalman Filter for the Rovers
  */
 
 #ifndef LINEAR_KALMAN_FILTER_H
@@ -30,29 +30,32 @@
 
 // maximum size for the state vector
 #ifndef KF_MAX_STATE_SIZE
-#define KF_MAX_STATE_SIZE 4
+#define KF_MAX_STATE_SIZE 6
 #endif
 
 // maximum size for the command vector
 #ifndef KF_MAX_CMD_SIZE
-#define KF_MAX_CMD_SIZE 2
+#define KF_MAX_CMD_SIZE 3
 #endif
 
 // maximum size for the measurement vector
 #ifndef KF_MAX_MEAS_SIZE
-#define KF_MAX_MEAS_SIZE 4
+#define KF_MAX_MEAS_SIZE 6
 #endif
 
-struct linear_kalman_filter {
+struct extended_kalman_filter {
   // filled by user after calling init function
-  float A[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< dynamic matrix
-  float B[KF_MAX_STATE_SIZE][KF_MAX_CMD_SIZE];    ///< command matrix
-  float C[KF_MAX_MEAS_SIZE][KF_MAX_STATE_SIZE];   ///< observation matrix
+  // float A[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< dynamic matrix
+  // float B[KF_MAX_STATE_SIZE][KF_MAX_CMD_SIZE];    ///< command matrix
+  // float C[KF_MAX_MEAS_SIZE][KF_MAX_STATE_SIZE];   ///< observation matrix
   float P[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< state covariance matrix
   float Q[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< proces covariance noise
   float R[KF_MAX_MEAS_SIZE][KF_MAX_MEAS_SIZE];    ///< measurement covariance noise
+  float F[KF_MAX_STATE_SIZE][KF_MAX_STATE_SIZE];  ///< dynamic matrix
+  float H[KF_MAX_MEAS_SIZE][KF_MAX_STATE_SIZE];   ///< observation matrix
 
   float X[KF_MAX_STATE_SIZE];                     ///< estimated state X
+  float X_pred[KF_MAX_STATE_SIZE];                     ///< predicted state X
 
   // Esto mas adelante estaria bien borrarlo para evitar gastar memoria
   // Ahora esta para depurar
@@ -71,7 +74,7 @@ struct linear_kalman_filter {
  * @param m size of the measurement vector
  * @return false if n, c or m are larger than the maximum value
  */
-extern bool linear_kalman_filter_init(struct linear_kalman_filter *filter, uint8_t n, uint8_t c, uint8_t m);
+extern bool extended_kalman_filter_init(struct extended_kalman_filter *filter, uint8_t n, uint8_t c, uint8_t m);
 
 /** Prediction step
  *
@@ -81,7 +84,7 @@ extern bool linear_kalman_filter_init(struct linear_kalman_filter *filter, uint8
  * @param filter pointer to the filter structure
  * @param U command vector
  */
-extern void linear_kalman_filter_predict(struct linear_kalman_filter *filter, float *U);
+extern void extended_kalman_filter_predict(struct extended_kalman_filter *filter, float *U, float dt);
 
 /** Update step
  *
@@ -93,6 +96,12 @@ extern void linear_kalman_filter_predict(struct linear_kalman_filter *filter, fl
  * @param filter pointer to the filter structure
  * @param Y measurement vector
  */
-extern void linear_kalman_filter_update(struct linear_kalman_filter *filter, float *Y);
+extern void extended_kalman_filter_update(struct extended_kalman_filter *filter, float *Y);
 
-#endif /* DISCRETE_EKF_H */
+extern void ekf_f(struct extended_kalman_filter *filter, float *U, float dt);
+extern void ekf_compute_F(struct extended_kalman_filter *filter, float *U, float dt);
+
+extern void init_filter(struct extended_kalman_filter *filter, float dt);
+extern void update_matrix(struct extended_kalman_filter *filter);
+
+#endif 

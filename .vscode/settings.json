@@ -45,7 +45,9 @@
         "memory": "c",
         "random": "c",
         "optional": "c",
-        "autopilot.h": "c"
+        "autopilot.h": "c",
+        "serial_nps.h": "c",
+        "gvf_parametric_bare_2d_bezier_splines.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",
