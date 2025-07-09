@@ -158,7 +158,7 @@ void cbf_init(void)
   cbf_ac_state.nei=cbf_control.n_neighborns;
   #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF, send_cbf);
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF_REC, send_cbf_rec);
+  //register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF_REC, send_cbf_rec);
   #endif // PERIODIC_TELEMETRY 
 
 }
@@ -298,6 +298,12 @@ static void send_cbf_state_to_nei(void)
                                             &cbf_ac_state.speed, &cbf_ac_state.course,
                                             &cbf_ac_state.uref);
                                           }
+        //printf("x: %f, y: %f, vx: %f, vy: %f, speed: %f, course: %f, uref: %f\n",
+        //       cbf_ac_state.x, cbf_ac_state.y, cbf_ac_state.vx, cbf_ac_state.vy,
+        //       cbf_ac_state.speed, cbf_ac_state.course, cbf_ac_state.uref);
+        // Print the state of the AC
+        //printf("Sending CBF_STATE to AC %d\n", cbf_obs_tables[i].ac_id);
+      
         break; // Break the inner loop if we found the AC in CBF_NEI_AC_IDS
             }
       }

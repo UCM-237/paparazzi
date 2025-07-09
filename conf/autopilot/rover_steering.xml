@@ -42,7 +42,7 @@
 
         <call fun="SetAPThrottleFromCommands(commands[COMMAND_THROTTLE])"/>
       </control>
-      <exception cond="RCLost()" deroute="KILL"/>
+      <exception cond="RCLost()" deroute="AKILL"/>
     </mode>
 
     <!-- Cruiser: Speed ctrl (from state speed on enter )+ Heading from RC -->
@@ -115,6 +115,22 @@
         <call fun="SetCommands(commands_failsafe)"/>
         <call fun="SetAPThrottleFromCommands()"/>
       </control>
+    </mode>
+
+       <!-- Almost Kill throttle -->
+    <mode name="AKILL">
+      <select cond="kill_switch_is_on()"/>
+      <on_enter>
+        <!--call fun="autopilot_set_in_flight(false)"/-->
+        <call fun="autopilot_set_motors_on(false)"/>
+      </on_enter>
+      <control>
+        <!--call fun="rover_guidance_steering_kill()"/-->
+
+        <!--call fun="SetCommands(commands_failsafe)"/-->
+        <!--call fun="SetAPThrottleFromCommands()"/-->
+      </control>
+       <exception cond="LessThan(RCLost(),1)" deroute="DIRECT"/>
     </mode>
 
   </state_machine>
