@@ -1,43 +1,45 @@
+<!-- Same as Pradolongo, but with the origin in Campillo -->
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
-<!-- Este plan de vuelo es para la piscina de la UCM -->
 
-<flight_plan alt="660" ground_alt="650" lat0="40.436857" lon0="-3.731207" max_dist_from_home="1500" name="Piscina Test" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.3215103" lon0="-3.5098164" max_dist_from_home="2000" name="Campillo Test" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
-    <waypoint name="HOME"    x="0" y="0"/>
-    <waypoint name="STDBY"   x="-55" y="20"/>
-    <waypoint name="ELLIPSE" x="-40" y="10"/>
-    <waypoint name="P1"      lat="40.4370040" lon="-3.7312671"/>
-    <waypoint name="P2"      lat="40.4373809" lon="-3.7314290"/>
-    <waypoint lat="40.4371049" lon="-3.7314030" name="BZ0"/> <!-- wP/-->
-    <waypoint lat="40.4369629" lon="-3.7313350" name="BZ1"/>
-    <waypoint lat="40.4370009" lon="-3.7311939" name="BZ2"/>
-    <waypoint lat="40.4370589" lon="-3.7311450" name="BZ3"/>
-    <waypoint lat="40.4372109" lon="-3.7312220" name="BZ4"/> 
-    <waypoint lat="40.4372909" lon="-3.7313140" name="BZ5"/> <!-- wP/-->
-    <waypoint lat="40.4374239" lon="-3.7314750" name="BZ6"/>
-    <waypoint lat="40.4373409" lon="-3.7315690" name="BZ7"/> 
-    <waypoint lat="40.4373029" lon="-3.7314770" name="BZ8"/> <!-- wP/-->
-    <waypoint lat="40.4371689" lon="-3.7313539" name="BZ9"/>
-    <waypoint lat="40.4372559" lon="-3.7313900" name="BZ10"/>
-    <waypoint lat="40.4371350" lon="-3.7314160" name="BZ11"/> <!-- wP/-->
+    <waypoint name="HOME" x="0" y="0"/>
+    <waypoint name="STDBY" lat="40.3209437" lon="-3.5096997"/>
+    <waypoint name="ELLIPSE" lat="40.3208690" lon="-3.5086590"/>
+    <waypoint name="P1" lat="40.3201290" lon="-3.5091919"/>
+    <waypoint name="P2" lat="40.3215860" lon="-3.5092290"/>
+    <waypoint lat="40.3214850" lon="-3.5092301" name="BZ0"/> <!-- wP/-->
+    <waypoint lat="40.3216079" lon="-3.5088711" name="BZ1"/>
+    <waypoint lat="40.3216739" lon="-3.5086771" name="BZ2"/>
+    <waypoint lat="40.3214370" lon="-3.5086340" name="BZ3"/>
+    <waypoint lat="40.3213820" lon="-3.5084301" name="BZ4"/> 
+    <waypoint lat="40.3213890" lon="-3.5080201" name="BZ5"/> <!-- wP/-->
+    <waypoint lat="40.3210450" lon="-3.5078871" name="BZ6"/>
+    <waypoint lat="40.3208529" lon="-3.5083830" name="BZ7"/> 
+    <waypoint lat="40.3207580" lon="-3.5086680" name="BZ8"/> <!-- wP/-->
+    <waypoint lat="40.3205740" lon="-3.5091939" name="BZ9"/>
+    <waypoint lat="40.3208429" lon="-3.5094790" name="BZ10"/>
+    <waypoint lat="40.3211350" lon="-3.5092890" name="BZ11"/> <!-- wP/-->
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
     <waypoint name="_S4" x="-3" y="4"/>
-    <waypoint name="_N1" x="796.4" y="1254.9"/>
-    <waypoint name="_N2" x="796.4" y="-865.4"/>
-    <waypoint name="_N3" x="-908.7" y="-865.4"/>
-    <waypoint name="_N4" x="-908.7" y="1254.9"/>
-    <waypoint lat="40.4372682" lon="-3.7306754" name="L0"/>
-    <waypoint lat="40.4372682" lon="-3.7306754" name="L1"/>
-    <waypoint lat="40.4372682" lon="-3.7306754" name="L2"/>
-    <waypoint lat="40.4372682" lon="-3.7306754" name="L3"/>
-    <waypoint lat="40.4372682" lon="-3.7306754" name="L4"/>
-    <waypoint lat="40.4372682" lon="-3.7306754" name="L5"/>
-    <waypoint lat="40.4372682" lon="-3.7306754" name="L6"/>
+    <waypoint name="_N1" x="1570" y="1100"/>
+    <waypoint name="_N2" x="1570" y="-810"/>
+    <waypoint name="_N3" x="-350" y="-810"/>
+    <waypoint name="_N4" x="-350" y="1100"/>
+    <waypoint name="L0" lat="40.3209449" lon="-3.5094740"/>
+    <waypoint name="L1" lat="40.3209689" lon="-3.5078862"/>
+    <waypoint name="L2" lat="40.3209666" lon="-3.5077648"/>
+    <waypoint name="L3" lat="40.3209674" lon="-3.5076630"/>
+    <waypoint name="L4" lat="40.3209661" lon="-3.5075641"/>
+    <waypoint name="L5" lat="40.3209695" lon="-3.5074385"/>
+    <waypoint name="L6" lat="40.3209693" lon="-3.5073186"/>
+    <!-- sonda -->
+    <waypoint name="_P1" x="6000" y="200"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">
@@ -75,7 +77,6 @@
     <block name="ellipse_wp" strip_icon="oval.png">
       <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-      <!-- <exception cond="(12.1 > PowerVoltage()) @AND (GpsFixValid())" deroute="line_to_HOME"/> -->
     </block>
     <block name="line_P1_P2" strip_icon="line.png">
       <call fun="gvf_line_wp1_wp2(WP_P1, WP_P2)"/>
@@ -91,27 +92,26 @@
     </block>
     <block name="line_array" strip_icon="line.png">
       <call fun="gvf_lines_array_wp_v2(WP_L0, WP_L1, WP_L2, WP_L3, WP_L4, WP_L5, WP_L6, gvf_segment_par.d1, gvf_segment_par.d2)"/>
-      <exception cond="dist(GetPosX(), GetPosY(), WP_L0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_bezier_bare">
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_quintic_bezier_bare">
-      <!-- <go wp="BZ0"/> -->
       <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
-      <exception cond="dist_quintic(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
+      <exception cond="dist(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="static_control">
       <set var="gvf_c_stopwp.stay_still" value="1"/>
-      <call_once fun="increase_bz_pointer()"/>
+      <call_once fun=" increase_bz_pointer()"/>
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
       <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="gvf_quintic_bezier_bare"/>
     </block>
-    
+
     <!-- Malacate functions -->
     <block name="mision_malacate">
       <set var="gvf_c_stopwp.stay_still" value="0"/>
@@ -125,7 +125,20 @@
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
       <exception cond="And(serial_response, serial_response)" deroute="mision_malacate"/>
-       <!-- <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="mision_malacate"/> -->
     </block>
+
+
+    <!-- ########################## TEST SONDA (DELETE) ############################ -->
+    <!-- <block name="Mision_Prueba_Sonda">
+      <go wp="P1"/>
+      <call_once fun="send_measure_msg(WP__P1)"/>
+
+      <while cond="serial_response == 0">
+          <stay wp="P1"/>
+      </while>
+
+      <go wp="P2"/>
+    </block> -->
+
   </blocks>
 </flight_plan>
