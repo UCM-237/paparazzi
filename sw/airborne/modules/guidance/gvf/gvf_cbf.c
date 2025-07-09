@@ -110,7 +110,7 @@ static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
 void cbf_init(void)
 {
 
-  cbf_param.r = 5.0;
+  cbf_param.r = 7.0;
   cbf_param.alpha =1;
   cbf_ac_state.nei=0;
   cbf_ac_state.active_conds=(uint8_t)0;
@@ -139,6 +139,9 @@ void cbf_init(void)
       cbf_obs_tables[i].ac_id = 0;
       cbf_telemetry.acs_id[i] =0;
     }
+    #ifdef USE_GRID
+      cbf_control.n_neighborns += MAX_CELLS; 
+    #endif
     // Initialize the state related to the obstacles   
     cbf_obs_tables[i].state.x=0.;
     cbf_obs_tables[i].state.y=0.;
@@ -340,7 +343,7 @@ bool gvf_cbf(void){
   // HERE I CAN UPDATE THE OBSTACLES AND THE TABLE
   #ifdef USE_GRID
     // We'll need to send the radius
-    get_occupied_cells(10, 5);
+    get_occupied_cells(10, 4);
   #endif
 
   for (uint8_t i = 0; i < cbf_control.n_neighborns; ++i)  {
@@ -362,7 +365,7 @@ bool gvf_cbf(void){
     }
 
     // Build the eta[j] (safe function)
-    printf("Estado de la Tabla %f", cbf_obs_tables[i].state.x);
+    // printf("Estado de la Tabla %f", cbf_obs_tables[i].state.x);
     float dx=cbf_ac_state.x-cbf_obs_tables[i].state.x;
     float dy=cbf_ac_state.y-cbf_obs_tables[i].state.y;
 

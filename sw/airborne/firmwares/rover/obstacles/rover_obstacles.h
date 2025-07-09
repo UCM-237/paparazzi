@@ -50,6 +50,11 @@ extern void fill_free_cells();
 
 #ifdef GVF_CBF_H
 extern void get_occupied_cells(int max_cells, int radius);
-#endif
+
+#ifndef MAX_CELLS
+#define MAX_CELLS 8
+#endif // MAX_CELLS
+
+#endif // GVF_CBF_H
 
 #endif // ROVER_OBSTACLES_H

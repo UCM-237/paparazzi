@@ -42,8 +42,8 @@
 // Default number of neighbors per robot
 #ifndef CBF_MAX_NEIGHBORS
 #define CBF_MAX_NEIGHBORS 12
-
 #endif
+#define MAX_ROVERS  4 // Max number of rovers (4 without Satur)
 
 //
 #ifndef CBF_NEI_AC_IDS

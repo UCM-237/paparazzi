@@ -215,17 +215,17 @@ void fill_free_cells() {
 
 // Bresenham algorithm
 void update_line_bayes(int x0, int y0, int x1, int y1) {
-    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy;
+	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = dx + dy;
 
-    while (1) {
-        if (x0 == x1 && y0 == y1) break;
-        update_cell_bayes(x0, y0, false); // Libre
-        int e2 = 2 * err;
-        if (e2 >= dy) { err += dy; x0 += sx; }
-        if (e2 <= dx) { err += dx; y0 += sy; }
-    }
+	while (1) {
+			if (x0 == x1 && y0 == y1) break;
+			update_cell_bayes(x0, y0, false); // Libre
+			int e2 = 2 * err;
+			if (e2 >= dy) { err += dy; x0 += sx; }
+			if (e2 <= dx) { err += dx; y0 += sy; }
+	}
 }
 
 
@@ -313,11 +313,26 @@ void write_cbf_static_obstacle(uint16_t i, float x_utm, float y_utm, uint16_t fa
 
 }
 
+void clean_cbf_static_obstacle(uint16_t i)
+{
+  if (i >= CBF_MAX_NEIGHBORS) return;
 
-void get_occupied_cells(int max_cells, int radius) {
+  cbf_obs_tables[i].state.vx = 0.0f;
+  cbf_obs_tables[i].state.vy = 0.0f;
+  cbf_obs_tables[i].state.speed = 0.0f;
+  cbf_obs_tables[i].state.course = 0.0f;
+  cbf_obs_tables[i].state.uref = 0.0f;
 
-	// El radio de momento unused
-	radius = radius;
+  cbf_obs_tables[i].available = (uint8_t) 0;
+  cbf_obs_tables[i].omega_safe = 0.0f;
+  cbf_telemetry.acs_available[i] = 0;
+
+	// printf("Sender %u, Table pos %u",cbf_obs_tables[i].ac_id,i);
+
+}
+
+
+void get_occupied_cells(int max_cells, uint8_t BLOCK_SIZE) {
 
 	if (!obstacle_grid.is_ready) return 0;
 
@@ -325,16 +340,11 @@ void get_occupied_cells(int max_cells, int radius) {
   int cx, cy;
   obtain_cell_xy(pos.x, pos.y, &cx, &cy);
 
-	// Índices de desplazamiento de los 8 bloques (excluye el central)
-	#define BLOCK_SIZE 3	// Change this
-	uint8_t dxs[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };
-	uint8_t dys[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };
-	for (int i = 0; i < 8; i++) {
-		dxs[i] *= BLOCK_SIZE;
-		dys[i] *= BLOCK_SIZE;
-	}
+	// Índices de desplazamiento de los 4 bloques
+	const int8_t dxs[4] = { -1, 1, -1, 1};
+	const int8_t dys[4] = { -1, -1, 1, 1};
 
-	for (int b = 0; b < 8; b++) {
+	for (int b = 0; b < 4; b++) {
     int block_x0 = cx + dxs[b];
     int block_y0 = cy + dys[b];
 
@@ -343,84 +353,41 @@ void get_occupied_cells(int max_cells, int radius) {
     // Recorre las 9 celdas del bloque 3x3
     for (int i = 0; i < BLOCK_SIZE && !block_occupied; i++) {
       for (int j = 0; j < BLOCK_SIZE && !block_occupied; j++) {
-        int x = block_x0 + i;
-        int y = block_y0 + j;
+        int x = cx + i*dxs[b];
+        int y = cy + j*dys[b];
+
         if (x < 0 || x >= N_COL_GRID || y < 0 || y >= N_ROW_GRID) continue;
+				if (x == cx && y == cy) continue;
+
         if (obstacle_grid.world[y][x] > LT) {
+					// printf("CELDA (%d, %d) OCUPADA. Bloque %d \n", y, x, b);
           block_occupied = true;
         }
+				else{
+					// printf("CELDA (%d, %d) LIBRE. Bloque %d \n", y, x, b);
+				}
       }
     }
 
     if (block_occupied) {
+			
       struct EnuCoor_f enu;
-      enu.x = obstacle_grid.xmin + (block_x0 + BLOCK_SIZE/2) * obstacle_grid.dx;
-      enu.y = obstacle_grid.ymin + (block_y0 + BLOCK_SIZE/2) * obstacle_grid.dy;
+      enu.x = pos.x + dxs[b]*BLOCK_SIZE/2*obstacle_grid.dx;
+      enu.y = pos.y + dys[b]*BLOCK_SIZE/2*obstacle_grid.dy;
       enu.z = 0.0f;
 
       struct UtmCoor_f utm;
       utm_of_enu_f(&utm, &enu);
-
-			// ME FALTA VER CUANTO SERIA X
-			// int x = 4;
-			// write_cbf_static_obstacle(b+x, utm.north, utm.east, 200+b);
-			write_cbf_static_obstacle(b, utm.north, utm.east, 200+b);
+			
+			// printf("Obstacle in block %d at ENU: (%f, %f)\n", b, enu.x, enu.y);
+			write_cbf_static_obstacle(b+MAX_ROVERS, utm.north, utm.east, 200+b);
     }
+		else{
+			clean_cbf_static_obstacle(b+MAX_ROVERS);
+		}
   }
-
 }
 
-
-
-// // Devuelve obstáculos estáticos cercanos, en UTM (esta es la version de prueba)
-// void get_occupied_cells(int max_cells, int radius) {
-
-//   if (!obstacle_grid.is_ready) return 0;
-
-// 	struct FloatVect2 cells;	// I dont know if I need this
-
-//   struct EnuCoor_f pos_enu = *stateGetPositionEnu_f();
-//   int cx, cy;
-//   obtain_cell_xy(pos_enu.x, pos_enu.y, &cx, &cy);
-
-//   int count = 0;
-
-//   for (int dx = -radius; dx <= radius; dx++) {
-//     for (int dy = -radius; dy <= radius; dy++) {
-//       int nx = cx + dx;
-//       int ny = cy + dy;
-
-//       if (nx < 0 || nx >= N_COL_GRID || ny < 0 || ny >= N_ROW_GRID) continue;
-
-//       int8_t val = obstacle_grid.world[ny][nx];
-//       if (val > LT && count < max_cells) {
-
-//         // Calcular centro de la celda en ENU (en ENU esta bien)
-//         struct EnuCoor_f enu;
-//         enu.x = obstacle_grid.xmin + (nx + 0.5f) * obstacle_grid.dx;
-//         enu.y = obstacle_grid.ymin + (ny + 0.5f) * obstacle_grid.dy;
-//         enu.z = 0.0f;
-
-// 				// GVF_CBF require UTM
-//         struct UtmCoor_f utm;
-// 				utm_of_enu_f(&utm, &enu);
-
-// 				// cells[count].x = utm.north;
-// 				// cells[count].y = utm.east;
-//         count++;
-
-// 				// A LO MEJOR EN VEZ DE DEVOLVER NADA LO QUE PODRIA HACER ES IR RELLENANDO
-// 				// LA TABLA DEL CBF
-
-// 				// Para probar
-// 				write_cbf_static_obstacle(2, utm.north, utm.east, 200);
-// 				count = max_cells;
-//       }
-//     }
-//   }
-
-//   // return count;	// Hara falta ??
-// }
 
 
 #endif
