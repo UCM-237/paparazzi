@@ -182,25 +182,25 @@
 
 
 
-		<!-- Calibracion Campillo 10/04/25 -->
+		<!-- Calibracion Campillo 10/07/25 -->
 		<define name="IMU_MAG_CALIB" type="array">
-			<field type="struct">
-				<field name="abi_id" value="7"/>
-				<field name="calibrated" type="struct">
-				  <field name="neutral" value="true"/>
-				  <field name="scale" value="true"/>
-				</field>
-				<field name="neutral" value="2424,2667,1410" type="int[]"/>
-				<field name="scale" value="{{40822,47203,59311},{26129,30471,38117}}"/>
-			</field>
-		</define>
+      <field type="struct">
+        <field name="abi_id" value="7"/>
+        <field name="calibrated" type="struct">
+          <field name="neutral" value="true"/>
+          <field name="scale" value="true"/>
+        </field>
+        <field name="neutral" value="2476,2627,1519" type="int[]"/>
+        <field name="scale" value="{{14081,22671,39733},{8890,13967,24597}}"/>
+      </field>
+    </define>
 
-		<define name="MAG_X_NEUTRAL" value="2424"/>
-		<define name="MAG_Y_NEUTRAL" value="2667"/>
-		<define name="MAG_Z_NEUTRAL" value="1410"/>
-		<define name="MAG_X_SENS" value="1.562325385560543" integer="16"/>
-		<define name="MAG_Y_SENS" value="1.5491122704816889" integer="16"/>
-		<define name="MAG_Z_SENS" value="1.5560248710985949" integer="16"/>
+    <define name="MAG_X_NEUTRAL" value="2476"/>
+    <define name="MAG_Y_NEUTRAL" value="2627"/>
+    <define name="MAG_Z_NEUTRAL" value="1519"/>
+    <define name="MAG_X_SENS" value="1.583914508954987" integer="16"/>
+    <define name="MAG_Y_SENS" value="1.6231832169043077" integer="16"/>
+    <define name="MAG_Z_SENS" value="1.6153595973662915" integer="16"/>
 
 		
 		
