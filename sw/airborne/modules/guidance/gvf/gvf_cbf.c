@@ -165,7 +165,7 @@ void cbf_init(void)
   cbf_ac_state.nei=cbf_control.n_neighborns;
   #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF, send_cbf);
-  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF_REC, send_cbf_rec);
+  //register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF_REC, send_cbf_rec);
   #endif // PERIODIC_TELEMETRY 
 
 }
@@ -365,7 +365,6 @@ bool gvf_cbf(void){
     }
 
     // Build the eta[j] (safe function)
-    // printf("Estado de la Tabla %f", cbf_obs_tables[i].state.x);
     float dx=cbf_ac_state.x-cbf_obs_tables[i].state.x;
     float dy=cbf_ac_state.y-cbf_obs_tables[i].state.y;
 

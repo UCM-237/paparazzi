@@ -29,7 +29,7 @@
 
       <message name="CBF" 	    	           period="0.5"/>
       <message name="CBF_STATE" 	           period="0.05"/>
-      <message name="CBF_REC" 	             period="10.0"/>
+      <!-- <message name="CBF_REC" 	             period="10.0"/> -->
 
       <message name="LIDAR"                  period="0.2"/>
       <message name="SLAM"                   period="0.2"/>
