@@ -173,5 +173,3 @@ float binom(float mu, float n){
     fact_mun *= (n-mu-i); 
   return fact_n/(fact_mu * fact_mun);
 }
-
-

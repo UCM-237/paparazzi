@@ -11,12 +11,12 @@
     <waypoint x="33.7" y="42.1" name="L0"/>
     <waypoint x="26.8" y="-4.4" name="L1"/>
     <waypoint x="-42.5" y="-0.1" name="L2"/>
-    <waypoint x="-151.70125" y="-15.992513" name="L3"/>
-    <waypoint x="-163.56749" y="-15.992513" name="L4"/>
-    <waypoint x="-151.70125" y="-1.6850263" name="L5"/>
+    <waypoint x="-189.4" y="42.7" name="L3"/>
+    <waypoint x="-163.56749" y="12.62246" name="L4"/>
+    <waypoint x="-175.43375" y="-1.6850263" name="L5"/>
     <waypoint x="-163.56749" y="-1.6850263" name="L6"/>
-    <waypoint x="-175.43375" y="-1.6850263" name="L7"/>
-    <waypoint x="-189.4" y="42.7" name="L8"/>
+    <waypoint x="-151.70125" y="-1.6850263" name="L7"/>
+    <waypoint x="-163.56749" y="-15.992513" name="L8"/>
     <waypoint x="-144.45619" y="-112.44049" name="L9"/>
     <waypoint x="-7.2" y="-116.9" name="L10"/>
     <waypoint name="HOME" x="58.9" y="26.4"/>
