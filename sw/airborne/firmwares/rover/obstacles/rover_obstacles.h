@@ -20,6 +20,7 @@ typedef struct{
 	float threshold;		// Threshold for occupied/free cells
 	float occ;					// Occupied cells probability
 	float free;					// Free cells probability
+	uint8_t decay;				// Decay Probability (log-odds)
 } bayesian_map;
 
 
@@ -39,6 +40,9 @@ typedef struct{
 
 extern world_grid obstacle_grid;
 
+#define GRID_BLOCK_SIZE 4
+extern uint8_t grid_block_size; // This is only used in CBF
+
 
 extern void init_grid(uint8_t pa, uint8_t pb);
 extern void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4);
@@ -49,10 +53,10 @@ extern void fill_bayesian_cell(float px, float py);
 extern void fill_free_cells();
 
 #ifdef GVF_CBF_H
-extern void get_occupied_cells(int max_cells, int radius);
+extern void get_occupied_cells(int radius);
 
 #ifndef MAX_CELLS
-#define MAX_CELLS 8
+#define MAX_CELLS 8	// Revisar
 #endif // MAX_CELLS
 
 #endif // GVF_CBF_H

@@ -13,22 +13,28 @@ PRINT_CONFIG_VAR(N_ROW_GRID)
 PRINT_CONFIG_VAR(N_COL_GRID)
 
 // Mapa de Probabilidades
-#define P_FREE    0.2   // celda observada libre (log-odds negativo)
-#define P_OCC     0.8   // celda observada ocupada (log-odds positivo)
+#define P_FREE    0.4   // celda observada libre (log-odds negativo)
+#define P_OCC     0.7   // celda observada ocupada (log-odds positivo)
 #define L_MIN    -127   // saturación mínima
 #define L_MAX     127   // saturación máxima
 #define L0         0    // valor inicial (desconocido)
-#define P_T				0.9   // Threeshold para considerar una celda ocupada/libres
+#define P_T				0.95   // Threeshold para considerar una celda ocupada/libres
 
-#define SCALE    30.0f   // escalado de log-odds float a int8_t
+#define SCALE    20.0f   // escalado de log-odds float a int8_t --> Con 20, max prob 0.995
+
+#define DECAY_INTERVAL 5000	// ms para que decaiga la probabilidad de los obstaculos
+#define DECAY 5	// Decaimiento por segundo
+static uint32_t last_s = 0;
 
 // Variables globales (para evitar estar calculando todo el rato log)
 float POCC = 0;
+float PFREE = 0;
 float PT = 0;
 
 int8_t LT, LOCC, LFREE;
 
 world_grid obstacle_grid;
+uint8_t grid_block_size = GRID_BLOCK_SIZE;
 
 
 #if PERIODIC_TELEMETRY
@@ -86,7 +92,8 @@ void init_grid(uint8_t pa, uint8_t pb){
 
 }
 
-// Same as init_grid but with 4 waypoints (you can give the 4 wp in any order).
+// Same as init_grid but with 4 waypoints (you can give the 4 wp in any order, 
+// but you need to have them in the correct order in the flightplan for painting the border in the GCS).
 void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
   float xmin = fminf(fminf(WaypointX(wp1), WaypointX(wp2)), fminf(WaypointX(wp3), WaypointX(wp4)));
   float xmax = fmaxf(fmaxf(WaypointX(wp1), WaypointX(wp2)), fmaxf(WaypointX(wp3), WaypointX(wp4)));
@@ -106,7 +113,8 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4) {
 
 	obstacle_grid.map.threshold = (float) P_T; 
 	obstacle_grid.map.occ = (float) P_OCC; 
-	obstacle_grid.map.free = (float) 1- P_OCC; 
+	obstacle_grid.map.free = (float) P_FREE; 
+	obstacle_grid.map.decay = (uint8_t) DECAY;
 
   memset(obstacle_grid.world, 0, sizeof(obstacle_grid.world));
 
@@ -163,7 +171,7 @@ void fill_bayesian_cell(float px, float py){
 		obtain_cell_xy(rover_pos.x, rover_pos.y, &rx, &ry);
 
 		update_line_bayes(rx, ry, cx, cy);   // Libre entre rover y obstáculo
-		update_cell_bayes(cx, cy, true);     // Ocupado en el punto final
+		compute_cell_bayes(cx, cy, true);     // Ocupado en el punto final
 }
 
 // Rellena las celda libres cuando no hay medida del lidar
@@ -199,11 +207,36 @@ void fill_free_cells() {
 			return;
 		}
 		else{
-			update_cell_bayes(rx, ry, false);    // Libre en el punto final
+			compute_cell_bayes(rx, ry, false);    // Libre en el punto final
 		}
-
-		
 }
+
+
+// Funcion para que el mapa olvide los obstaculos
+void decay_map()
+{   
+	uint32_t now_s = get_sys_time_msec();
+
+	if (now_s > (last_s + DECAY_INTERVAL)) { 
+		last_s = now_s;
+		for (int y = 0; y < N_ROW_GRID; y++) {
+			for (int x = 0; x < N_COL_GRID; x++) {
+				int8_t *cell = &obstacle_grid.world[y][x];
+				if (*cell == 0){
+					continue;
+				}
+				else if (*cell > 0) {
+					int updated = (*cell > obstacle_grid.map.decay) ? *cell - obstacle_grid.map.decay : 0;
+					update_cell(x, y, updated);
+				} else if (*cell < 0) {
+					int updated = (*cell < - obstacle_grid.map.decay) ? *cell + obstacle_grid.map.decay : 0;
+					update_cell(x, y, updated);
+				}
+			}
+  	}
+	}
+}
+
 
 
 /*******************************************************************************
@@ -221,7 +254,7 @@ void update_line_bayes(int x0, int y0, int x1, int y1) {
 
 	while (1) {
 			if (x0 == x1 && y0 == y1) break;
-			update_cell_bayes(x0, y0, false); // Libre
+			compute_cell_bayes(x0, y0, false); // Libre
 			int e2 = 2 * err;
 			if (e2 >= dy) { err += dy; x0 += sx; }
 			if (e2 <= dx) { err += dx; y0 += sy; }
@@ -229,43 +262,51 @@ void update_line_bayes(int x0, int y0, int x1, int y1) {
 }
 
 
-void update_cell_bayes(int x, int y, bool is_occupied) {
+// Decide si enviar esta celda (0 unknown, 1 ocupado, 2 libre)
+void update_cell(int x, int y, int new_value){
+	
+	int8_t *cell = &obstacle_grid.world[y][x];
+	int8_t old_value = *cell;
+	
+	uint8_t old_state = (old_value > LT) ? 1 : (old_value < -LT) ? 2 : 0;
+	uint8_t new_state = (new_value > LT) ? 1 : (new_value < -LT) ? 2 : 0;
+	obstacle_grid.map.LT = LT; // For the GCS
+
+	*cell = (int8_t)new_value;
+
+	if(old_state != new_state){
+		DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, &y, &x, &new_value);
+		// printf("Cell (%d, %d) updated from %d to %d (delta: %d)\n", x, y, old_value, *cell, delta);
+	}
+}
+
+
+void compute_cell_bayes(int x, int y, bool is_occupied) {
 		if (x < 0 || x >= N_COL_GRID || y < 0 || y >= N_ROW_GRID) {
 			return;
 		}
     int8_t *cell = &obstacle_grid.world[y][x];
 
-		obstacle_grid.map.free = 1 - obstacle_grid.map.occ;
+		// obstacle_grid.map.free = 1 - obstacle_grid.map.occ;
 		check_probs(&LOCC, &LFREE, &LT);
-		// printf("LOCC: %d, LFREE: %d\n", LOCC, LFREE);
 		
     int delta = is_occupied ? LOCC : LFREE;
     int updated = *cell + delta;
     if (updated > L_MAX) updated = L_MAX;
     if (updated < L_MIN) updated = L_MIN;
 
-		// Decide si enviar esta celda (0 unknown, 1 ocupado, 2 libre)
-		int8_t old_value = *cell;
-		
-    uint8_t old_state = (old_value > LT) ? 1 : (old_value < -LT) ? 2 : 0;
-    uint8_t new_state = (updated > LT) ? 1 : (updated < -LT) ? 2 : 0;
-		obstacle_grid.map.LT = LT; // For the GCS
-
-		*cell = (int8_t)updated;
-
-		if(old_state != new_state){
-			DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, &y, &x, &updated);
-			// printf("Cell (%d, %d) updated from %d to %d (delta: %d)\n", x, y, old_value, *cell, delta);
-		}
+		update_cell(x, y, updated);
 }
 
 
 void check_probs(int8_t *LOCC, int8_t *LFREE, int8_t *LT){
 
-	if (obstacle_grid.map.occ != POCC){
+	if ((obstacle_grid.map.occ != POCC) || (obstacle_grid.map.free != PFREE)){
 		*LOCC = (int8_t) (SCALE*logf(obstacle_grid.map.occ / (1.0f - obstacle_grid.map.occ)));
 		*LFREE = (int8_t) (SCALE*logf(obstacle_grid.map.free / (1.0f - obstacle_grid.map.free)));
 		POCC = obstacle_grid.map.occ;
+		PFREE = obstacle_grid.map.free;
+		printf("LOCC: %d, LFREE: %d\n", *LOCC, *LFREE);
 	}
 
 	if (obstacle_grid.map.threshold != PT){
@@ -306,6 +347,10 @@ void write_cbf_static_obstacle(uint16_t i, float x_utm, float y_utm, uint16_t fa
 
   cbf_telemetry.acs_id[i] = fake_id;
   cbf_telemetry.acs_available[i] = 1;
+
+	cbf_ac_state.d[i] = sqrt(pow(cbf_obs_tables[i].state.x - cbf_ac_state.x, 2) + 
+                        pow(cbf_obs_tables[i].state.y - cbf_ac_state.y, 2));
+
 	// printf("Sender %u, Table pos %u",cbf_obs_tables[i].ac_id,i);
 
 	// Hay que añadir al contador para que lo tenga en cuenta ??
@@ -327,12 +372,14 @@ void clean_cbf_static_obstacle(uint16_t i)
   cbf_obs_tables[i].omega_safe = 0.0f;
   cbf_telemetry.acs_available[i] = 0;
 
+	cbf_ac_state.d[i] = 0;
+
 	// printf("Sender %u, Table pos %u",cbf_obs_tables[i].ac_id,i);
 
 }
 
 
-void get_occupied_cells(int max_cells, uint8_t BLOCK_SIZE) {
+void get_occupied_cells(uint8_t BLOCK_SIZE) {
 
 	if (!obstacle_grid.is_ready) return 0;
 
@@ -345,6 +392,9 @@ void get_occupied_cells(int max_cells, uint8_t BLOCK_SIZE) {
 	const int8_t dys[4] = { -1, -1, 1, 1};
 
 	for (int b = 0; b < 4; b++) {
+
+		if ((b+MAX_ROVERS+1) > CBF_MAX_NEIGHBORS) return 0;
+
     int block_x0 = cx + dxs[b];
     int block_y0 = cy + dys[b];
 
@@ -380,10 +430,10 @@ void get_occupied_cells(int max_cells, uint8_t BLOCK_SIZE) {
       utm_of_enu_f(&utm, &enu);
 			
 			// printf("Obstacle in block %d at ENU: (%f, %f)\n", b, enu.x, enu.y);
-			write_cbf_static_obstacle(b+MAX_ROVERS, utm.north, utm.east, 200+b);
+			write_cbf_static_obstacle(b+MAX_ROVERS+1, utm.north, utm.east, 200+b);
     }
 		else{
-			clean_cbf_static_obstacle(b+MAX_ROVERS);
+			clean_cbf_static_obstacle(b+MAX_ROVERS+1);
 		}
   }
 }

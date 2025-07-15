@@ -342,8 +342,7 @@ bool gvf_cbf(void){
 
   // HERE I CAN UPDATE THE OBSTACLES AND THE TABLE
   #ifdef USE_GRID
-    // We'll need to send the radius
-    get_occupied_cells(10, 4);
+    get_occupied_cells(grid_block_size);
   #endif
 
   for (uint8_t i = 0; i < cbf_control.n_neighborns; ++i)  {
@@ -425,13 +424,13 @@ bool gvf_cbf(void){
         for (int j = 0; j < N1; j++) {
           L[i][j] = 0.0f;
           U[i][j] = 0.0f;
+        }
+        P[i] = i;  // inicialización por si acaso
+        c[i] = 0.0f; // Initialize c
+        lambda_A[i] = 0.0f; // Initialize lambda_A
+        y[i] = 0.0f; // Initialize y
+        bp[i] = 0.0f; // Initialize bp
       }
-      P[i] = i;  // inicialización por si acaso
-      c[i] = 0.0f; // Initialize c
-      lambda_A[i] = 0.0f; // Initialize lambda_A
-      y[i] = 0.0f; // Initialize y
-      bp[i] = 0.0f; // Initialize bp
-    }
 
       for (uint8_t i=0;i<active_conds;i++){
           c[i]=Aa[i][0]*gvf_c_field.xi_x+Aa[i][1]*gvf_c_field.xi_y-b[i];
@@ -440,34 +439,36 @@ bool gvf_cbf(void){
         }
 
       }
-        if(!lu_factorization(Aact, L,U,P, active_conds)){
-          return false;
-        }
-      
-         if(!apply_permutation(c, bp, P, active_conds)){
-          return false;
-         }
-         if(!forward_substitution(L, bp, y, active_conds)){
-          return false;
-         }
-         if(!backward_substitution(U, y, lambda_A, active_conds)){
-          return false;
-        }
 
-        
+      if(!lu_factorization(Aact, L,U,P, active_conds)){
+        return false;
+      }
+    
+        if(!apply_permutation(c, bp, P, active_conds)){
+        return false;
+        }
+        if(!forward_substitution(L, bp, y, active_conds)){
+        return false;
+        }
+        if(!backward_substitution(U, y, lambda_A, active_conds)){
+        return false;
+      }
+
+          
       float cx=0,cy=0;
       for (uint8_t i=0;i<active_conds;i++){
         // Calculate the modified field
         cx=cx+Aact[i][0]*lambda_A[i];
         cy=cy+Aact[i][1]*lambda_A[i];
-    
       }   
+      cbf_ac_state.xicbf_x=gvf_c_field.xi_x-cx;
+      cbf_ac_state.xicbf_y=gvf_c_field.xi_y-cy;
     }
-  // Modified field (only if there are active conditions
-    cbf_ac_state.active_conds=(uint8_t)active_conds;
-    gvf_c_field.xi_x=cbf_ac_state.xicbf_x;
-    gvf_c_field.xi_y=cbf_ac_state.xicbf_y;
- return true;
+  // Modified field (only if there are active conditions)
+  cbf_ac_state.active_conds=(uint8_t)active_conds;
+  gvf_c_field.xi_x=cbf_ac_state.xicbf_x;
+  gvf_c_field.xi_y=cbf_ac_state.xicbf_y;
+  return true;
  }    
  return false; // No active conditions, no modification of the field
 }

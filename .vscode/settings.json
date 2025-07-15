@@ -54,7 +54,8 @@
         "hash_map": "c",
         "hash_set": "c",
         "algorithm": "c",
-        "gvf_low_level_control.h": "c"
+        "gvf_low_level_control.h": "c",
+        "complex": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",
