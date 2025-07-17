@@ -41,7 +41,13 @@
         "stdint.h": "c",
         "modules.h": "c",
         "gvf_ellipse.h": "c",
-        "gvf_common.h": "c"
+        "gvf_common.h": "c",
+        "memory": "c",
+        "random": "c",
+        "optional": "c",
+        "autopilot.h": "c",
+        "serial_nps.h": "c",
+        "gvf_parametric_bare_2d_bezier_splines.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false,
     "esbonio.sphinx.confDir": "",
@@ -50,5 +56,5 @@
         "kind": "global"
     },
     "C_Cpp.errorSquiggles": "disabled",
-    "workbench.colorTheme": "Default Light+",
+    "workbench.colorTheme": "Default Dark Modern",
 }

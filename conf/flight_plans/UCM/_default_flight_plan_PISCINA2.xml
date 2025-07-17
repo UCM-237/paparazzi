@@ -1,28 +1,28 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
-<!-- Este plan de vuelo es para hacer pruebas en Guajaraz a distancias cortas (para probar el control y el control estatico sobre todo) -->
+<!-- Este plan de vuelo es para la piscina de la UCM -->
 
-<flight_plan alt="660" ground_alt="650" lat0="39.7939538" lon0="-4.0814169" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="40.436857" lon0="-3.731207" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
   <waypoints>
     <waypoint name="HOME"    x="0" y="0"/>
     <waypoint name="STDBY"   x="-55" y="20"/>
-    <waypoint name="ELLIPSE" x="-70" y="20"/>
-    <waypoint name="P1"      x="-50" y="0"/>
-    <waypoint name="P2"      x="-300" y="0"/>
-    <waypoint lat="39.7940240" lon="-4.0811780" name="BZ0"/> <!-- wP/-->
-    <waypoint lat="39.7941839" lon="-4.0810930" name="BZ1"/>
-    <waypoint lat="39.7943159" lon="-4.0811770" name="BZ2"/>
-    <waypoint lat="39.7944050" lon="-4.0812750" name="BZ3"/>
-    <waypoint lat="39.7944639" lon="-4.0815070" name="BZ4"/> <!-- wP/-->
-    <waypoint lat="39.7943050" lon="-4.0815380" name="BZ5"/>
-    <waypoint lat="39.7940580" lon="-4.0815670" name="BZ6"/>
-    <waypoint lat="39.7939070" lon="-4.0816359" name="BZ7"/> <!-- wP/-->
-    <waypoint lat="39.7940869" lon="-4.0818069" name="BZ8"/>
-    <waypoint lat="39.7943530" lon="-4.0817629" name="BZ9"/>
-    <waypoint lat="39.7944769" lon="-4.0819170" name="BZ10"/>
-    <waypoint lat="39.7944550" lon="-4.0816900" name="BZ11"/> <!-- wP/-->
+    <waypoint name="ELLIPSE" x="-40" y="10"/>
+    <waypoint name="P1"      lat="40.4370040" lon="-3.7312671"/>
+    <waypoint name="P2"      lat="40.4373809" lon="-3.7314290"/>
+    <waypoint lat="40.4368209" lon="-3.7312469" name="BZ0"/> <!-- wP/-->
+    <waypoint lat="40.4368129" lon="-3.7312690" name="BZ1"/>
+    <waypoint lat="40.4368569" lon="-3.7312919" name="BZ2"/>
+    <waypoint lat="40.4368769" lon="-3.7312710" name="BZ3"/>
+    <waypoint lat="40.4368910" lon="-3.7312759" name="BZ4"/> <!-- wP/-->
+    <waypoint lat="40.4369009" lon="-3.7312600" name="BZ5"/>
+    <waypoint lat="40.4369119" lon="-3.7312390" name="BZ6"/>
+    <waypoint lat="40.4369169" lon="-3.7311941" name="BZ7"/> <!-- wP/-->
+    <waypoint lat="40.4369128" lon="-3.7311691" name="BZ8"/>
+    <waypoint lat="40.4368820" lon="-3.7311259" name="BZ9"/>
+    <waypoint lat="40.4368519" lon="-3.7311190" name="BZ10"/>
+    <waypoint lat="40.4368340" lon="-3.7311549" name="BZ11"/> <!-- wP/-->
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
@@ -31,13 +31,13 @@
     <waypoint name="_N2" x="796.4" y="-865.4"/>
     <waypoint name="_N3" x="-908.7" y="-865.4"/>
     <waypoint name="_N4" x="-908.7" y="1254.9"/>
-    <waypoint lat="39.7944769" lon="-4.0818651" name="L0"/>
-    <waypoint lat="39.7941489" lon="-4.0818719" name="L1"/>
-    <waypoint lat="39.7945768" lon="-4.0824400" name="L2"/>
-    <waypoint lat="39.7943540" lon="-4.0830730" name="L3"/>
-    <waypoint lat="39.7948449" lon="-4.0831279" name="L4"/>
-    <waypoint lat="39.7941879" lon="-4.0825310" name="L5"/>
-    <waypoint lat="39.7945479" lon="-4.0819640" name="L6"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L0"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L1"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L2"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L3"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L4"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L5"/>
+    <waypoint lat="40.4372682" lon="-3.7306754" name="L6"/>
   </waypoints>
   <sectors>
     <sector color="red" name="Net">
@@ -121,11 +121,11 @@
     </block>
     <block name="static_malacate">
       <set var="gvf_c_stopwp.stay_still" value="1"/>
-      <call_once fun="send_measure_msg(WP_BZ0)"/>
       <call_once fun="increase_bz_pointer_malacate()"/>
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-      <exception cond="serial_response == 0" deroute="mision_malacate"/>  
+      <exception cond="And(serial_response, serial_response)" deroute="mision_malacate"/>
+       <!-- <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="mision_malacate"/> -->
     </block>
   </blocks>
 </flight_plan>

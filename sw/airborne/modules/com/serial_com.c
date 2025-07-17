@@ -38,7 +38,7 @@
 #include "autopilot.h"
 #include "navigation.h"
 #include "state.h"
-//#include "modules/sonar/sonar_bluerobotics.h"		// No funciona en los rover
+#include "modules/sonar/sonar_bluerobotics.h"		// No funciona en los rover
 #include "modules/radio_control/radio_control.h"
 #include "modules/nav/waypoints.h"
 
@@ -64,6 +64,7 @@ bool serial_msg_setting;
 bool serial_msg_test = false;
 bool serial_response;
 bool serial_button_check;
+bool check_status = true;
 
 // Sonar msg header bytes (and checksum)
 const uint8_t headerLength = 2;
@@ -90,8 +91,21 @@ uint32_t msg_buffer = 0;
 #define SEND_INTERVAL 500 // time between sending messages (ms)
 
 // Sonda (valores por defecto, se modifican en el flight plan)
+#define MAX_DEPTH 20*1000 // En mm
+#define MIN_DEPTH 0.07*1000 			// En mm
 #define PROBE_MSG_LENGTH 12
-int16_t probe_depth = 5000; // En mm
+
+// Malacate states
+#define INIT 0
+#define CHECK 1
+#define MANUAL 2
+#define TEST 3
+#define AUTO 4
+#define BLOCKED 5
+#define READING 6
+uint8_t malacate_state = INIT;
+
+// int16_t probe_depth = 5000; // En mm
 uint16_t probe_time = 180; // En s
 uint8_t probe_error = 0; // 0: OK
 
@@ -157,6 +171,7 @@ int cont = 0;
 
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
   pprz_msg_send_SERIAL_COM(trans, dev, AC_ID,
+							&malacate_state,
 							&serial_msg.button_state,
   						&serial_snd.msg_id,
 							&serial_snd.msg_length,
@@ -184,6 +199,10 @@ void serial_init(void)
   serial_msg_setting = true;
 	serial_msg_test = false;
 	serial_button_check = false;
+
+	malacate_state = INIT;
+	serial_msg.depth = 1.0*1000; // Evito que se bloquee al principio (quitar)
+	serial_snd.limit_depth = 1;
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -228,7 +247,7 @@ static void message_probe_parse(void){
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[7];
 	msgBytes[1]=serial_msg.msgData[6];
-	serial_msg.depth=serial_byteToint(msgBytes,2)*300;	// Es un int (en mm)
+	serial_msg.depth=serial_byteToint(msgBytes,2);//*300;	// Es un int (en mm)
 
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[9];
@@ -250,11 +269,11 @@ static void message_OK_parse(void){
 	msgBytes[1]=serial_msg.msgData[6];
 	serial_msg.depth=serial_byteToint(msgBytes,2)*300;	// Es un int (en mm)
 
-	serial_response = 1;
 	
 	if (serial_msg.error == 1){
+		serial_response = 1;
 		serial_msg_test = false;
-		bloqued_probe = true;
+		bloqued_probe = false;
 	}
 }
   
@@ -280,14 +299,14 @@ void serial_read_message(void){
 	switch (serial_msg.msg_id){
 		case SR_WAYPOINT:	// Este es para procesar los waypoints (aqui no se usa seguramente)
 			parse_MOVE_WP();
-			serial_msg.error = SERIAL_BR_ERR_NONE;
+			// serial_msg.error = SERIAL_BR_ERR_NONE;
 			// Ahora que puedo mandar multiples mensajes ¿poner un ACK?
  			break;
 
 		case SR_HOME:	// Este es para procesar el home request (unused) (ver Rovers)
 			// parse_HOME();		// REVISAR ESTO 
 			SET_BIT(msg_buffer, HOME_RESPONSE);
-			serial_msg.error = SERIAL_BR_ERR_NONE;
+			// serial_msg.error = SERIAL_BR_ERR_NONE;
  			break;
  		
 		case SR_OK:	 // Este es el mensaje de respuesta de medida
@@ -301,12 +320,12 @@ void serial_read_message(void){
  		
 
  		default:
- 			serial_msg.error = SERIAL_ERR_UNEXPECTED;
+ 			// serial_msg.error = SERIAL_ERR_UNEXPECTED;
  			break;
  		};
 
  	if(chks!=(unsigned int) serial_msg.ck){
-		serial_msg.error=SERIAL_BR_ERR_CHECKSUM;
+		// serial_msg.error=SERIAL_BR_ERR_CHECKSUM;
 		serial_msg.error_cnt++;
 		}
 }
@@ -519,7 +538,16 @@ void set_telemetry_message(uint8_t start_byte){
 }
 
 // Mensajes de la sonda
+
+int16_t bound_depth(int16_t depth){
+  return (depth < (int16_t)(br_sonar.distance - 0.5)) ? depth : (int16_t)(br_sonar.distance - 0.5);
+}
+
+
 void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
+
+	if(serial_snd.limit_depth)
+		depth = bound_depth(depth);
 
 	serial_snd.msgData[start_byte] = probe_error;
 	if((serial_snd.msg_id == PPZ_MEASURE_BYTE) || (serial_snd.msg_id == PPZ_SONDA_TEST_BYTE)){
@@ -528,6 +556,7 @@ void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
 	}
 	
 	uint8_t msg_data[3] = {0,0,0};
+
 	itoh(depth, msg_data, 3);
 	serial_snd.msgData[start_byte+1] = msg_data[0];
 	serial_snd.msgData[start_byte+2] = msg_data[1];
@@ -561,66 +590,137 @@ void serial_ping()
 	struct sonar_parse_t *sonar_data;	// No funciona en el rover, solo en el barco
 	uint8_t msg_gps[5]={0,0,0,0,0};
 	// uint8_t msg_dist[5]={0,0,0,0,0};
+
+
+	// Estado por defecto (si ya ha hecho el INIT)
+	if(malacate_state > 1){
+		malacate_state = READING;
+	}
+
+
+	// Comprueba si esta en modo auto test (falta comprobacion de que este en manual??)
+	if(radio_control_get(7)<=0){
+		malacate_state = TEST;
+	}
+
+	// Comprueba si esta en manual o automatico
+	if (malacate_state == READING){
+		if (autopilot.mode == 0)
+			malacate_state = MANUAL;
+		else
+			malacate_state = AUTO;
+	}
+
+	// Si hay cualquier problema, deshabilita el mando
+	if((serial_msg.error != 0) || (check_status == true)){
+		malacate_state = CHECK;
+	}
+
+	// Si esta midiendo en auto, no tocar
+	if (bloqued_probe == true){
+		malacate_state = BLOCKED;
+	}
+
+	// ---------------- Comprobación de la sonda ----------------
+	switch (malacate_state)
+	{
+	case INIT:
+		RESET_BUFFER(msg_buffer);
+		malacate_state = CHECK;
+		break;
 	
-
-	if ((autopilot.mode == 0) && (bloqued_probe == false)){
-		// Modo Automatico-Manual
-		if(radio_control_get(7)<=0){
-			SET_BIT(msg_buffer, SONDA_TEST);
-			CLEAR_BIT(msg_buffer, SONDA_UP);
-			CLEAR_BIT(msg_buffer, SONDA_DOWN);
-			CLEAR_BIT(msg_buffer, SONDA_CENTER);
-		}
-		// Modo Manual
-		else{
-			serial_snd.error = 0;
-			SET_BIT(msg_buffer, SONDA_MANUAL);
-			if (radio_control_get(RADIO_GAIN2)>0){
-				SET_BIT(msg_buffer, SONDA_UP);
-			}
-			else if (radio_control_get(RADIO_GAIN2)<0){
-				SET_BIT(msg_buffer, SONDA_DOWN);
-			}
-			else{
-				SET_BIT(msg_buffer, SONDA_CENTER);
-			}
-		}		
-	}
-	else if (bloqued_probe == true){
-		serial_snd.error = 1;
-		SET_BIT(msg_buffer, SONDA_CENTER);
-		if(radio_control_get(7)>0){
-			SET_BIT(msg_buffer, SONDA_MANUAL);
-			bloqued_probe = false;
-			serial_msg.error = 0;
-			serial_snd.error = 0;
-		}
-	}
-	else {
-		// AQUI HABRIA QUE HACER QUE COMPRUEBA SI HAY QUE BAJAR LA SONDA
-		if(serial_msg_test == true){
-			SET_BIT(msg_buffer, MEASURE_SN);
-			// AQUI CREO QUE FALTA ALGO
-			bloqued_probe = true; 
-		}
-		else{
-			SET_BIT(msg_buffer, SONDA_AUTO);
-		}
-	}
-
-
-	// Comprobación inicial de los botones
-	if(serial_button_check == false){
-		serial_snd.error = 2; // Esto ya se comprobara
+	// Buttons not in init position ---------------------------------------------------------------
+	case CHECK:
+		serial_snd.error = 2;
+		check_status = true;
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_CENTER);
-		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0) && (autopilot.mode == 0)){
-			serial_button_check = true;
-			serial_snd.error = 0;
+		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0)){
+			if (serial_msg.error == 0){
+				malacate_state = READING;
+				serial_snd.error = 0;
+				check_status = false;
+			}
 		}
+		break;
+
+	// MANUAL MODE ----------------------------------------------------------------------------------
+	case MANUAL:
+		serial_snd.error = 0;
+		SET_BIT(msg_buffer, SONDA_MANUAL);
+		int gain2 = radio_control_get(RADIO_GAIN2);
+
+		// serial_msg.depth = 1.0*1000; //DEBUG, pendiente de revisar
+
+		// if(serial_msg.error == 1){
+		// 	malacate_state = CHECK;
+		// 	SET_BIT(msg_buffer, SONDA_CENTER);
+		// 	break;
+		// }
+
+		// Subir --
+		if (gain2>0){
+			//if (serial_msg.depth <= MIN_DEPTH){
+			//	RESET_BUFFER(msg_buffer);
+			//	SET_BIT(msg_buffer, SONDA_CENTER);
+			//	serial_snd.error = 4; // Error de profundidad minima
+			//}
+			// else{
+			CLEAR_BIT(msg_buffer, SONDA_CENTER);
+			SET_BIT(msg_buffer, SONDA_UP);
+			// }
+		}	
+		// Bajar --
+		else if (gain2<0){
+			//if (serial_msg.depth >= MAX_DEPTH){
+			//	RESET_BUFFER(msg_buffer);
+			//	SET_BIT(msg_buffer, SONDA_CENTER);
+			//	serial_snd.error = 3; // Error de profundidad maxima
+			//}
+			//else{
+				CLEAR_BIT(msg_buffer, SONDA_CENTER);
+				SET_BIT(msg_buffer, SONDA_DOWN);
+			//}
+		}
+		// Quieto --
+		else{
+			RESET_BUFFER(msg_buffer);
+			SET_BIT(msg_buffer, SONDA_CENTER);
+		}
+		break;
+
+	// Auto-Manual mode --------------------------------------------------------------------------
+	case TEST:
+		SET_BIT(msg_buffer, SONDA_TEST);
+		break;
+	
+	// Full Auto mode ----------------------------------------------------------------------------
+	case AUTO:
+		if(serial_msg_test == true){
+			SET_BIT(msg_buffer, MEASURE_SN); 
+		}
+		else{
+			serial_response = 0;
+			SET_BIT(msg_buffer, SONDA_AUTO);
+		}
+		break;
+
+	// Sonda bloqued  ---------------------------------------------------------------------------
+	case BLOCKED:
+		serial_snd.error = 1;
+		SET_BIT(msg_buffer, SONDA_CENTER);
+		if(serial_msg_test == false){
+			bloqued_probe = false;
+			// serial_msg.error = 0;
+			// serial_response = 1; // Esto no deberia hacer falta
+		}
+		break;
+
+	default:
+		break;
 	}
-
-
+	
+	
 	if (now_s > (last_s + SEND_INTERVAL)) {
 		
 		last_s = now_s;
@@ -700,7 +800,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_CENTER_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_CENTER);
@@ -720,7 +820,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_UP_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_UP);
@@ -730,7 +830,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_DOWN_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_DOWN);
@@ -756,16 +856,18 @@ void serial_ping()
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_TEST); 
+				check_status = true;
 			}
 			
 			else if(CHECK_BIT(msg_buffer, MEASURE_SN)){
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_MEASURE_BYTE);
-        set_probe_message(msg_byte, probe_depth, probe_time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, MEASURE_SN);
+				bloqued_probe = true;
     	}
 
 			else{	 
@@ -794,14 +896,21 @@ void serial_ping()
 // ------------------------------------------------------
 // FUNCIONES para el flight plan
 
-void send_measure_msg(uint8_t wp){
+void send_measure_msg(){
 	
-	probe_depth = WaypointX(wp);
-	probe_time = WaypointY(wp);
+	// Esto no funciona aun
+	// probe_depth = WaypointX(wp);
+	// probe_time = WaypointY(wp);
 
 	SET_BIT(msg_buffer, MEASURE_SN);
-	// serial_response = 0;
+	serial_response = 0;
 	serial_msg_test = true;
 
+}
+
+// Paparazzi cant check a variable directly, so we use a function to check the response
+// Dont seem to work either, but you can use an and operation.
+bool check_malacate(){
+  return serial_response;
 }
 

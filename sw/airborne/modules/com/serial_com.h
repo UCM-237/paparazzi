@@ -80,7 +80,8 @@ struct serial_send_t {
   
   uint16_t ck;
   uint16_t time;
-  uint16_t depth;
+  int16_t depth;
+  bool limit_depth;
 
 };
 
@@ -104,12 +105,14 @@ struct serial_parse_t {
   uint16_t time;
   uint16_t depth;
 
-  int16_t button_state[BUTTONS]
+  int16_t button_state[BUTTONS];
 
 };
 
 extern struct serial_parse_t serial_msg;
 extern struct serial_send_t serial_snd;
+
+extern uint8_t malacate_state;
 
 
 // Message functions
@@ -118,12 +121,13 @@ void set_gps_message(uint8_t start_byte);
 void set_imu_message(uint8_t start_byte);
 void set_telemetry_message(uint8_t start_byte);
 void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time);
-void send_measure_msg(uint8_t wp);
 
   
 /* External functions (called by the autopilot)*/
 extern void serial_init(void);
 extern void serial_ping(void);
 extern void serial_event(void);
+extern bool check_malacate(void);
+extern void send_measure_msg(void);
 
 #endif //SERIAL_COM_H

@@ -10,14 +10,20 @@
     <configure name="SERIAL_UART" value="UARTX" description="SERIAL on which other device is connected"/>
     <configure name="SERIAL_BAUD" value="B115200" description="UART Baudrate, default to 115200"/>
   </doc>
+
   <settings>
     <dl_settings>
       <dl_settings NAME="SR_Com">
-        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_setting" shortname="stream" module="modules/com/serial_com" values="FALSE|TRUE"/>
-        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_test" shortname="test" module="modules/com/serial_com" values="FALSE|TRUE"/>
+        <dl_setting MAX="20" MIN="0" STEP="1" VAR="serial_snd.depth" shortname="depth"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_snd.limit_depth" shortname="depth_limit" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_setting" shortname="stream" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_test" shortname="test" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_response" shortname="response" values="FALSE|TRUE"/>
       </dl_settings>
     </dl_settings>
   </settings>
+
+
   <dep>
     <depends>uart</depends>
     <provides>navigation,datalink,telemetry</provides>
@@ -30,7 +36,7 @@
   <periodic fun="serial_ping()" freq="10" autorun="TRUE"/>    <!-- Esto es para mandar la telemetria -->
   <event fun="serial_event()"/>                               <!-- Esto es para leer los mensajes -->
 
-  <makefile>
+  <makefile target="ap" firmware="rover"> 
     <configure name="SERIAL_UART" default = "UART5" case="upper|lower"/> <!-- Revisar estos configure | Mirar gps_ublox.xml -->
     <configure name="SERIAL_BAUD" default="B115200"/>
     <file name="serial_com.c"/>

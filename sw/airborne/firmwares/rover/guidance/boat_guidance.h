@@ -52,14 +52,20 @@
 
 
 // Controller gains
-#ifndef BOAT_SPEED_KF // Lineal feed forward speed control constant (have to be measured with new servos)
-#define BOAT_SPEED_KF 10
-#warning "Construction constant BOAT_MEASURED_KF for boat speed ctrl not defined"
+#ifndef BOAT_SPEED_KF
+#if USE_NPS
+#define BOAT_SPEED_KF 5000
+#else
+#define BOAT_SPEED_KF 5000
+#endif
 #endif
 
 #ifndef BOAT_BEARING_KF
-#define BOAT_BEARING_KF 10
-#warning "Construction constant BOAT_BEARING_KF for boat bearing ctrl not defined"
+#if USE_NPS
+#define BOAT_BEARING_KF -50000
+#else
+#define BOAT_BEARING_KF -5000
+#endif
 #endif
 
 // Speed Controller PID
@@ -67,7 +73,7 @@
 #if USE_NPS
 #define BOAT_KP 4000
 #else
-#define BOAT_KP 10
+#define BOAT_KP 4000
 #endif
 #endif
 
@@ -75,7 +81,7 @@
 #if USE_NPS
 #define BOAT_KI 2000
 #else
-#define BOAT_KI 100
+#define BOAT_KI 2000
 #endif
 #endif
 

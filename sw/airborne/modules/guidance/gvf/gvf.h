@@ -167,6 +167,7 @@ extern bool dist_bool(float x_, float y_, uint8_t wp0);
 extern float dist(float x_, float y_, uint8_t wp0);
 extern float dist_quintic(float x_, float y_, uint8_t wp0);
 extern bool increase_bz_pointer(void);
+extern bool increase_bz_pointer_malacate(void);
 
 #endif // GVF_H
 

@@ -34,7 +34,7 @@
 #include "modules/energy/electrical.h"
 
 struct NpsElectrical nps_electrical;
-struct NpsFdm fdm;
+//struct NpsFdm fdm;
 
 static struct EnuCoor_d rover_vel;
 static struct LtpDef_d ltpdef;

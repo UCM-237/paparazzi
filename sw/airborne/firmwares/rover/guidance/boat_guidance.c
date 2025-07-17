@@ -51,7 +51,10 @@ ctrl_t guidance_control;
 
 static struct PID_f boat_pid;
 static float time_step;
+
+// This ones are for saving the state of the boat during the static ctrl
 static float last_speed_cmd;
+
 uint32_t rover_time = 0;
 uint8_t reset_time = 0;
 
@@ -158,8 +161,8 @@ void boat_bound_cmds(void)
 void boat_guidance_read_rc(void){
 
   // Multiply by 2 to maintain the same range as the NAV mode
-  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE]*2;
-  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL]*2;
+  guidance_control.rc_throttle = (int32_t)radio_control.values[RADIO_THROTTLE]*2*0.7; // 70% por si acaso
+  guidance_control.rc_bearing  = (int32_t)radio_control.values[RADIO_ROLL]*2*0.7;
 
   // Display purposes
   guidance_control.throttle = (float)guidance_control.rc_throttle;  // +- 19200
@@ -207,6 +210,10 @@ void boat_guidance_bearing_GVF_ctrl(void)
 /* Static ctrl. Only works for GVF line array TODO: Improvements to work in any point */
 bool boat_guidance_bearing_static_ctrl(void)
 { 
+
+  // Avoid problems with the PID Wind-Up
+  reset_pid_f(&boat_pid);
+
 	// Current position of the boat
 	struct EnuCoor_f *p = stateGetPositionEnu_f();
   float px = p->x;
@@ -299,6 +306,12 @@ void boat_guidance_steering_obtain_setpoint(void)
 		if( (get_sys_time_msec() - rover_time) >= 1000*gvf_c_stopwp.wait_time){
 			reset_time = 0;
       guidance_control.cmd.speed = last_speed_cmd;
+      if (gvf_c_stopwp.next_wp > 0){
+      gvf_parametric_bare_control.w = (float) (gvf_c_stopwp.next_wp-1);
+      }
+      else{
+        gvf_parametric_bare_control.w = 0.0f;
+      }
 			gvf_c_stopwp.stay_still = 0;
 		}	
 	}

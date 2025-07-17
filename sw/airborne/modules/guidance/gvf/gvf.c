@@ -37,6 +37,15 @@
 #include "../../../firmwares/rover/guidance/boat_guidance.h"
 
 
+#ifdef SERIAL_NPS_H
+#include "modules/com/serial_com.h"
+#endif
+
+#ifdef SERIAL_COM_H
+#include "modules/com/serial_com.h"
+#endif
+
+
 
 
 
@@ -860,3 +869,15 @@ bool increase_bz_pointer(void){
     gvf_c_stopwp.next_wp=0;
   return false;
 }
+
+#ifdef SERIAL_COM_H
+// Same, but send the signal to the Raspberry
+bool increase_bz_pointer_malacate(void){
+  send_measure_msg();
+  return increase_bz_pointer();
+}
+#else
+bool increase_bz_pointer_malacate(void){
+  return increase_bz_pointer();
+}
+#endif

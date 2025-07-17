@@ -28,6 +28,7 @@
       <module name="fdm"           type="CYANOA"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <module name="serial" type="nps"/>
     </target>    
     
     <!-- Same board module as matek_f405_wind but without OSD -->
@@ -39,8 +40,11 @@
     	<configure name="GPS_PORT"  value="UART6"/>
     </module>
     <module name="gps_ubx_ucenter"/>
+    
     <module name="ins"/>
- 
+    <!-- Untested -->
+    <!-- <module name="ins_ekf"/> -->
+  
 
     <!-- Use magnetometers on ground, on fly and do not use gps for heading    -->
     <configure name="USE_MAGNETOMETER" value="TRUE"/>
@@ -165,7 +169,7 @@
 		
 		
     <!-- Calibracion 25/04/2025 GUAJARAZ -->
-		<define name="IMU_MAG_CALIB" type="array">
+		<!-- <define name="IMU_MAG_CALIB" type="array">
 			<field type="struct">
 				<field name="abi_id" value="7"/>
 				<field name="calibrated" type="struct">
@@ -182,29 +186,29 @@
 		<define name="MAG_Z_NEUTRAL" value="1428"/>
 		<define name="MAG_X_SENS" value="1.536568709724108" integer="16"/>
 		<define name="MAG_Y_SENS" value="1.5028633583577604" integer="16"/>
-		<define name="MAG_Z_SENS" value="1.516927891132286" integer="16"/>
+		<define name="MAG_Z_SENS" value="1.516927891132286" integer="16"/> -->
 
 
 
-		<!-- Calibracion Campilo 10/04/25 -->
-		<!-- <define name="IMU_MAG_CALIB" type="array">
-			<field type="struct">
-				<field name="abi_id" value="7"/>
-				<field name="calibrated" type="struct">
-				  <field name="neutral" value="true"/>
-				  <field name="scale" value="true"/>
-				</field>
-				<field name="neutral" value="2424,2667,1410" type="int[]"/>
-				<field name="scale" value="{{40822,47203,59311},{26129,30471,38117}}"/>
-			</field>
-		</define>
+		<!-- Calibracion Campillo 10/07/25 -->
+		<define name="IMU_MAG_CALIB" type="array">
+      <field type="struct">
+        <field name="abi_id" value="7"/>
+        <field name="calibrated" type="struct">
+          <field name="neutral" value="true"/>
+          <field name="scale" value="true"/>
+        </field>
+        <field name="neutral" value="2476,2627,1519" type="int[]"/>
+        <field name="scale" value="{{14081,22671,39733},{8890,13967,24597}}"/>
+      </field>
+    </define>
 
-		<define name="MAG_X_NEUTRAL" value="2424"/>
-		<define name="MAG_Y_NEUTRAL" value="2667"/>
-		<define name="MAG_Z_NEUTRAL" value="1410"/>
-		<define name="MAG_X_SENS" value="1.562325385560543" integer="16"/>
-		<define name="MAG_Y_SENS" value="1.5491122704816889" integer="16"/>
-		<define name="MAG_Z_SENS" value="1.5560248710985949" integer="16"/> -->
+    <define name="MAG_X_NEUTRAL" value="2476"/>
+    <define name="MAG_Y_NEUTRAL" value="2627"/>
+    <define name="MAG_Z_NEUTRAL" value="1519"/>
+    <define name="MAG_X_SENS" value="1.583914508954987" integer="16"/>
+    <define name="MAG_Y_SENS" value="1.6231832169043077" integer="16"/>
+    <define name="MAG_Z_SENS" value="1.6153595973662915" integer="16"/>
 
 		
 		
@@ -250,6 +254,7 @@
     <!--<define name="JSBSIM_MODEL"    value="HOOPERFLY/hooperfly_teensyfly_quad" type="string"/>-->
   </section>
   
+  <!-- Esto ademas de estar mal, no es muy fiable -->
   <section name="BAT">
     <define name="CATASTROPHIC_BAT_LEVEL"    value="7.35" unit="V"/>
     <define name="CRITIC_BAT_LEVEL"          value="7.40" unit="V"/>

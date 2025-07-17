@@ -195,6 +195,17 @@ static void send_ins_ref(struct transport_tx *trans, struct link_device *dev)
                           &ins_int.ltp_def.hmsl, &ins_int.qfe);
   }
 }
+
+static void send_body_rates_accel(struct transport_tx *trans, struct link_device *dev)
+{
+  pprz_msg_send_BODY_RATES_ACCEL(trans, dev, AC_ID,
+                                  &(stateGetBodyRates_f()->p),
+                                  &(stateGetBodyRates_f()->q),
+                                  &(stateGetBodyRates_f()->r),
+                                  &(stateGetAccelBody_i()->x),
+                                  &(stateGetAccelBody_i()->y),
+                                  &(stateGetAccelBody_i()->z));
+}
 #endif
 
 static void ins_ned_to_state(void);
@@ -238,6 +249,7 @@ void ins_int_init(void)
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS, send_ins);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_Z, send_ins_z);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INS_REF, send_ins_ref);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_BODY_RATES_ACCEL, send_body_rates_accel);
 #endif
 
   /*
