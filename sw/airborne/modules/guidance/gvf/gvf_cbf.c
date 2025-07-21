@@ -217,6 +217,7 @@ static void cbf_low_level_getState(void)
 static void write_cbf_table(uint16_t i, uint8_t *buf) 
 {
   cbf_ac_state.nmes_rec++;
+
   if (i<CBF_MAX_NEIGHBORS){
   cbf_obs_tables[i].state.x = DL_CBF_STATE_x_enu(buf);
   cbf_obs_tables[i].state.y = DL_CBF_STATE_y_enu(buf);
@@ -228,8 +229,20 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
   
   cbf_obs_tables[i].available = (uint8_t) 1;
   cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
-  cbf_ac_state.d[i] = sqrt(pow(cbf_obs_tables[i].state.x - cbf_ac_state.x, 2) + 
-                        pow(cbf_obs_tables[i].state.y - cbf_ac_state.y, 2));
+  double dx = cbf_obs_tables[i].state.x - cbf_ac_state.x;
+  double dy = cbf_obs_tables[i].state.y - cbf_ac_state.y;
+
+  // Protect against NaN values
+  if (isnan(dx) || isnan(dy)) {
+    printf("NaN detected in dx or dy for i=%d\n", i);
+    cbf_ac_state.d[i] = 0.0;
+  } 
+  else {
+    double dist2 = dx*dx + dy*dy;
+    if (dist2 < 0.0) dist2 = 0.0;
+    cbf_ac_state.d[i] = sqrt(dist2);
+}
+
   }  
 }
 
