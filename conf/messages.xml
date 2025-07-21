@@ -1963,19 +1963,18 @@
     <message name="SERIAL_COM" id="212">
        <field name="STATE"		    type="uint8" values="INIT|CHECK|MANUAL|TEST|AUTO|BLOCKED|READING"/>
        <field name="BUTTON_STATE"	type="int16[3]"/>
+       <field name="PROFILE_ID"		type="uint8"/>
      	 <field name="SEND_ID"		  type="uint8"/>
     	 <field name="SEND_LENGTH"	type="uint8"/> 
     	 <field name="SEND_ERROR"	  type="uint8" values="OK|MEASURE|BUTTONS|UP|DOWN"/>
     	 <field name="SEND_DEPTH"	  type="uint16"  alt_unit="m"	alt_unit_coef="0.001"/> 
     	 <field name="SEND_TIME"		type="uint16"  alt_unit="s"/>
-    	 <field name="SEND_CK"			type="uint16"/>
     	 <field name="RECV_STATUS"	type="uint8" values="OK|SYNC|PAYLOAD"/>
        <field name="RECV_ID"			type="uint8"/>
     	 <field name="RECV_LENGTH"	type="uint8"/>
        <field name="RECV_ERROR"   type="uint8" values="OK|FINISH_TEST"/> 
        <field name="RECV_DEPTH"	  type="uint16" alt_unit="m"	alt_unit_coef="0.001"/>
-    	 <field name="RECV_TIME"	  type="uint16" alt_unit="s"		/>
-    	 <field name="RECV_CK"			type="uint16"/> 
+    	 <field name="RECV_TIME"	  type="uint16" alt_unit="s"/>
     </message>
 
     <message name="TUNE_VERT" id="213">

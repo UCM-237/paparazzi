@@ -111,6 +111,8 @@ uint16_t probe_time = 180; // En s
 uint8_t probe_error = 0; // 0: OK
 
 bool bloqued_probe = false;
+uint8_t profile;	// Para llevar un recuento de perfiles
+uint8_t profile_counter;
 
 
 // Sonar parse states
@@ -176,19 +178,18 @@ static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
   pprz_msg_send_SERIAL_COM(trans, dev, AC_ID,
 							&malacate_state,
 							&serial_msg.button_state,
+							&profile,
   						&serial_snd.msg_id,
 							&serial_snd.msg_length,
   						&serial_snd.error,
   						&serial_snd.depth,
   						&serial_snd.time,
-							&serial_snd.ck,
 							&serial_msg.status,
   						&serial_msg.msg_id,
   						&serial_msg.payload_len,
 							&serial_msg.error,
 							&serial_msg.depth,
-  						&serial_msg.time,
-  						&serial_msg.ck);
+  						&serial_msg.time);
 }
 #endif
 
@@ -208,7 +209,8 @@ void serial_init(void)
 	serial_msg.depth = 1.0*1000; // Evito que se bloquee al principio (quitar)
 	serial_snd.limit_depth = 1;
 
-
+	profile = 0;
+	profile_counter = 0;
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -597,6 +599,16 @@ int16_t bound_depth(int16_t depth){
 }
 
 
+void update_profile(){
+
+	if(profile == 0){
+		profile_counter++;
+		profile = profile_counter;
+	}
+
+}
+
+
 void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
 
 	if(serial_snd.limit_depth)
@@ -686,6 +698,7 @@ void serial_ping()
 	case CHECK:
 		serial_snd.error = 2;
 		check_status = true;
+		profile = 0;
 		RESET_BUFFER(msg_buffer);
 		SET_BIT(msg_buffer, SONDA_CENTER);
 		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0)){
@@ -716,17 +729,20 @@ void serial_ping()
 			serial_snd.error = 4; // Indicador de que subiendo
 			CLEAR_BIT(msg_buffer, SONDA_CENTER);
 			SET_BIT(msg_buffer, SONDA_UP);
+			update_profile();
 		}	
 		// Bajar --
 		else if (gain2<0){
-			serial_snd.error = 4; // Indicador de que esta bajando
+			serial_snd.error = 3; // Indicador de que esta bajando
 			CLEAR_BIT(msg_buffer, SONDA_CENTER);
 			SET_BIT(msg_buffer, SONDA_DOWN);
+			update_profile();
 		}
 		// Quieto --
 		else{
 			RESET_BUFFER(msg_buffer);
 			SET_BIT(msg_buffer, SONDA_CENTER);
+			profile = 0;
 		}
 		break;
 
@@ -738,11 +754,13 @@ void serial_ping()
 	// Full Auto mode ----------------------------------------------------------------------------
 	case AUTO:
 		if(serial_msg_test == true){
-			SET_BIT(msg_buffer, MEASURE_SN); 
+			SET_BIT(msg_buffer, MEASURE_SN);
+			update_profile(); 
 		}
 		else{
 			serial_response = 0;
 			SET_BIT(msg_buffer, SONDA_AUTO);
+			profile = 0;
 		}
 		break;
 
