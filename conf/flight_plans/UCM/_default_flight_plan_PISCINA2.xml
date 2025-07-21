@@ -125,7 +125,6 @@
       <call fun="boat_guidance_bearing_static_ctrl()"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
       <exception cond="And(serial_response, serial_response)" deroute="mision_malacate"/>
-       <!-- <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="mision_malacate"/> -->
     </block>
   </blocks>
 </flight_plan>
