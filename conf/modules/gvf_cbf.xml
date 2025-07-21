@@ -26,6 +26,7 @@ No Eigen is needed
       <dl_settings NAME="CBF">
         <dl_setting MAX="10" MIN="1.0" STEP="0.1" VAR="cbf_param.r" shortname="cbf_r" param="CBF_R"/>
         <dl_setting MAX="10" MIN="0.01" STEP="0.05" VAR="cbf_param.alpha" shortname="cbf_alpha" param="CBF_ALPHA"/>
+         <dl_setting MAX="5000" MIN="0.01" STEP="100" VAR="cbf_control.broadcast_time" shortname="cbf_broadcast_time" param="CBF_BRCST"/>
     </dl_settings>
     </dl_settings>
   </settings>

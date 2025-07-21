@@ -1758,6 +1758,7 @@
       <field name="speed"  type="float"/>
       <field name="course" type="float"/>
       <field name="uref"   type="float"/>
+      <field name="nmes"   type="uint32"/>
     </message>
     
      <message name="CBF" id="183">
@@ -1773,6 +1774,8 @@
       <field name="d"         type="float[]" />
       <field name="R"         type="float"/>
       <field name="alpha"     type="float"/>
+      <field name="nmes_env"   type="uint32"/>
+      <field name="nmes_rec"   type="uint32"/>
     </message>
     
     <message name="CBF_REC" id="184">

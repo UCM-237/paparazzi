@@ -63,6 +63,7 @@ struct cbf_con {
   float omega_safe;
   uint8_t n_neighborns;
   uint32_t last_transmision;
+  uint32_t broadcast_time;
 };
 
 // CBF telemetry
@@ -98,6 +99,8 @@ typedef struct{
   float vx;
   float vy;
   float uref;
+  uint32_t nmes_env; // number of messages sent to neighbors
+  uint32_t nmes_rec; // number of messages received from neighbors
 } cbf_state_t;
 
 // CBF obstacle tables

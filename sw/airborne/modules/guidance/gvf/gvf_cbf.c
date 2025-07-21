@@ -72,7 +72,10 @@ static void send_cbf(struct transport_tx *trans, struct link_device *dev)
           cbf_control.n_neighborns,
           &(cbf_ac_state.d[0]),
   				&cbf_param.r,
-          &cbf_param.alpha);
+          &cbf_param.alpha,
+         &cbf_ac_state.nmes_env,
+        &cbf_ac_state.nmes_rec
+          );
 }
 
 static void send_cbf_rec(struct transport_tx *trans, struct link_device *dev)
@@ -116,6 +119,7 @@ void cbf_init(void)
   cbf_ac_state.xi_x=0;
   cbf_control.n_neighborns= (uint8_t) 0;
   cbf_param.timeout = 2000.0; // valor en milisegundos
+  cbf_control.broadcast_time=200; // valor en milisegundos
  // Initilize the obstacles tables with the ac_id of the neighborns
   uint16_t cbf_nei_ac_ids[CBF_MAX_NEIGHBORS] = CBF_NEI_AC_IDS;
   for (int i = 0; i < CBF_MAX_NEIGHBORS; i++) {
@@ -156,6 +160,7 @@ void cbf_init(void)
      }
 
   cbf_ac_state.nei=cbf_control.n_neighborns;
+  cbf_control.last_transmision = get_sys_time_msec();
   #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF, send_cbf);
   //register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CBF_REC, send_cbf_rec);
@@ -211,7 +216,7 @@ static void cbf_low_level_getState(void)
 // Fill the i'th obstacle table with the info contained in the buffer  
 static void write_cbf_table(uint16_t i, uint8_t *buf) 
 {
- 
+  cbf_ac_state.nmes_rec++;
   if (i<CBF_MAX_NEIGHBORS){
   cbf_obs_tables[i].state.x = DL_CBF_STATE_x_enu(buf);
   cbf_obs_tables[i].state.y = DL_CBF_STATE_y_enu(buf);
@@ -231,6 +236,7 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
  void parseCBFTable(uint8_t *buf)
 {
   uint8_t ac_id = DL_CBF_REG_TABLE_ac_id(buf);
+  
   if (ac_id == AC_ID) {
       uint8_t nei_id = DL_CBF_REG_TABLE_nei_id(buf);
     
@@ -248,6 +254,7 @@ static void write_cbf_table(uint16_t i, uint8_t *buf)
               cbf_obs_tables[i].state.uref = DL_CBF_REG_TABLE_uref(buf);
               cbf_obs_tables[i].available = (uint8_t) 1;
               cbf_obs_tables[i].t_last_msg = get_sys_time_msec();
+              
               return;
            
         }
@@ -291,13 +298,16 @@ static void send_cbf_state_to_nei(void)
           msg.sender_id = AC_ID;
           msg.receiver_id = cbf_obs_tables[i].ac_id;
           msg.component_id = 0;
-          
+          cbf_ac_state.nmes_env++; // Increment the number of messages sent to neighbors
+
+          // Fill the message with the state of the AC          
           // The information sended is redundant
         pprzlink_msg_send_CBF_STATE(&msg, &cbf_ac_state.x, &cbf_ac_state.y, 
                                             &cbf_ac_state.vx, &cbf_ac_state.vy, 
                                             &cbf_ac_state.speed, &cbf_ac_state.course,
-                                            &cbf_ac_state.uref);
+                                            &cbf_ac_state.uref, &cbf_ac_state.nmes_env);
                                           }
+        // Uncomment the next line to print the state of the A
         //printf("x: %f, y: %f, vx: %f, vy: %f, speed: %f, course: %f, uref: %f\n",
         //       cbf_ac_state.x, cbf_ac_state.y, cbf_ac_state.vx, cbf_ac_state.vy,
         //       cbf_ac_state.speed, cbf_ac_state.course, cbf_ac_state.uref);
@@ -333,9 +343,14 @@ float b[CBF_MAX_NEIGHBORS];
 int j=0; 
 uint32_t now = get_sys_time_msec();
 // Get the current state of the AC
-
+if (cbf_control.last_transmision + cbf_control.broadcast_time < now) {
+  // If the last transmission was more than broadcast_time ago, send the state to the neighbors
+  cbf_control.last_transmision = now;
+  send_cbf_state_to_nei();
+  /*printf("Sending CBF_STATE to neighbors\n");
+  printf("cbf_control.last_transmision: %d, now: %d\n", cbf_control.last_transmision, now);*/
+}
  cbf_low_level_getState();
- send_cbf_state_to_nei();
  cbf_ac_state.xi_x=gvf_c_field.xi_x;
  cbf_ac_state.xi_y=gvf_c_field.xi_y;
 
