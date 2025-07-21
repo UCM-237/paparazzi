@@ -1,7 +1,7 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
-<!-- Este plan de vuelo es para hacer pruebas en Guajaraz a distancias cortas (para probar el control y el control estatico sobre todo) -->
+<!-- Este plan de vuelo es para la demo de Julio -->
 
-<flight_plan alt="660" ground_alt="650" lat0="39.7939538" lon0="-4.0814169" max_dist_from_home="1600" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="39.7939538" lon0="-4.0814169" max_dist_from_home="2400" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>
@@ -27,10 +27,10 @@
     <waypoint name="_S2" x="3" y="-4"/>
     <waypoint name="_S3" x="-3" y="-4"/>
     <waypoint name="_S4" x="-3" y="4"/>
-    <waypoint name="_N1" x="796.4" y="1254.9"/>
-    <waypoint name="_N2" x="796.4" y="-865.4"/>
-    <waypoint name="_N3" x="-908.7" y="-865.4"/>
-    <waypoint name="_N4" x="-908.7" y="1254.9"/>
+    <waypoint name="_N1" lat="39.8005160" lon="-4.0781900"/>
+    <waypoint name="_N2" lat="39.7783100" lon="-4.0778431"/>
+    <waypoint name="_N3" lat="39.7781189" lon="-4.0982450"/>
+    <waypoint name="_N4" lat="39.8003250" lon="-4.0985979"/>
     <waypoint lat="39.7944769" lon="-4.0818651" name="L0"/>
     <waypoint lat="39.7941489" lon="-4.0818719" name="L1"/>
     <waypoint lat="39.7945768" lon="-4.0824400" name="L2"/>

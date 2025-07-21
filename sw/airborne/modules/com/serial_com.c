@@ -409,6 +409,7 @@ void serial_event(void)
 	while(uart_char_available(&(SERIAL_DEV))){
 		uint8_t ch= uart_getch(&(SERIAL_DEV));
 	
+		serial_msg.msg_id = 0;	// Resetea el id del mensaje recibido
  		serial_parse(ch);		// Este lee del puerto serie	
 	
 		if (serial_msg.msg_available) {
@@ -660,27 +661,15 @@ void serial_ping()
 
 		// Subir --
 		if (gain2>0){
-			//if (serial_msg.depth <= MIN_DEPTH){
-			//	RESET_BUFFER(msg_buffer);
-			//	SET_BIT(msg_buffer, SONDA_CENTER);
-			//	serial_snd.error = 4; // Error de profundidad minima
-			//}
-			// else{
+			serial_snd.error = 4; // Indicador de que subiendo
 			CLEAR_BIT(msg_buffer, SONDA_CENTER);
 			SET_BIT(msg_buffer, SONDA_UP);
-			// }
 		}	
 		// Bajar --
 		else if (gain2<0){
-			//if (serial_msg.depth >= MAX_DEPTH){
-			//	RESET_BUFFER(msg_buffer);
-			//	SET_BIT(msg_buffer, SONDA_CENTER);
-			//	serial_snd.error = 3; // Error de profundidad maxima
-			//}
-			//else{
-				CLEAR_BIT(msg_buffer, SONDA_CENTER);
-				SET_BIT(msg_buffer, SONDA_DOWN);
-			//}
+			serial_snd.error = 4; // Indicador de que esta bajando
+			CLEAR_BIT(msg_buffer, SONDA_CENTER);
+			SET_BIT(msg_buffer, SONDA_DOWN);
 		}
 		// Quieto --
 		else{
@@ -725,6 +714,8 @@ void serial_ping()
 		
 		last_s = now_s;
 		CLEAR_BIT(msg_buffer, END_MESSAGE);	// Por si acaso
+		serial_snd.msg_id = 0; // Limpia el id del mensaje enviado
+
 		while (!CHECK_BIT(msg_buffer, END_MESSAGE)){
 	
 			if(CHECK_BIT(msg_buffer, TELEMETRY_SN)){
