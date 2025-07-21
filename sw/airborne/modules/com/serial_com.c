@@ -247,7 +247,7 @@ static void message_probe_parse(void){
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[7];
 	msgBytes[1]=serial_msg.msgData[6];
-	serial_msg.depth=serial_byteToint(msgBytes,2);//*300;	// Es un int (en mm)
+	serial_msg.depth=serial_byteToint(msgBytes,2);	// Es un int (en mm)
 
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[9];
@@ -267,7 +267,7 @@ static void message_OK_parse(void){
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[7];
 	msgBytes[1]=serial_msg.msgData[6];
-	serial_msg.depth=serial_byteToint(msgBytes,2)*300;	// Es un int (en mm)
+	serial_msg.depth=serial_byteToint(msgBytes,2);	// Es un int (en mm)
 
 	
 	if (serial_msg.error == 1){
