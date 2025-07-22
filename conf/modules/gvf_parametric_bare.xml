@@ -20,6 +20,12 @@ No Eigen is needed
           <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_bare_2d_bezier_par.kx" shortname="2d_bezier_kx" param="GVF_PARAMETRIC_BARE_2D_BEZIER_KX"/>
           <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_bare_2d_bezier_par.ky" shortname="2d_bezier_ky" param="GVF_PARAMETRIC_BARE_2D_BEZIER_KY"/>
         </dl_settings>   
+        <dl_settings NAME="2D_lines">
+          <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_bare_2d_lines_par.kx" shortname="2d_lines_kx" param="GVF_PARAMETRIC_BARE_2D_LINES_KX"/>
+          <dl_setting MAX="9.750" MIN="0.0" STEP="0.0005" VAR="gvf_parametric_bare_2d_lines_par.ky" shortname="2d_lines_ky" param="GVF_PARAMETRIC_BARE_2D_LINES_KY"/>
+          <dl_setting MAX="2.000" MIN="0.01" STEP="0.001"  VAR="gvf_parametric_bare_2d_lines_par.epsilon_x" shortname="2d_lines_epsilon_x" param="GVF_PARAMETRIC_BARE_2D_LINES_EPSILON_X"/>
+          <dl_setting MAX="2.000" MIN="0.01" STEP="0.001"  VAR="gvf_parametric_bare_2d_lines_par.epsilon_y" shortname="2d_lines_epsilon_y" param="GVF_PARAMETRIC_BARE_2D_LINES_EPSILON_Y"/>
+        </dl_settings> 
       </dl_settings>
     </dl_settings>
   </settings>
@@ -31,6 +37,7 @@ No Eigen is needed
    <header>
      <file name="gvf_parametric_bare.h"/>
      <file name="trajectories/gvf_parametric_bare_2d_bezier_splines.h"/> 
+     <file name="trajectories/gvf_parametric_bare_2d_lines.h"/>
    </header>
 
    <init fun = "gvf_parametric_bare_init()"/>
@@ -43,5 +50,6 @@ No Eigen is needed
    <makefile target="ap|nps" firmware="rover">
     <file name="gvf_parametric_bare.c"/>
     <file name="trajectories/gvf_parametric_bare_2d_bezier_splines.c"/>
+    <file name="trajectories/gvf_parametric_bare_2d_lines.c"/>
   </makefile>
 </module>

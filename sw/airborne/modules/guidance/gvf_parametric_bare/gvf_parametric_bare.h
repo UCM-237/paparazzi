@@ -76,6 +76,7 @@ extern gvf_parametric_bare_con gvf_parametric_bare_control;
 enum trajectories_parametric_bare {
   BEZIER_2D_BARE = 3,
   QUINTIC_BEZIER_2D_BARE = 4,
+  LINE_2D_BARE = 5,
   NONE_PARAMETRIC_BARE = 255,
 };
 
@@ -125,7 +126,7 @@ extern void gvf_parametric_bare_control_2D(float kx, float ky,
                                            float f1d, float f2d,
                                            float f1dd, float f2dd);
 
-/************ 2D THIRD ORDER BEZIER WITH C^2 CONTINUITY AT CONTROL POINTS ******/
+/************ 2D THIRD ORDER BEZIER WITH C^0 CONTINUITY AT CONTROL POINTS ******/
 /** @function bool gvf_parametric_bare_2D_bezier_wp
  *  @brief Function used to construct the third order Bézier curves and
  *  preparing the buffers to send them through telemetry.
@@ -160,5 +161,26 @@ extern bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t wp0);
  *  @returns true if successful, false otherwise
  */
 extern bool gvf_parametric_bare_2D_quintic_bezier_XY(void);
+
+
+/************************* 2D SMOOTHED LINES **********************************/
+
+// TODO: Change function comments
+/** @function bool gvf_parametric_bare_2D_quintic_bezier_wp
+ *  @brief Function used to construct the fifth order Bézier curves and
+ *  preparing the buffers to send them through telemetry.
+ *  @param wp0: First point defined in the flight plan of the Bézier Curve
+ *  @returns true if successful, false otherwise
+ */
+extern bool gvf_parametric_bare_2D_lines_wp(uint8_t wp0);
+
+/** @function bool gvf_parametric_bare_2D_quintic_bezier_XY
+ *  @brief Function used to obtain the curve and its derivatives evaluated, and
+ *  computes the control signal for the fifth order Bézier curves with C^2
+ *  continuity
+ *  @param None
+ *  @returns true if successful, false otherwise
+ */
+extern bool gvf_parametric_bare_2D_lines_XY(float *x_points, float *y_points);
 
 #endif // GVF_PARAMETRIC_H

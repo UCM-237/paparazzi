@@ -30,6 +30,7 @@
 
 #include "gvf_parametric_bare.h"
 #include "./trajectories/gvf_parametric_bare_2d_bezier_splines.h"
+#include "trajectories/gvf_parametric_bare_2d_lines.h"
 
 #include "autopilot.h"
 
@@ -373,3 +374,75 @@ bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t wp0)
   return true;
 }
 
+bool gvf_parametric_bare_2D_lines_XY(float *x_points, float *y_points)
+{
+  float fx, fy, fxd, fyd;
+  gvf_parametric_bare_trajectory.type = LINE_2D_BARE;
+
+  // Obtain information from the curve.
+  gvf_parametric_bare_2d_lines_info(GVF_PARAMETRIC_BARE_2D_LINES_N_SEG,
+                                    x_points, y_points, &fx, &fy, &fxd, &fyd);
+
+  // Compute control signal. TODO: Add second derivatives
+  gvf_parametric_bare_control_2D(gvf_parametric_bare_2d_bezier_par.kx, gvf_parametric_bare_2d_bezier_par.ky,
+                                 fx, fy, fxd, fyd, 0.0, 0.0);
+  return true;
+}
+
+bool gvf_parametric_bare_2D_lines_wp(uint8_t wp0)
+{
+
+  float x_points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1];
+  float y_points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1];
+
+  for(int k = 0; k < GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1; k++)
+  {
+    x_points[k] = WaypointX(wp0+k);
+    y_points[k] = WaypointY(wp0+k);
+  }
+
+  /* Send data piecewise. Some radio modules do not allow for a big data frame.*/
+  // MAX 4 SEGMENTS FOR XBEE
+
+  // Send x points -> Indicate x with sign (+) in the first parameter
+  if(gvf_parametric_bare_splines_ctr == 0)
+  {
+    gvf_parametric_bare_trajectory.p_parametric[0] = -GVF_PARAMETRIC_BARE_2D_LINES_N_SEG; // send x (negative value)
+    for(int k = 0; k < GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1; k++)
+    {
+      gvf_parametric_bare_trajectory.p_parametric[k+1] = x_points[k];
+    }
+  }
+  // Send y points -> Indicate y with sign (-) in the first parameter
+  else if (gvf_parametric_bare_splines_ctr == 1)
+  {
+    gvf_parametric_bare_trajectory.p_parametric[0]  = GVF_PARAMETRIC_BARE_2D_LINES_N_SEG; // send y (positive value)
+    for(int k = 0; k < GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1; k++)
+    {
+      gvf_parametric_bare_trajectory.p_parametric[k+1] = y_points[k];
+    }
+  }
+  // send kx, ky, beta and anything else needed
+  else
+  {
+    gvf_parametric_bare_trajectory.p_parametric[0] = 0.0;
+    gvf_parametric_bare_trajectory.p_parametric[1] = gvf_parametric_bare_2d_lines_par.kx;
+    gvf_parametric_bare_trajectory.p_parametric[2] = gvf_parametric_bare_2d_lines_par.ky;
+    gvf_parametric_bare_trajectory.p_parametric[3] = gvf_parametric_bare_2d_lines_par.epsilon_x;
+    gvf_parametric_bare_trajectory.p_parametric[4] = gvf_parametric_bare_2d_lines_par.epsilon_y;
+    gvf_parametric_bare_trajectory.p_parametric[5] = gvf_parametric_bare_control.beta;
+  }
+  gvf_parametric_bare_plen = 16;
+  gvf_parametric_bare_plen_wps = 1;
+
+  if(gvf_parametric_bare_control.w >= (float)GVF_PARAMETRIC_BARE_2D_LINES_N_SEG)
+  {
+    gvf_parametric_bare_control.w = 0;
+  }
+  else if(gvf_parametric_bare_control.w < 0)
+  {
+    gvf_parametric_bare_control.w = 0;
+  }
+  gvf_parametric_bare_2D_lines_XY(x_points, y_points);
+  return true;
+}
