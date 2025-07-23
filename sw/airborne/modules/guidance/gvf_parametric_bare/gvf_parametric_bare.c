@@ -384,7 +384,7 @@ bool gvf_parametric_bare_2D_lines_XY(float *x_points, float *y_points)
                                     x_points, y_points, &fx, &fy, &fxd, &fyd);
 
   // Compute control signal. TODO: Add second derivatives
-  gvf_parametric_bare_control_2D(gvf_parametric_bare_2d_bezier_par.kx, gvf_parametric_bare_2d_bezier_par.ky,
+  gvf_parametric_bare_control_2D(gvf_parametric_bare_2d_lines_par.kx, gvf_parametric_bare_2d_lines_par.ky,
                                  fx, fy, fxd, fyd, 0.0, 0.0);
   return true;
 }
@@ -392,6 +392,7 @@ bool gvf_parametric_bare_2D_lines_XY(float *x_points, float *y_points)
 bool gvf_parametric_bare_2D_lines_wp(uint8_t wp0)
 {
 
+  float max_epsilon;
   float x_points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1];
   float y_points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1];
 
@@ -435,7 +436,7 @@ bool gvf_parametric_bare_2D_lines_wp(uint8_t wp0)
   gvf_parametric_bare_plen = 16;
   gvf_parametric_bare_plen_wps = 1;
 
-  if(gvf_parametric_bare_control.w >= (float)GVF_PARAMETRIC_BARE_2D_LINES_N_SEG)
+  if(gvf_parametric_bare_control.w >= (float)(GVF_PARAMETRIC_BARE_2D_LINES_N_SEG))
   {
     gvf_parametric_bare_control.w = 0;
   }

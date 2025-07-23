@@ -46,10 +46,19 @@
  * due to the convolution's support. By increasing the parameter range
  * with a factor (e.g., FACTOR = 10), the effective resolution improves.
  * For example, with ε = 0.5 and FACTOR = 10, only 1/20 of the curve is cut.
+ *
+ * Do not forget to adjust the same FACTOR in the Ground Control Station!
+ * TODO: Send this value via parameter so the GCS does not need to be changed
  */
 #ifndef GVF_PARAMETRIC_BARE_2D_LINES_REPARAMETRIZATION_FACTOR
 #define GVF_PARAMETRIC_BARE_2D_LINES_REPARAMETRIZATION_FACTOR 1.0
 #endif
+
+// Integration constant ensures that \int_{\R}\phi = 1, where \phi is the mollifier.
+#define INTEGRATION_CONSTANT 0.44399
+
+// Points of integration used to compute the convolution
+#define NUM_POINTS_OF_INTEGRATION 100
 
 gvf_bare_par_2d_lines_par gvf_parametric_bare_2d_lines_par = {GVF_PARAMETRIC_BARE_2D_LINES_KX,
                                                               GVF_PARAMETRIC_BARE_2D_LINES_KY,
@@ -66,10 +75,23 @@ float gvf_parametric_bare_2d_lines_function(float *points, float lambda)
   fractional_part = modff(lambda_factor, &integer_part_float);
   integer_part = (int)(integer_part_float);
 
-  // If the convolution parameter falls below the valid range,repeat the first segment.
+  /*
+   * IT IS NECESSARY TO EXTEND THE DOMAIN OF THE FUNCTION.
+   *
+   * This extension is required to ensure the convolution of the trajectory
+   * is properly carried out. Each component of the trajectory
+   * is given by a function f : [0, N_SEG] → ℝ. When convolving with a mollifier
+   * whose support is [-ε, ε], the convolution requires evaluating f outside its
+   * original domain, specifically, over the extended interval [-ε, N_SEG + ε].
+   *
+   * For this reason, the trajectory must be defined beyond its original bounds.
+   * Values of the curve parameter below 0 and above N_SEG are handled by extending
+   * the line segment.
+   */
   if(lambda <= 1)
   {
-    return (1 - lambda_factor) * points[0] +  lambda_factor * points[1];
+    // If the convolution parameter falls below the valid range,repeat the first segment.
+    return (1 - fractional_part) * points[0] +  fractional_part * points[1];
   }
   else if(integer_part < GVF_PARAMETRIC_BARE_2D_LINES_N_SEG)
   {
@@ -77,15 +99,14 @@ float gvf_parametric_bare_2d_lines_function(float *points, float lambda)
   }
   else
   {
-    // If the convolution parameter is above the valid range,repeat the first segment.
-    return (1 - fractional_part) * points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG - 1] + fractional_part * points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG];
+    //If the convolution parameter is above the valid range,repeat the last segment to infinity
+    return ( (1 - (lambda_factor - GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1)) * points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG - 1] +
+           (lambda_factor - GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1) * points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG]);
   }
 }
 
 float gvf_parametric_bare_2d_lines_mollifier(float x, float epsilon)
 {
-  // TODO: Replace magic number
-  float integration_constant = 0.44399;
   float y = x / epsilon;
 
   if(fabsf(y) < 1)
@@ -95,7 +116,7 @@ float gvf_parametric_bare_2d_lines_mollifier(float x, float epsilon)
     {
       return 0.0;
     }
-    return 1 / (integration_constant * epsilon) * expf(-1 / (1-powf(y,2)));
+    return 1 / (INTEGRATION_CONSTANT * epsilon) * expf(-1 / (1-powf(y,2)));
   }
   return 0.0;
 }
@@ -116,9 +137,6 @@ float gvf_parametric_bare_2d_lines_simple_convolution(float lambda, float *point
                                                       int n_segments, float epsilon,
                                                       int order)
 {
-  // TODO: Replace magic number
-  int n_points_of_integration = 100;
-
   /*
    * NOTE: The subtraction of epsilon is due to the definition of the function.
    *
@@ -137,12 +155,12 @@ float gvf_parametric_bare_2d_lines_simple_convolution(float lambda, float *point
   float lower_integration_value = -epsilon;
   float upper_integration_value = epsilon;
 
-  float step_of_integration = (upper_integration_value - lower_integration_value) / n_points_of_integration;
+  float step_of_integration = (upper_integration_value - lower_integration_value) / NUM_POINTS_OF_INTEGRATION;
 
   float convolution_at_lambda = 0;
   float step = 0;
 
-  for(int k_iter = 0; k_iter < n_points_of_integration; k_iter++)
+  for(int k_iter = 0; k_iter < NUM_POINTS_OF_INTEGRATION; k_iter++)
   {
     step = k_iter * step_of_integration;
 
@@ -178,6 +196,7 @@ void gvf_parametric_bare_2d_lines_info(int n_segments, float *x_points, float *y
   *f1 = gvf_parametric_bare_2d_lines_simple_convolution(lambda, x_points,
                                                         n_segments, epsilon_x,
                                                         0);
+
   *f2 = gvf_parametric_bare_2d_lines_simple_convolution(lambda, y_points,
                                                         n_segments, epsilon_y,
                                                         0);
@@ -185,6 +204,7 @@ void gvf_parametric_bare_2d_lines_info(int n_segments, float *x_points, float *y
   *f1d = gvf_parametric_bare_2d_lines_simple_convolution(lambda, x_points,
                                                         n_segments, epsilon_x,
                                                         1);
+
   *f2d = gvf_parametric_bare_2d_lines_simple_convolution(lambda, y_points,
                                                         n_segments, epsilon_y,
                                                         1);
