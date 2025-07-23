@@ -165,20 +165,19 @@ extern bool gvf_parametric_bare_2D_quintic_bezier_XY(void);
 
 /************************* 2D SMOOTHED LINES **********************************/
 
-// TODO: Change function comments
-/** @function bool gvf_parametric_bare_2D_quintic_bezier_wp
- *  @brief Function used to construct the fifth order Bézier curves and
- *  preparing the buffers to send them through telemetry.
- *  @param wp0: First point defined in the flight plan of the Bézier Curve
+/** @function bool gvf_parametric_bare_2D_lines_wp
+ *  @brief Function used to obtain the points from the flight plan and
+ *         preparing the buffers to send them through telemetry.
+ *  @param wp0: First point defined in the flight plan of the trajectory
  *  @returns true if successful, false otherwise
  */
 extern bool gvf_parametric_bare_2D_lines_wp(uint8_t wp0);
 
-/** @function bool gvf_parametric_bare_2D_quintic_bezier_XY
- *  @brief Function used to obtain the curve and its derivatives evaluated, and
- *  computes the control signal for the fifth order Bézier curves with C^2
- *  continuity
- *  @param None
+/** @function bool gvf_parametric_bare_2D_lines_XY
+ *  @brief Function used to obtain the mollified curve and its derivatives
+ *  evaluated, and computes the control signal for the mollified trajectory.
+ *  @param x_points IN: Array with the x coordinate points of the trajectory
+ *  @param y_points IN: Array with the y coordinate points of the trajectory
  *  @returns true if successful, false otherwise
  */
 extern bool gvf_parametric_bare_2D_lines_XY(float *x_points, float *y_points);

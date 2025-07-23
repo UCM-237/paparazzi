@@ -22,14 +22,17 @@
 #include "modules/guidance/gvf_parametric_bare/gvf_parametric_bare.h"
 #include "modules/guidance/gvf_parametric_bare/trajectories/gvf_parametric_bare_2d_lines.h"
 
+// GVF perpendicular X component constant
 #ifndef GVF_PARAMETRIC_BARE_2D_LINES_KX
 #define GVF_PARAMETRIC_BARE_2D_LINES_KX 0.5
 #endif 
 
+// GVF perpendicular Y component constant
 #ifndef GVF_PARAMETRIC_BARE_2D_LINES_KY
 #define GVF_PARAMETRIC_BARE_2D_LINES_KY 0.5
 #endif 
 
+// Initial value of half length of the support of the mollifier [-\epsilon,\epsilon]
 #ifndef GVF_PARAMETRIC_BARE_2D_LINES_EPSILON
 #define GVF_PARAMETRIC_BARE_2D_LINES_EPSILON 0.5
 #endif
@@ -60,12 +63,12 @@
 // Points of integration used to compute the convolution
 #define NUM_POINTS_OF_INTEGRATION 100
 
+// Struct of parameters of the lines
 gvf_bare_par_2d_lines_par gvf_parametric_bare_2d_lines_par = {GVF_PARAMETRIC_BARE_2D_LINES_KX,
                                                               GVF_PARAMETRIC_BARE_2D_LINES_KY,
                                                               GVF_PARAMETRIC_BARE_2D_LINES_EPSILON,
                                                               GVF_PARAMETRIC_BARE_2D_LINES_EPSILON};
 
-// Just in one dimension
 float gvf_parametric_bare_2d_lines_function(float *points, float lambda)
 {
   float integer_part_float;
@@ -111,7 +114,7 @@ float gvf_parametric_bare_2d_lines_mollifier(float x, float epsilon)
 
   if(fabsf(y) < 1)
   {
-    // Avoid divisions by zero
+    // Avoid divisions by zero by comparing with MACHINE EPSILON
     if(fabsf(1-powf(y,2)) <= FLT_EPSILON)
     {
       return 0.0;
@@ -123,7 +126,7 @@ float gvf_parametric_bare_2d_lines_mollifier(float x, float epsilon)
 
 float gvf_parametric_bare_2d_lines_mollifier_derivative(float x, float epsilon)
 {
-  // Avoid division by zero
+  // Avoid division by zero by comparing with MACHINE EPSILON
   if(fabsf(powf(epsilon,2) - powf(x,2)) <= FLT_EPSILON)
   {
     return 0;
@@ -132,7 +135,6 @@ float gvf_parametric_bare_2d_lines_mollifier_derivative(float x, float epsilon)
   return gvf_parametric_bare_2d_lines_mollifier(x, epsilon) * fun_dot_f;
 }
 
-// Convolution in one dimension
 float gvf_parametric_bare_2d_lines_simple_convolution(float lambda, float *points,
                                                       int n_segments, float epsilon,
                                                       int order)
