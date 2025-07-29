@@ -68,6 +68,17 @@
    }
  }
  
+ static void send_num_wp_moved(struct transport_tx *trans, struct link_device *dev)
+{
+  
+  pprz_msg_send_NUM_WP_MOVED(trans, dev, AC_ID,
+                             &num_wp_moved,
+                             150,
+                             flag_stop);
+
+}
+
+ 
  #if GVF_OCAML_GCS
  static void send_circle_parametric(struct transport_tx *trans, struct link_device *dev)
  {
@@ -98,6 +109,7 @@
    gvf_parametric_bare_control.beta = GVF_PARAMETRIC_BARE_CONTROL_BETA;
  #if PERIODIC_TELEMETRY
    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GVF_PARAMETRIC, send_gvf_parametric_bare);
+   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NUM_WP_MOVED, send_num_wp_moved);
  #if GVF_OCAML_GCS
    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CIRCLE, send_circle_parametric);
  #endif // GVF_OCAML_GCS
@@ -225,12 +237,29 @@
    return true;
  }
  
+ int segmentos_trayectoria;
+ 
  bool gvf_parametric_bare_2D_bezier_wp(uint8_t wp0)
  {
- 
-   float x[3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-   float y[3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
-   for(int k = 0; k < 3 * GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1; k++){
+   int n_segmentos;
+   n_segmentos = (num_wp_moved-1)/3;
+   //printf("n_segmentos = %d", n_segmentos);
+   
+   
+   if (n_segmentos > GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG || n_segmentos < 0) {
+    segmentos_trayectoria = GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG;
+   }
+   else{
+    segmentos_trayectoria = n_segmentos;
+   }
+   
+   
+   float x[3*segmentos_trayectoria+1];
+   float y[3*segmentos_trayectoria+1];
+   
+  //printf("len x = %d", 3*segmentos_trayectoria+1);
+   
+   for(int k = 0; k < 3 * segmentos_trayectoria + 1; k++){
      x[k] = WaypointX(wp0+k);
      y[k] = WaypointY(wp0+k);
    }
@@ -241,14 +270,14 @@
    
    // Send x points -> Indicate x with sign (+) in the first parameter
    if(gvf_parametric_bare_splines_ctr == 0){
-     gvf_parametric_bare_trajectory.p_parametric[0] = -GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; // send x (negative value)
-     for(int k = 0; k < 3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1; k++)
+     gvf_parametric_bare_trajectory.p_parametric[0] = -segmentos_trayectoria; // send x (negative value)
+     for(int k = 0; k < 3*segmentos_trayectoria+1; k++)
        gvf_parametric_bare_trajectory.p_parametric[k+1] = x[k];
    }
    // Send y points -> Indicate y with sign (-) in the first parameter
    else if (gvf_parametric_bare_splines_ctr == 1){
-     gvf_parametric_bare_trajectory.p_parametric[0]  = GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; // send y (positive value)
-     for(int k = 0; k < 3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1; k++)
+     gvf_parametric_bare_trajectory.p_parametric[0] = segmentos_trayectoria; // send y (positive value)
+     for(int k = 0; k < 3*segmentos_trayectoria+1; k++)
        gvf_parametric_bare_trajectory.p_parametric[k+1] = y[k];
    }
    // send kx, ky, beta and anything else needed..
@@ -262,7 +291,7 @@
    gvf_parametric_bare_plen_wps = 1;
    
    // restart the spline
-   if(gvf_parametric_bare_control.w >= (float)GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG)
+   if(gvf_parametric_bare_control.w >= (float)segmentos_trayectoria)
      gvf_parametric_bare_control.w = 0;
    else if(gvf_parametric_bare_control.w < 0)
      gvf_parametric_bare_control.w = 0;
@@ -270,6 +299,51 @@
    return true;
  }
  
+ 
+//  bool gvf_parametric_bare_2D_bezier_wp(uint8_t wp0)
+//  {
+ 
+//    float x[3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+//    float y[3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1];
+//    for(int k = 0; k < 3 * GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1; k++){
+//      x[k] = WaypointX(wp0+k);
+//      y[k] = WaypointY(wp0+k);
+//    }
+   
+//    bare_create_bezier_spline(gvf_bezier_2D_bare, 3, x, y);
+   
+//    /* Send data piecewise. Some radio modules do not allow for a big data frame.*/
+   
+//    // Send x points -> Indicate x with sign (+) in the first parameter
+//    if(gvf_parametric_bare_splines_ctr == 0){
+//      gvf_parametric_bare_trajectory.p_parametric[0] = -GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; // send x (negative value)
+//      for(int k = 0; k < 3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1; k++)
+//        gvf_parametric_bare_trajectory.p_parametric[k+1] = x[k];
+//    }
+//    // Send y points -> Indicate y with sign (-) in the first parameter
+//    else if (gvf_parametric_bare_splines_ctr == 1){
+//      gvf_parametric_bare_trajectory.p_parametric[0]  = GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; // send y (positive value)
+//      for(int k = 0; k < 3*GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1; k++)
+//        gvf_parametric_bare_trajectory.p_parametric[k+1] = y[k];
+//    }
+//    // send kx, ky, beta and anything else needed..
+//    else{
+//      gvf_parametric_bare_trajectory.p_parametric[0] = 0.0; 
+//      gvf_parametric_bare_trajectory.p_parametric[1] = gvf_parametric_bare_2d_bezier_par.kx;
+//      gvf_parametric_bare_trajectory.p_parametric[2] = gvf_parametric_bare_2d_bezier_par.ky;
+//      gvf_parametric_bare_trajectory.p_parametric[3] = gvf_parametric_bare_control.beta;
+//    }
+//    gvf_parametric_bare_plen = 16;
+//    gvf_parametric_bare_plen_wps = 1;
+   
+//    // restart the spline
+//    if(gvf_parametric_bare_control.w >= (float)GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG)
+//      gvf_parametric_bare_control.w = 0;
+//    else if(gvf_parametric_bare_control.w < 0)
+//      gvf_parametric_bare_control.w = 0;
+//    gvf_parametric_bare_2D_bezier_XY();
+//    return true;
+//  }
  
  // 2D QUINTIC BEZIER CURVE
  bool gvf_parametric_bare_2D_quintic_bezier_XY(void)

@@ -135,6 +135,7 @@
  extern bool gvf_parametric_bare_3D_lissajous_wp_center(uint8_t, float, float, float, float, float, float, float, float,
      float, float, float);
  
- 
+ //N_SEGMENTOS
+ extern int segmentos_trayectoria;
  
  #endif // GVF_PARAMETRIC_H

@@ -61,8 +61,8 @@ void nps_electrical_run_step(double time __attribute__((unused)))
   // Calcular módulo de la velocidad
   double *commands = nps_autopilot.commands; //ESTO LO PASA A %
   // Simulación de consumo de batería
-  double consumo_right = (16.242643*pow(commands[COMMAND_MRIGHT],2) + 0.085211*commands[COMMAND_MRIGHT] - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
-  double consumo_left = (16.242643*pow(commands[COMMAND_MLEFT],2) + 0.085211*commands[COMMAND_MLEFT] - 1.491132)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
+  double consumo_right = (0.001743*pow(commands[COMMAND_MRIGHT],2) + 3.616078*commands[COMMAND_MRIGHT] - 0.663737)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
+  double consumo_left = (0.001743*pow(commands[COMMAND_MLEFT],2) + 3.616078*commands[COMMAND_MLEFT] - 0.663737)*fdm.init_dt/3600; //Amperaje en el instante de tiempo dt
   
   if (consumo_right < 0){
     consumo_right = 0.000000001;

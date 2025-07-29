@@ -62,24 +62,34 @@ static struct EnuCoor_d rover_acc;
 double calculo_motor_izq (double throttle_izq)
 {
   //printf("throttle izq = %f\n", throttle_izq);
-  double fuerza_motor_izq = (2.4277*pow(throttle_izq,3) + 0.4041*pow(throttle_izq,2) + 0.9662 * throttle_izq - 0.0004)*9.8/physical_params.mass;
-  //printf("fuerza_motor_izq = %f\n", fuerza_motor_izq);
+  double fuerza_motor_izq = (3.45447*pow(throttle_izq,2) + 0.341331*throttle_izq + 0.16475)*9.8/physical_params.mass;
+  printf("fuerza_motor_izq = %f\n", fuerza_motor_izq);
   if (throttle_izq == 0) 
   {
     fuerza_motor_izq = 0;
   }
+  if (throttle_izq < 0)
+  {
+    fuerza_motor_izq = fuerza_motor_izq * (-1);
+  }
+  //printf("fuerza_motor_izq = %f\n", fuerza_motor_izq);
   return fuerza_motor_izq;
 }
 
 double calculo_motor_dcho (double throttle_derecho)
 {
   //printf("throttle dcho = %f\n", throttle_derecho*9600);
-  double fuerza_motor_dcho = (2.4277*pow(throttle_derecho,3) + 0.4041*pow(throttle_derecho,2) + 0.9662 * throttle_derecho - 0.0004)*9.8/physical_params.mass;
+  double fuerza_motor_dcho = (3.45447*pow(throttle_derecho,2) + 0.341331*throttle_derecho + 0.16475)*9.8/physical_params.mass;
   //printf("fuerza_motor_dcho = %f\n", fuerza_motor_dcho);
   if (throttle_derecho == 0) 
   {
     fuerza_motor_dcho = 0;
   }
+  if(throttle_derecho < 0)
+  {
+    fuerza_motor_dcho = fuerza_motor_dcho*(-1);
+  }
+  //printf("fuerza_motor_dch = %f\n", fuerza_motor_dcho);
   return fuerza_motor_dcho;
 }
 
