@@ -63,7 +63,7 @@ double calculo_motor_izq (double throttle_izq)
 {
   //printf("throttle izq = %f\n", throttle_izq);
   double fuerza_motor_izq = (3.45447*pow(throttle_izq,2) + 0.341331*throttle_izq + 0.16475)*9.8/physical_params.mass;
-  printf("fuerza_motor_izq = %f\n", fuerza_motor_izq);
+  //printf("fuerza_motor_izq = %f\n", fuerza_motor_izq);
   if (throttle_izq == 0) 
   {
     fuerza_motor_izq = 0;
