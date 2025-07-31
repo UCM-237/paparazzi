@@ -1,7 +1,7 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 <!-- Este plan de vuelo es para la demo de Julio -->
 
-<flight_plan alt="660" ground_alt="650" lat0="39.7939538" lon0="-4.0814169" max_dist_from_home="2400" name="Rover Steering" security_height="0.3">
+<flight_plan alt="660" ground_alt="650" lat0="39.796413" lon0="-4.085499" max_dist_from_home="2400" name="Rover Steering" security_height="0.3">
   <header>
 
 </header>

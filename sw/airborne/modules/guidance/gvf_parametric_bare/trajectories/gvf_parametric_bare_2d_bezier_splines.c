@@ -42,7 +42,7 @@ void bare_create_bezier_spline(bare_bezier_t *bezier, int order, float *px, floa
 	
 	// C^0 continuity third order Bézier Curves
 	if(order == 3){
-	  for(k = 0; k < GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; k++)
+	  for(k = 0; k < segmentos_trayectoria; k++)
 	  {
 		  bezier[k].p0[0] = px[j];
 		  bezier[k].p0[1] = py[j];
@@ -70,7 +70,7 @@ void bare_create_bezier_spline(bare_bezier_t *bezier, int order, float *px, floa
 	  
 	  // Init the rest of segments
 	  j = 5;
-	  for(k = 1; k < GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; k++){
+	  for(k = 1; k < segmentos_trayectoria; k++){
 	    bezier[k].p0[0] = px[j];
 	    bezier[k].p0[1] = py[j];
 	    // p1 and p2 are fixed by continuity conditions
@@ -84,7 +84,7 @@ void bare_create_bezier_spline(bare_bezier_t *bezier, int order, float *px, floa
 	  }
 	  
 	  // Continuity conditions
-	  for(k = 1; k < GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG; k++){
+	  for(k = 1; k < segmentos_trayectoria; k++){
 	    bezier[k].p1[0] = 2*bezier[k-1].p5[0] - bezier[k-1].p4[0];
 	    bezier[k].p1[1] = 2*bezier[k-1].p5[1] - bezier[k-1].p4[1];
 	    bezier[k].p2[0] = 4*bezier[k-1].p5[0] - 4*bezier[k-1].p4[0] + bezier[k-1].p3[0];
