@@ -66,6 +66,7 @@ struct serial_send_t {
 
   uint8_t msg_length;
   uint8_t msg_id;
+  uint16_t send_interval;
 
   uint8_t msgData[SERIAL_MAX_PAYLOAD];
   uint8_t error_cnt;
@@ -108,6 +109,31 @@ struct serial_parse_t {
   int16_t button_state[BUTTONS];
 
 };
+
+
+// Para el Log local
+typedef struct {
+    int32_t lat;          // 4B  *1e7
+    int32_t lon;          // 4B  *1e7
+    uint16_t Ah;          // 2B  *100
+    uint16_t time_week;   // GPS week number
+    uint32_t time_tow;    // GPS time of week in ms
+    int32_t orient_raw;   // 2B  *100
+    uint8_t static_control; // 1B (0/1)
+    int32_t theta;        // 2B  *100
+    int16_t throttle_L;   // 2B
+    int16_t throttle_R;   // 2B
+    uint8_t utm_zone;     // 1B
+    int32_t x;            // 4B  *100
+    int32_t y;            // 4B  *100
+    int32_t u_raw;         // 1B  *100
+    int32_t v_raw;         // 1B  *100
+    int32_t du_raw;        // 1B  *100
+    int32_t dv_raw;        // 1B  *100
+} __attribute__((packed)) LogMessage;
+// Total: 40 Bytes
+
+
 
 extern struct serial_parse_t serial_msg;
 extern struct serial_send_t serial_snd;

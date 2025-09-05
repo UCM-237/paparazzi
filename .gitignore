@@ -209,3 +209,4 @@ tests/results/*
 
 .vscode
 .vscode/settings.json
+/track_points.txt

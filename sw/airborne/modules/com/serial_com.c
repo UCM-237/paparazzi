@@ -84,6 +84,7 @@ static uint8_t PPZ_SONDA_CENTER_BYTE = 0x43;	// "C"
 static uint8_t PPZ_SONDA_AUTO_BYTE = 0x41;	// "A"
 static uint8_t PPZ_SONDA_MANUAL_BYTE = 0x42;	// "B"
 static uint8_t PPZ_SONDA_TEST_BYTE = 0x45;	// "E"
+static uint8_t PPZ_LOG_BYTE = 0x4C; // "L"
 
 static uint32_t last_s = 0;  // timestamp in usec when last message was send
 uint16_t counter = 0;				 // for counting the number of messages sent
@@ -138,6 +139,7 @@ bool bloqued_probe = false;
 #define IMU_MESSAGE 6
 #define GPS_MESSAGE 7
 #define LIDAR_MESSAGE 8
+#define LOG_MESSAGE 13
 
 // Delay of each message (0 for not periodic message, >= 1 for periodic)
 #define TIME_TELEMETRY 12
@@ -145,6 +147,7 @@ bool bloqued_probe = false;
 #define TIME_IMU 10
 #define TIME_GPS 20
 #define TIME_LIDAR 0
+#define TIME_LOG 4
 
 
 //Messages received
@@ -198,11 +201,14 @@ void serial_init(void)
   serial_msg.error=0;
   serial_msg_setting = true;
 	serial_msg_test = false;
+	serial_snd.send_interval = SEND_INTERVAL;
 	serial_button_check = false;
 
 	malacate_state = INIT;
 	serial_msg.depth = 1.0*1000; // Evito que se bloquee al principio (quitar)
 	serial_snd.limit_depth = 1;
+
+
   
   last_s=get_sys_time_msec();
   #if PERIODIC_TELEMETRY
@@ -258,7 +264,7 @@ static void message_probe_parse(void){
 }
   
 
-// AQUI HARIA FALTA HACERLE SABER AL PLAN DE VUELO QUE PUEDE CONTINUAR
+// Este es el mensaje que llega de la sonda
 static void message_OK_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
@@ -538,6 +544,52 @@ void set_telemetry_message(uint8_t start_byte){
 
 }
 
+
+void set_log_message(uint8_t start_byte){
+
+    uint8_t j = start_byte;
+    memset(&serial_snd.msgData[j], 0, sizeof(LogMessage));
+
+    LogMessage log;
+
+    log.lat  = (int32_t)(gps.lla_pos.lat);	// *1e7
+    log.lon  = (int32_t)(gps.lla_pos.lon);	// *1e7
+    log.Ah   = (uint16_t)(electrical.charge * 100.0f);
+
+		// Time UNIX
+    log.time_week = gps.week;
+    log.time_tow  = gps.tow;
+
+		struct Int32Eulers *eulers;
+		eulers = stateGetNedToBodyEulers_i();
+    log.orient_raw = (int32_t)(eulers->psi);
+		log.theta = (int32_t)(eulers->psi); // Lo dejo asi hasta encontrar el que me hace falta
+
+    log.static_control = (uint8_t) gvf_c_stopwp.stay_still;
+
+    log.throttle_L = (int16_t) commands[COMMAND_MLEFT];
+    log.throttle_R = (int16_t) commands[COMMAND_MRIGHT];
+
+		struct UtmCoor_f *pos_state;
+		pos_state = stateGetPositionUtm_f(); // Cuanta posicion me hace falta (esta en float)?
+		log.x = (int32_t)(pos_state->north * 100.0f);  // Convert to cm
+		log.y = (int32_t)(pos_state->east  * 100.0f);  // Convert to cm
+		log.utm_zone = (uint8_t) (pos_state->zone);
+
+		struct NedCoor_i *speed_state;
+		speed_state = stateGetSpeedNed_i();
+    log.u_raw  = (int32_t)(speed_state->x);
+    log.v_raw  = (int32_t)(speed_state->y);
+
+		struct NedCoor_i *accel_state;
+		accel_state = stateGetAccelNed_i();
+		log.du_raw = (int32_t)(accel_state->x);	
+		log.dv_raw = (int32_t)(accel_state->y);
+
+    memcpy(&serial_snd.msgData[j], &log, sizeof(LogMessage));
+}
+
+
 // Mensajes de la sonda
 
 int16_t bound_depth(int16_t depth){
@@ -710,7 +762,7 @@ void serial_ping()
 	}
 	
 	
-	if (now_s > (last_s + SEND_INTERVAL)) {
+	if (now_s > (last_s + serial_snd.send_interval)) {
 		
 		last_s = now_s;
 		CLEAR_BIT(msg_buffer, END_MESSAGE);	// Por si acaso
@@ -773,7 +825,16 @@ void serial_ping()
 
 			}
 
-      // TODO: Comprobar si existe el Lidar (sino da fallo)
+			else if(CHECK_BIT(msg_buffer, LOG_MESSAGE)){
+				serial_snd.msg_length = sizeof(LogMessage) + 4 + 2; // Header + msg + checksum
+				msg_byte = set_header(PPZ_LOG_BYTE);
+				set_log_message(msg_byte);
+
+				send_full_message(serial_snd.msg_length);
+				CLEAR_BIT(msg_buffer, LOG_MESSAGE);
+			}
+				
+      // TODO: Comprobar si existe el Lidar (sino da fallo, borrado por simplicidad)
 
 
 			// Mensajes de la sonda
@@ -871,7 +932,8 @@ void serial_ping()
 
 		RESET_BUFFER(msg_buffer);
 
-		// Set the messages to sent in the next iteration (Disable on the boat)
+		// Set the messages to sent in the next iteration
+		SET_BIT_IF(counter, TIME_LOG, msg_buffer, LOG_MESSAGE);
 		// SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
 		// SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
 		// SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);

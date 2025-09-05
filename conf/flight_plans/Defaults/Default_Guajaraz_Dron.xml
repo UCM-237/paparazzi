@@ -62,11 +62,7 @@
     <waypoint name="L47" x="956.2" y="770.4"/>
     <waypoint name="L48" x="956.2" y="770.4"/>
     <waypoint name="L49" x="956.2" y="770.4"/>
-<<<<<<< HEAD
-    <waypoint name="L50" x="956.2" y="770.4"/>
-=======
     <waypoint name="L50" x="956.2" y="770.4"/>   
->>>>>>> boat_armando
     <waypoint name="CLIMB" x="-4.9" y="-3.4"/>
   </waypoints>
   <sectors>
@@ -97,11 +93,7 @@
     <block group="init_control" name="Takeoff" strip_button="Takeoff" strip_icon="launch.png">
       <exception cond="GetPosHeight() @GT 2.0" deroute="Standby"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
-<<<<<<< HEAD
-      <stay climb="nav.climb_vspeed" vmode="climb" wp="CLIMB"/>
-=======
       <stay vmode="climb" climb="nav.climb_vspeed" wp="CLIMB"/>
->>>>>>> boat_armando
     </block>
     <block group="waypoint_control_col1" name="Standby" strip_button="Standby" strip_icon="standby.png">
       <stay wp="STDBY"/>
@@ -160,17 +152,10 @@
       <go approaching_time="0" from="L47" hmode="route" wp="L48"/>
       <go approaching_time="0" from="L48" hmode="route" wp="L49"/>
       <go approaching_time="0" from="L49" hmode="route" wp="L50"/>
-<<<<<<< HEAD
-      <deroute block="stay_L50"/>
-    </block>
-    <block name="landed">
-      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
-=======
       <deroute block="stay_L50"/>      
     </block>
     <block name="landed">
       <attitude pitch="0" roll="0" throttle="0" vmode="throttle" until="FALSE"/>
->>>>>>> boat_armando
     </block>
   </blocks>
 </flight_plan>
