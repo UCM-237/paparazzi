@@ -357,7 +357,13 @@
  
  bool gvf_parametric_bare_2D_quintic_bezier_wp(uint8_t wp0)
  {
- 
+
+   // Creo que hay un conflicto entre dos versiones aqui
+   // La normal usa segmentos_trayectoria, la Quintic usa GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG
+   // Pero bare_create_bezier_spline es comun a las dos, por eso quintic esta fallando
+   // Como solucion temporal hago esto:
+  //  segmentos_trayectoria = GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG;
+
    float x[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
    float y[3*(GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG+1)];
    for(int k = 0; k < 3 * (GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG + 1); k++){
