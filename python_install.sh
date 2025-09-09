@@ -25,7 +25,7 @@ packages=(
   pymoo
   numpy==1.24.4
   pandas
-  matplotlib
+  matplotlib==3.5.1
   scikit-learn
   lxml
   myproj
