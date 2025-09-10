@@ -78,6 +78,8 @@ void nps_electrical_run_step(double time __attribute__((unused)))
   bat_status = 100*(1-consumo_acum/Ah_0);
   
   electrical.vsupply = bat_status;
+  electrical.charge = consumo_acum; // Ah
+  electrical.energy += consumo * electrical.vsupply; //Wh
 
   batery += consumo;  // Restar el consumo de batería (asumiendo que es descarga)
   // Imprimir para depuración
