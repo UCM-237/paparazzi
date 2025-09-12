@@ -98,7 +98,6 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_quintic_bezier_bare">
-      <!-- <go wp="BZ0"/> -->
       <set var="gvf_c_stopwp.stay_still" value="0"/>
       <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
       <exception cond="dist_quintic(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_control"/>
