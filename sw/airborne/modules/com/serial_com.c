@@ -778,10 +778,10 @@ void serial_ping()
 	default:
 		break;
 	}
-	
-	
-	if (now_s > (last_s + serial_snd.send_interval)) {
-		
+
+
+	if ((now_s > (last_s + serial_snd.send_interval)) && (serial_msg_setting == true)) {
+
 		last_s = now_s;
 		CLEAR_BIT(msg_buffer, END_MESSAGE);	// Por si acaso
 		serial_snd.msg_id = 0; // Limpia el id del mensaje enviado
