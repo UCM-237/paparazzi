@@ -33,6 +33,8 @@
 #include "generated/airframe.h"
 #include "modules/energy/electrical.h"
 
+#define FIXED_CONSUMPTION 6.6e-4 //Consumo fijo en A (sensores, electrónica, etc)
+
 struct NpsElectrical nps_electrical;
 //struct NpsFdm fdm;
 
@@ -72,7 +74,7 @@ void nps_electrical_run_step(double time __attribute__((unused)))
     consumo_left = 0.000000001;
   }
   
-  double consumo = consumo_right + consumo_left;
+  double consumo = consumo_right + consumo_left + FIXED_CONSUMPTION*fdm.init_dt/3600;
   
   consumo_acum += consumo;
   bat_status = 100*(1-consumo_acum/Ah_0);

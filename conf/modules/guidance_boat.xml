@@ -24,8 +24,8 @@
         </dl_settings>
         <dl_settings NAME="Static control">
         	<dl_setting MAX="1" MIN="0" STEP="1" VAR="guidance_control.use_dynamic_pos" shortname="use_dynamic_positioning"/>
-       		<dl_setting MAX="9600.0" MIN="-9600.0" STEP="1" VAR="guidance_control.kf_bearing_static" shortname="kf static"/>
-          <dl_setting MAX="9600.0" MIN="-9600.0" STEP="1" VAR="guidance_control.kf_speed_static" shortname="kf static"/>
+       		<dl_setting MAX="9600.0" MIN="-9600.0" STEP="1" VAR="guidance_control.kf_bearing_static" shortname="kf bearing"/>
+          <dl_setting MAX="9600.0" MIN="-9600.0" STEP="1" VAR="guidance_control.kf_speed_static" shortname="kf speed"/>
           <dl_setting MAX="3" MIN="0" STEP="1" VAR="gvf_c_stopwp.next_wp" shortname="bz pointer"/>
        	</dl_settings>
       </dl_settings>

@@ -166,8 +166,10 @@ extern bool gvf_sin_wp_alpha(uint8_t wp, float alpha, float w, float off,
 extern bool dist_bool(float x_, float y_, uint8_t wp0);
 extern float dist(float x_, float y_, uint8_t wp0);
 extern float dist_quintic(float x_, float y_, uint8_t wp0);
+extern float dist_ptp(float x_, float y_, uint8_t wp0);
 extern bool increase_bz_pointer(void);
 extern bool increase_bz_pointer_malacate(void);
+extern bool increase_pointer_ptp(void);
 
 #endif // GVF_H
 

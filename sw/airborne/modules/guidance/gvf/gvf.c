@@ -604,29 +604,30 @@ bool gvf_lines_array_wp_v3(uint8_t wp0, float d1, float d2)
 		gvf_lines_array[k].p2y = y[k+1];
 	}
 
-	struct EnuCoor_f *p = stateGetPositionEnu_f();
- 	float px = p->x;
-	float py = p->y;
-	float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
+	// struct EnuCoor_f *p = stateGetPositionEnu_f();
+ 	// float px = p->x;
+	// float py = p->y;
+	// float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
 	
-	if((dist <= gvf_c_stopwp.distance_stop)){
-		if(!gvf_c_stopwp.stop_at_wp){
-			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
-			}		
-		if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-			gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
-			gvf_c_stopwp.stay_still = 1;
-			}
-		}
-  	float x1 = gvf_lines_array[gvf_control.which_line].p1x;
-   	float y1 = gvf_lines_array[gvf_control.which_line].p1y;
-   	float x2 = gvf_lines_array[gvf_control.which_line].p2x;
-    float y2 = gvf_lines_array[gvf_control.which_line].p2y;
-    gvf_trajectory.p[3] = x2;
-    gvf_trajectory.p[4] = y2;
-    gvf_trajectory.p[5] = 0;
-    gvf_plen_wps = 3;
-    return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
+	// if((dist <= gvf_c_stopwp.distance_stop)){
+	// 	if(!gvf_c_stopwp.stop_at_wp){
+	// 		gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
+	// 		}		
+	// 	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+	// 		gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
+	// 		gvf_c_stopwp.stay_still = 1;
+	// 		}
+	// 	}
+
+  float x1 = gvf_lines_array[gvf_control.which_line].p1x;
+  float y1 = gvf_lines_array[gvf_control.which_line].p1y;
+  float x2 = gvf_lines_array[gvf_control.which_line].p2x;
+  float y2 = gvf_lines_array[gvf_control.which_line].p2y;
+  gvf_trajectory.p[3] = x2;
+  gvf_trajectory.p[4] = y2;
+  gvf_trajectory.p[5] = 0;
+  gvf_plen_wps = 3;
+  return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
     
 }
 
@@ -863,6 +864,34 @@ float dist_quintic(float x_, float y_, uint8_t wp0){
 }
 
 
+// New function for Point-to-Point
+// Waypoints are considered consecutive: WP_L0, WP_L1, WP_L2,
+float dist_ptp(float x_, float y_, uint8_t wp0) {
+    float x_target = WaypointX(wp0 + gvf_c_stopwp.next_wp);
+    float y_target = WaypointY(wp0 + gvf_c_stopwp.next_wp);
+    
+    float px = x_;
+    float py = y_;
+    float dist = sqrtf(powf(px - x_target, 2) + powf(py - y_target, 2));
+
+    dist_WP = dist;
+    gvf_c_stopwp.pxd = x_target; 
+    gvf_c_stopwp.pyd = y_target;
+
+    // if((dist <= gvf_c_stopwp.distance_stop)){	
+    //   if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
+    //     gvf_c_stopwp.stay_still = 1;
+    //   }
+    // } 
+
+    if (dist > 1000) {
+        dist = 1000; // Cap the distance to avoid overflow
+    }
+    
+    return dist;
+}
+
+
 bool increase_bz_pointer(void){
   gvf_c_stopwp.next_wp++;
   if (gvf_c_stopwp.next_wp>3) 
@@ -870,14 +899,44 @@ bool increase_bz_pointer(void){
   return false;
 }
 
-#ifdef SERIAL_COM_H
-// Same, but send the signal to the Raspberry
+
 bool increase_bz_pointer_malacate(void){
+  #ifdef SERIAL_COM_H
   send_measure_msg();
+  #endif
   return increase_bz_pointer();
 }
-#else
-bool increase_bz_pointer_malacate(void){
-  return increase_bz_pointer();
+
+
+bool increase_pointer_ptp() {
+
+  // Update static pointer
+  uint8_t current_wp = gvf_c_stopwp.next_wp;
+  gvf_c_stopwp.next_wp++;
+
+  // Update line array pointer
+  gvf_control.which_line = (gvf_c_stopwp.next_wp - 1 < 0) ? 0 : gvf_c_stopwp.next_wp - 1;
+
+  // For Point-to-Point, the maximum number of waypoints comes from num_wp_moved
+  if (gvf_c_stopwp.next_wp >= num_wp_moved) {
+      gvf_c_stopwp.next_wp = 0;  // Go back to the beginning
+      gvf_control.which_line = 0;
+  }
+
+  printf("Proximo punto de parada: %d\n", gvf_c_stopwp.next_wp);
+  printf("Proximo punto del array: %d\n", gvf_control.which_line);
+
+  // flag_stop[gvf_c_stopwp.next_wp] = 0 si es de parada, 1 si es de paso
+  if(flag_stop[current_wp] == 1) {
+      printf("Pasando waypoint de paso %d\n", current_wp);
+      serial_response = 1; // Bypass malacate
+      return false; // Do nothing if it's a pass-through waypoint
+  }
+  
+  #ifdef SERIAL_COM_H
+  send_measure_msg();  // Send the signal to the Raspberry
+  #endif
+
+  
+  return false;
 }
-#endif
