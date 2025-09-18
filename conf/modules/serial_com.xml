@@ -14,7 +14,7 @@
   <settings>
     <dl_settings>
       <dl_settings NAME="SR_Com">
-        <dl_setting MAX="20" MIN="0" STEP="1" VAR="serial_snd.depth" shortname="depth"/>
+        <dl_setting MAX="20000" MIN="0" STEP="500" VAR="serial_snd.depth" shortname="depth (mm)"/>
         <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_snd.limit_depth" shortname="depth_limit" values="FALSE|TRUE"/>
         <dl_setting MAX="2000" MIN="100" STEP="100" VAR="serial_snd.send_interval" shortname="send_interval"/>
         <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_setting" shortname="stream" values="FALSE|TRUE"/>

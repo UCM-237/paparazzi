@@ -206,8 +206,10 @@ void serial_init(void)
 	serial_button_check = false;
 
 	malacate_state = INIT;
-	serial_msg.depth = 1.0*1000; // Evito que se bloquee al principio (quitar)
-	serial_snd.limit_depth = 1;
+	serial_msg.depth = 0.0*1000;
+	serial_snd.time = 0.0;
+	serial_snd.limit_depth = true;
+	serial_snd.depth = 4*1000;
 
 	profile = 0;
 	profile_counter = 0;
@@ -248,6 +250,7 @@ static void parse_MOVE_WP(void)
 
 
 // Aqui se procesaban los mensajes (se esta usando para la profundidad)
+// UNUSED
 static void message_probe_parse(void){
 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
 	serial_msg.time = serial_byteToint(msgBytes,2);
@@ -293,8 +296,8 @@ void serial_read_message(void){
 	// Checksum
 	uint8_t chksBytes[2];
 	if (serial_msg.msg_id == SR_OK){
-		chksBytes[0]=serial_msg.msgData[5];
-		chksBytes[1]=serial_msg.msgData[4];
+		chksBytes[0]=serial_msg.msgData[9];
+		chksBytes[1]=serial_msg.msgData[8];
 	}
 	else{
 		chksBytes[0]=serial_msg.msgData[2+serial_msg.payload_len+1];
@@ -417,7 +420,7 @@ void serial_event(void)
 	while(uart_char_available(&(SERIAL_DEV))){
 		uint8_t ch= uart_getch(&(SERIAL_DEV));
 	
-		serial_msg.msg_id = 0;	// Resetea el id del mensaje recibido
+		// serial_msg.msg_id = 0;	// Resetea el id del mensaje recibido
  		serial_parse(ch);		// Este lee del puerto serie	
 	
 		if (serial_msg.msg_available) {
@@ -439,7 +442,7 @@ uint8_t set_header(uint8_t type) {
     memset(serial_snd.msgData, 0, serial_snd.msg_length);
     serial_snd.msgData[0] = PPZ_START_BYTE;
     serial_snd.msgData[1] = type;
-    uint16_t time=sys_time.nb_sec;
+    uint16_t time=sys_time.nb_sec;	// Useless (just 65 seconds)
 				
 		ito2h(time, msg_time);
 		serial_snd.msgData[2]=msg_time[0];
@@ -554,9 +557,14 @@ void set_log_message(uint8_t start_byte){
 
     LogMessage log;
 
+		
+		log.time_s = (uint32_t)(get_sys_time_msec()); // milliseconds since start
+
     log.lat  = (int32_t)(gps.lla_pos.lat);	// *1e7
     log.lon  = (int32_t)(gps.lla_pos.lon);	// *1e7
     log.Ah   = (uint16_t)(electrical.charge * 100.0f);
+
+		log.profile = profile;
 
 		// Time UNIX
     log.time_week = gps.week;
@@ -569,11 +577,11 @@ void set_log_message(uint8_t start_byte){
 
     log.static_control = (uint8_t) gvf_c_stopwp.stay_still;
 
-    log.throttle_L = (int16_t) commands[COMMAND_MLEFT];
-    log.throttle_R = (int16_t) commands[COMMAND_MRIGHT];
+    log.throttle_L = (int16_t) guidance_control.command[0];
+    log.throttle_R = (int16_t) guidance_control.command[1];
 
 		struct UtmCoor_f *pos_state;
-		pos_state = stateGetPositionUtm_f(); // Cuanta posicion me hace falta (esta en float)?
+		pos_state = stateGetPositionUtm_f();
 		log.x = (int32_t)(pos_state->north * 100.0f);  // Convert to cm
 		log.y = (int32_t)(pos_state->east  * 100.0f);  // Convert to cm
 		log.utm_zone = (uint8_t) (pos_state->zone);
@@ -594,8 +602,11 @@ void set_log_message(uint8_t start_byte){
 
 // Mensajes de la sonda
 
-int16_t bound_depth(int16_t depth){
-  return (depth < (int16_t)(br_sonar.distance - 0.5)) ? depth : (int16_t)(br_sonar.distance - 0.5);
+
+// Asegurar que no nos pasamos del sonar (con margen de seguridad)
+uint16_t bound_depth(uint16_t depth){
+  uint16_t max_safe_depth = (br_sonar.distance > 500) ? (br_sonar.distance - 500) : 0;
+  return (depth < max_safe_depth) ? depth : max_safe_depth;
 }
 
 
@@ -615,10 +626,10 @@ void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
 		depth = bound_depth(depth);
 
 	serial_snd.msgData[start_byte] = probe_error;
-	if((serial_snd.msg_id == PPZ_MEASURE_BYTE) || (serial_snd.msg_id == PPZ_SONDA_TEST_BYTE)){
-		serial_snd.depth = depth;
-		serial_snd.time = time;
-	}
+	// if((serial_snd.msg_id == PPZ_MEASURE_BYTE) || (serial_snd.msg_id == PPZ_SONDA_TEST_BYTE)){
+	// 	serial_snd.depth = depth;
+	// 	serial_snd.time = time;
+	// }
 	
 	uint8_t msg_data[3] = {0,0,0};
 
@@ -633,6 +644,18 @@ void set_probe_message(uint8_t start_byte, int16_t depth, uint16_t time){
 	serial_snd.msgData[start_byte+5] = msg_data[2];
 	memset(msg_data,0,3);
 	
+}
+
+void reset_probe_buffer(){
+	CLEAR_BIT(msg_buffer, SONDA_UP);
+	CLEAR_BIT(msg_buffer, SONDA_DOWN);
+	CLEAR_BIT(msg_buffer, SONDA_CENTER);
+	CLEAR_BIT(msg_buffer, SONDA_AUTO);
+	CLEAR_BIT(msg_buffer, SONDA_MANUAL);
+	CLEAR_BIT(msg_buffer, SONDA_TEST);
+	CLEAR_BIT(msg_buffer, SONDA_RQ);
+	CLEAR_BIT(msg_buffer, MEASURE_SN);
+	CLEAR_BIT(msg_buffer, BLOCKED);
 }
 
 
@@ -690,7 +713,7 @@ void serial_ping()
 	switch (malacate_state)
 	{
 	case INIT:
-		RESET_BUFFER(msg_buffer);
+		reset_probe_buffer();
 		malacate_state = CHECK;
 		break;
 	
@@ -699,7 +722,7 @@ void serial_ping()
 		serial_snd.error = 2;
 		check_status = true;
 		profile = 0;
-		RESET_BUFFER(msg_buffer);
+		reset_probe_buffer();
 		SET_BIT(msg_buffer, SONDA_CENTER);
 		if((radio_control_get(7)>0) && (radio_control_get(RADIO_GAIN2)==0)){
 			if (serial_msg.error == 0){
@@ -740,7 +763,7 @@ void serial_ping()
 		}
 		// Quieto --
 		else{
-			RESET_BUFFER(msg_buffer);
+			reset_probe_buffer();
 			SET_BIT(msg_buffer, SONDA_CENTER);
 			profile = 0;
 		}
@@ -950,12 +973,17 @@ void serial_ping()
 
 		RESET_BUFFER(msg_buffer);
 
-		// Set the messages to sent in the next iteration
-		SET_BIT_IF(counter, TIME_LOG, msg_buffer, LOG_MESSAGE);
+		// Set the messages to sent in the next iteration		
 		// SET_BIT_IF(counter, TIME_TELEMETRY, msg_buffer, TELEMETRY_SN);
 		// SET_BIT_IF(counter, TIME_IMU, msg_buffer, IMU_MESSAGE);
 		// SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
 		// SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);	// Disable on the boat
+
+		// Solo mando el mensaje de Log si hay gps
+		if (gps.fix >= GPS_FIX_2D) {
+			SET_BIT_IF(counter, TIME_LOG, msg_buffer, LOG_MESSAGE);
+		}
+
 
 		counter = (counter >= 255) ? 0 : counter + 1;
 

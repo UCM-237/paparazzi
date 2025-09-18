@@ -45,7 +45,8 @@ extern const uint8_t checksumLength;
 
 
 /* Parser msg struct */
-#define SERIAL_MAX_PAYLOAD 26
+#define LOG_LENGTH 57+8 // Bytes of the log message + security
+#define SERIAL_MAX_PAYLOAD LOG_LENGTH
 #define SERIAL_MAX_MSG 17
 #define BUTTONS 3 // Numero de botones usados del mando
 
@@ -81,7 +82,7 @@ struct serial_send_t {
   
   uint16_t ck;
   uint16_t time;
-  int16_t depth;
+  uint16_t depth;
   bool limit_depth;
 
 };
@@ -113,9 +114,11 @@ struct serial_parse_t {
 
 // Para el Log local
 typedef struct {
+    uint32_t time_s;       // 4B  milliseconds since start
     int32_t lat;          // 4B  *1e7
     int32_t lon;          // 4B  *1e7
     uint16_t Ah;          // 2B  *100
+    uint8_t profile;      // 1B
     uint16_t time_week;   // GPS week number
     uint32_t time_tow;    // GPS time of week in ms
     int32_t orient_raw;   // 2B  *100
@@ -126,17 +129,18 @@ typedef struct {
     uint8_t utm_zone;     // 1B
     int32_t x;            // 4B  *100
     int32_t y;            // 4B  *100
-    int32_t u_raw;         // 1B  *100
-    int32_t v_raw;         // 1B  *100
-    int32_t du_raw;        // 1B  *100
-    int32_t dv_raw;        // 1B  *100
+    int32_t u_raw;         // 4B  *100
+    int32_t v_raw;         // 4B  *100
+    int32_t du_raw;        // 4B  *100
+    int32_t dv_raw;        // 4B  *100
 } __attribute__((packed)) LogMessage;
-// Total: 40 Bytes
+// Total: 57 Bytes  --> Ver log_length mas arriba
 
 
 
 extern struct serial_parse_t serial_msg;
 extern struct serial_send_t serial_snd;
+// extern uint16_t depth_setting;
 
 extern uint8_t malacate_state;
 
