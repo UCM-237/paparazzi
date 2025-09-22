@@ -575,49 +575,39 @@ bool gvf_lines_array_wp_v2(uint8_t wp0, uint8_t wp1, uint8_t wp2, uint8_t wp3, u
 
 bool gvf_lines_array_wp_v3(uint8_t wp0, float d1, float d2)
 {
+  // Create the points
+  gvf_trajectory.type = LINE_ARRAY;
 
-	// Create the points
-	gvf_trajectory.type = LINE_ARRAY;
-	
-	if (num_wp_moved != 0 ){
-	  num_pnts = num_wp_moved;
-	  //printf("num_wp_moved= %d\n", num_pnts);
-	}
-	else{
-	  num_pnts = GVF_N_LINES;
-	  //printf("GVF_N_LINES= %d\n", num_pnts);
-	}
+  if (num_wp_moved != 0 ){
+    num_pnts = num_wp_moved;
+  }
+  else{
+    num_pnts = GVF_N_LINES;
+  }
 
-	float x[GVF_N_LINES];
-	float y[GVF_N_LINES];
-	
-	for(int k = 0; k < num_pnts; k++){
-	  x[k] = WaypointX(wp0+k);
-	  y[k] = WaypointY(wp0+k);
-	}
-	//printf("num_pnts = %d", num_pnts);
-	for(int k = 0; k < num_pnts-1; k++)
-	{
-		gvf_lines_array[k].p1x = x[k];
-		gvf_lines_array[k].p1y = y[k];
-		gvf_lines_array[k].p2x = x[k+1];
-		gvf_lines_array[k].p2y = y[k+1];
-	}
+  // One extra point for the vehicle position at the start
+  float x[GVF_N_LINES + 1];
+  float y[GVF_N_LINES + 1];
 
-	// struct EnuCoor_f *p = stateGetPositionEnu_f();
- 	// float px = p->x;
-	// float py = p->y;
-	// float dist = sqrtf( powf(px-gvf_lines_array[gvf_control.which_line].p2x,2) + powf(py-gvf_lines_array[gvf_control.which_line].p2y,2));
-	
-	// if((dist <= gvf_c_stopwp.distance_stop)){
-	// 	if(!gvf_c_stopwp.stop_at_wp){
-	// 		gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
-	// 		}		
-	// 	if(gvf_c_stopwp.stop_at_wp && !gvf_c_stopwp.stay_still){
-	// 		gvf_control.which_line = (gvf_control.which_line + 1) % num_pnts;
-	// 		gvf_c_stopwp.stay_still = 1;
-	// 		}
-	// 	}
+  // Get current vehicle position
+  struct EnuCoor_f *p = stateGetPositionEnu_f();
+  x[0] = p->x;
+  y[0] = p->y;
+
+  // Fill the rest with waypoints
+  for(int k = 0; k < num_pnts; k++){
+    x[k+1] = WaypointX(wp0+k);
+    y[k+1] = WaypointY(wp0+k);
+  }
+
+  // Build the line segments
+  for(int k = 0; k < num_pnts; k++)
+  {
+    gvf_lines_array[k].p1x = x[k];
+    gvf_lines_array[k].p1y = y[k];
+    gvf_lines_array[k].p2x = x[k+1];
+    gvf_lines_array[k].p2y = y[k+1];
+  }
 
   float x1 = gvf_lines_array[gvf_control.which_line].p1x;
   float y1 = gvf_lines_array[gvf_control.which_line].p1y;
@@ -628,7 +618,6 @@ bool gvf_lines_array_wp_v3(uint8_t wp0, float d1, float d2)
   gvf_trajectory.p[5] = 0;
   gvf_plen_wps = 3;
   return gvf_segment_loop_XY1_XY2(x1, y1, x2, y2, d1, d2);
-    
 }
 
 // ELLIPSE
@@ -915,7 +904,8 @@ bool increase_pointer_ptp() {
   gvf_c_stopwp.next_wp++;
 
   // Update line array pointer
-  gvf_control.which_line = (gvf_c_stopwp.next_wp - 1 < 0) ? 0 : gvf_c_stopwp.next_wp - 1;
+  // gvf_control.which_line = (gvf_c_stopwp.next_wp - 1 < 0) ? 0 : gvf_c_stopwp.next_wp - 1;
+  gvf_control.which_line = gvf_c_stopwp.next_wp;
 
   // For Point-to-Point, the maximum number of waypoints comes from num_wp_moved
   if (gvf_c_stopwp.next_wp >= num_wp_moved) {
@@ -927,9 +917,14 @@ bool increase_pointer_ptp() {
   printf("Proximo punto del array: %d\n", gvf_control.which_line);
 
   // flag_stop[gvf_c_stopwp.next_wp] = 0 si es de parada, 1 si es de paso
-  if(flag_stop[current_wp] == 1) {
+  if(flag_stop[current_wp+1] == 1) {
       printf("Pasando waypoint de paso %d\n", current_wp);
-      serial_response = 1; // Bypass malacate
+      // guidance_control.cmd.speed = last_speed_cmd; // Recover speed 
+      #ifdef SERIAL_COM_H
+        serial_response = 1; // Bypass malacate
+      #elif defined(SERIAL_NPS_H)
+        serial_msg_test = 1; // Bypass malacate
+      #endif
       return false; // Do nothing if it's a pass-through waypoint
   }
   
