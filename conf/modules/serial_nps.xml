@@ -13,6 +13,7 @@
     <dl_settings>
       <dl_settings NAME="SR_Com">
         <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_msg_test" shortname="test" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="serial_response" shortname="response" values="FALSE|TRUE"/>
       </dl_settings>
     </dl_settings>
   </settings>

@@ -63,6 +63,9 @@ void serial_nps_ping(void)
       serial_msg.error = 0;
     }
   }
+  else{
+    serial_response = false;
+  }
 }
 
 void serial_nps_init(void)

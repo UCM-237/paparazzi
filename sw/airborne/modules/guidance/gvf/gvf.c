@@ -877,6 +877,7 @@ float dist_ptp(float x_, float y_, uint8_t wp0) {
         dist = 1000; // Cap the distance to avoid overflow
     }
     
+    // printf("Distance to next WP (%d): %.2f\n", gvf_c_stopwp.next_wp, dist);
     return dist;
 }
 
@@ -909,7 +910,7 @@ bool increase_pointer_ptp() {
 
   // For Point-to-Point, the maximum number of waypoints comes from num_wp_moved
   if (gvf_c_stopwp.next_wp >= num_wp_moved) {
-      gvf_c_stopwp.next_wp = 0;  // Go back to the beginning
+      // gvf_c_stopwp.next_wp = 0;  // Go back to the beginning
       gvf_control.which_line = 0;
   }
 
@@ -921,15 +922,24 @@ bool increase_pointer_ptp() {
       printf("Pasando waypoint de paso %d\n", current_wp);
       // guidance_control.cmd.speed = last_speed_cmd; // Recover speed 
       #ifdef SERIAL_COM_H
-        serial_response = 1; // Bypass malacate
-      #elif defined(SERIAL_NPS_H)
-        serial_msg_test = 1; // Bypass malacate
+        serial_response = true; // Bypass malacate
+      #endif
+      #ifdef SERIAL_NPS_H
+        serial_response = true; // Bypass malacate
+        printf("Simulando bypass malacate\n");
       #endif
       return false; // Do nothing if it's a pass-through waypoint
   }
+
+  // From here, it's a stopping waypoint
+  gvf_c_stopwp.stay_still = 1;
   
   #ifdef SERIAL_COM_H
   send_measure_msg();  // Send the signal to the Raspberry
+  #endif
+
+  #ifdef SERIAL_NPS_H
+  send_measure_msg();  // Simulate Sending the signal to the Raspberry
   #endif
 
   

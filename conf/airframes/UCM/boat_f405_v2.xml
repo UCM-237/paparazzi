@@ -169,7 +169,7 @@
 		
 		
     <!-- Calibracion 25/04/2025 GUAJARAZ -->
-		<!-- <define name="IMU_MAG_CALIB" type="array">
+		<define name="IMU_MAG_CALIB" type="array">
 			<field type="struct">
 				<field name="abi_id" value="7"/>
 				<field name="calibrated" type="struct">
@@ -186,7 +186,7 @@
 		<define name="MAG_Z_NEUTRAL" value="1428"/>
 		<define name="MAG_X_SENS" value="1.536568709724108" integer="16"/>
 		<define name="MAG_Y_SENS" value="1.5028633583577604" integer="16"/>
-		<define name="MAG_Z_SENS" value="1.516927891132286" integer="16"/> -->
+		<define name="MAG_Z_SENS" value="1.516927891132286" integer="16"/>
 
 
 
@@ -211,27 +211,25 @@
     <define name="MAG_Z_SENS" value="1.6153595973662915" integer="16"/> -->
 
 		
-		
-		
-		<!-- Calibracion 07/04/2025 GUAJARAZ -->
-		<define name="IMU_MAG_CALIB" type="array">
-			<field type="struct">
-				<field name="abi_id" value="7"/>
-				<field name="calibrated" type="struct">
-				  <field name="neutral" value="true"/>
-				  <field name="scale" value="true"/>
-				</field>
-				<field name="neutral" value="2417,2665,1428" type="int[]"/>
-				<field name="scale" value="{{23703,29946,47519},{15092,19597,30871}}"/>
-			</field>
+    <!-- Calibracion 23/09/2025 GUAJARAZ - INSERTION -->
+    <!-- <define name="IMU_MAG_CALIB" type="array">
+		  <field type="struct">
+		    <field name="abi_id" value="7"/>
+		    <field name="calibrated" type="struct">
+		      <field name="neutral" value="true"/>
+		      <field name="scale" value="true"/>
+		    </field>
+		    <field name="neutral" value="1781,2995,2493" type="int[]"/>
+		    <field name="scale" value="{{45941,19894,37654},{29716,13639,25483}}"/>
+		  </field>
 		</define>
 
-		<define name="MAG_X_NEUTRAL" value="2417"/>
-		<define name="MAG_Y_NEUTRAL" value="2665"/>
-		<define name="MAG_Z_NEUTRAL" value="1428"/>
-		<define name="MAG_X_SENS" value="1.5705671884694137" integer="16"/>
-		<define name="MAG_Y_SENS" value="1.5280910338638283" integer="16"/>
-		<define name="MAG_Z_SENS" value="1.5392763430743452" integer="16"/>
+    <define name="MAG_X_NEUTRAL" value="1781"/>
+		<define name="MAG_Y_NEUTRAL" value="2995"/>
+		<define name="MAG_Z_NEUTRAL" value="2493"/>
+		<define name="MAG_X_SENS" value="1.5460021538225432" integer="16"/>
+		<define name="MAG_Y_SENS" value="1.4586113348024095" integer="16"/>
+		<define name="MAG_Z_SENS" value="1.4776125264396032" integer="16"/> -->
 
   </section>
 

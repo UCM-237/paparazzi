@@ -56,7 +56,7 @@
 #if USE_NPS
 #define BOAT_SPEED_KF 8000
 #else
-#define BOAT_SPEED_KF 5000
+#define BOAT_SPEED_KF 8000
 #endif
 #endif
 
@@ -73,7 +73,7 @@
 #if USE_NPS
 #define BOAT_KP 8000
 #else
-#define BOAT_KP 4000
+#define BOAT_KP 8000
 #endif
 #endif
 
@@ -81,7 +81,7 @@
 #if USE_NPS
 #define BOAT_KI 3000
 #else
-#define BOAT_KI 2000
+#define BOAT_KI 3000
 #endif
 #endif
 
