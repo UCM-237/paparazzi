@@ -167,7 +167,7 @@
       <call fun="gvf_lines_array_wp_v3(WP_L0, gvf_segment_par.d1, gvf_segment_par.d2)"/>
       <exception cond="dist_ptp(GetPosX(), GetPosY(), WP_L0) @LT gvf_c_stopwp.distance_stop" deroute="static_ptp"/>
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
-      <exception cond="! LessThan(gvf_c_stopwp.next_wp, num_wp_moved)" deroute="line_to_HOME"/>
+      <exception cond="! LessThan(gvf_c_stopwp.next_wp, num_wp_moved)" deroute="Standby"/>
     </block>
     <block name="static_ptp" strip_icon="downdown.png">
       <!-- <set var="gvf_c_stopwp.stay_still" value="1"/> -->
