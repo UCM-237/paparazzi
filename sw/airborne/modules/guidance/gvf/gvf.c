@@ -416,7 +416,7 @@ bool gvf_segment_loop_XY1_XY2(float x1, float y1, float x2, float y2, float d1, 
 
   float zx = x2 - x1;
   float zy = y2 - y1;
-  float alpha = atanf(zx / zy);
+  float alpha = atan2f(zx, zy);
 
   gvf_line(x1, y1, alpha);
 
