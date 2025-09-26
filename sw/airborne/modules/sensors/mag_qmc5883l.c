@@ -164,7 +164,8 @@ void qmc5883l_watchdog(void)
     if (qmc5883l_watchdog_counter > QMC5883L_WATCHDOG_LIMIT) {
       // Forzar reinicio del estado
       mag_qmc5883l.i2c_trans.status = I2CTransDone;
-      mag_qmc5883l.status = QMC5883L_STATUS_IDLE;
+      mag_qmc5883l.status = QMC5883L_CONF_UNINIT;
+      mag_qmc5883l.initialized = false; // forzar re-inicialización
       qmc5883l_watchdog_counter = 0;
       q5883l_errors_counter++;
     }
