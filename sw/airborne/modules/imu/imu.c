@@ -284,6 +284,30 @@ static void send_mag_raw(struct transport_tx *trans, struct link_device *dev)
     id = 0;
 }
 
+#if !USE_NPS // Disable debug message when using NPS as it is not supported
+static void send_QMC5883L_debug(struct transport_tx *trans, struct link_device *dev)
+{
+  uint8_t status       = (uint8_t)mag_qmc5883l.status;
+  uint8_t i2c_status   = (uint8_t)mag_qmc5883l.i2c_trans.status;
+  uint8_t data_rate    = mag_qmc5883l.data_rate;
+  uint8_t initialized  = (uint8_t)mag_qmc5883l.initialized;
+  uint8_t data_avail   = (uint8_t)mag_qmc5883l.data_available;
+
+  int32_t x = mag_qmc5883l.data.vect.x;
+  int32_t y = mag_qmc5883l.data.vect.y;
+  int32_t z = mag_qmc5883l.data.vect.z;
+
+  pprz_msg_send_QMC5883L_DEBUG(trans, dev, AC_ID,
+                               &status,
+                               &i2c_status,
+                               &q5883l_errors_counter,
+                               &data_rate,
+                               &initialized,
+                               &data_avail,
+                               &x, &y, &z);
+}
+#endif
+
 static void send_mag_scaled(struct transport_tx *trans, struct link_device *dev)
 {
   if(imu.mag_abi_send_id == ABI_DISABLE)
@@ -556,6 +580,9 @@ void imu_init(void)
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_IMU_MAG_SCALED, send_mag_scaled);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_IMU_MAG, send_mag);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_IMU_MAG_CURRENT_CALIBRATION, send_mag_current);
+  #if !USE_NPS
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_QMC5883L_DEBUG, send_QMC5883L_debug);
+  #endif
 #endif // DOWNLINK
 
 #if USE_SHELL

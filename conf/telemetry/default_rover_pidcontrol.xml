@@ -19,7 +19,7 @@
       <message name="GPS_SOL"                period="2.0"/>
       <message name="INS"                    period="0.3"/> 
       <message name="INS_REF"                period="5.1"/>
-      <message name="ROTORCRAFT_FP"          period="0.25"/> 
+      <!-- <message name="ROTORCRAFT_FP"          period="0.25"/>  -->
       <message name="ROTORCRAFT_NAV_STATUS"  period="1.6"/>
       <message name="ROVER_STATUS"           period="1.5"/>
       <message name="SERIAL_COM"	           period="0.25"/>
@@ -74,7 +74,7 @@
       <message name="IMU_GYRO_RAW"      period=".05"/>
       <message name="IMU_MAG_RAW"       period=".05"/>
       <message name="BARO_RAW"          period=".1"/>
-      <message name="QMC5883L_DEBUG"    period=".05"/>
+      <message name="QMC5883L_DEBUG"    period=".1"/>
     </mode>
 
     <mode name="aligner">

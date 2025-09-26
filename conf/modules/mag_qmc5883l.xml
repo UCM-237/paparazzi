@@ -45,6 +45,7 @@
   <init fun="mag_qmc5883l_module_init()"/>
   <periodic fun="mag_qmc5883l_module_periodic()" freq="MAG_QMC5883L_PERIODIC_FREQUENCY"/>
   <periodic fun="mag_qmc5883l_report()" freq="10" autorun="FALSE"/>
+  <periodic fun="qmc5883l_watchdog()"   freq="25"/>
   <event fun="mag_qmc5883l_module_event()"/>
   <makefile target="ap">
     <file name="mag_qmc5883l.c"/>

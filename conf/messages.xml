@@ -1785,14 +1785,15 @@
 
 
     <message name="QMC5883L_DEBUG" id="186">
-      <field name="status"      type="uint8"  values="INIT|CCR_DONE|TMRC_DONE|CCM_DONE|IDLE|MEAS"/>
-      <field name="i2c_status"  type="uint8"  values="PENDING|RUNNING|SUCESS|FAILED|DONE"/>
-      <field name="data_rate"   type="uint8"/>
-      <field name="initialized" type="uint8"/>
-      <field name="data_avail"  type="uint8"/>
-      <field name="x"           type="int32"/>
-      <field name="y"           type="int32"/>
-      <field name="z"           type="int32"/>
+      <field name="status"         type="uint8"  values="INIT|CCR_DONE|TMRC_DONE|CCM_DONE|IDLE|MEAS"/>
+      <field name="i2c_status"     type="uint8"  values="PENDING|RUNNING|SUCESS|FAILED|DONE"/>
+      <field name="errors_counter" type="uint8"/>
+      <field name="data_rate"      type="uint8"/>
+      <field name="initialized"    type="uint8"/>
+      <field name="data_avail"     type="uint8"/>
+      <field name="x"              type="int32"/>
+      <field name="y"              type="int32"/>
+      <field name="z"              type="int32"/>
     </message>
 
 

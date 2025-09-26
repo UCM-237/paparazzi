@@ -31,10 +31,13 @@
 
 extern struct Qmc5883l mag_qmc5883l;
 
+extern uint8_t q5883l_errors_counter; // counter of errors detected by the watchdog
+
 extern void mag_qmc5883l_module_init(void);
 extern void mag_qmc5883l_module_periodic(void);
 extern void mag_qmc5883l_module_event(void);
 extern void mag_qmc5883l_report(void);
+extern void qmc5883l_watchdog(void);
 
 #endif /* MAG_QMC5883L_H */
 

@@ -70,32 +70,6 @@ static struct Int32RMat mag_to_imu; ///< rotation from mag to imu frame
 
 struct Qmc5883l mag_qmc5883l;
 
-#ifdef PERIODIC_TELEMETRY
-#include "modules/datalink/telemetry.h"
-
-static void send_mag_debug(struct transport_tx *trans, struct link_device *dev)
-{
-  uint8_t status       = (uint8_t)mag_qmc5883l.status;
-  uint8_t i2c_status   = (uint8_t)mag_qmc5883l.i2c_trans.status;
-  uint8_t data_rate    = mag_qmc5883l.data_rate;
-  uint8_t initialized  = (uint8_t)mag_qmc5883l.initialized;
-  uint8_t data_avail   = (uint8_t)mag_qmc5883l.data_available;
-
-  int32_t x = mag_qmc5883l.data.vect.x;
-  int32_t y = mag_qmc5883l.data.vect.y;
-  int32_t z = mag_qmc5883l.data.vect.z;
-
-  pprz_msg_send_QMC5883L_DEBUG(trans, dev, AC_ID,
-                               &status,
-                               &i2c_status,
-                               &data_rate,
-                               &initialized,
-                               &data_avail,
-                               &x, &y, &z);
-}
-
-#endif
-
 
 void mag_qmc5883l_module_init(void)
 {
@@ -161,3 +135,39 @@ void mag_qmc5883l_report(void)
   };
   DOWNLINK_SEND_IMU_MAG_RAW(DefaultChannel, DefaultDevice, &id, &mag.x, &mag.y, &mag.z);
 }
+
+
+// FIX TEMPORAL: Si no encontramos nada, usamos esto para evitar problemas
+
+#define QMC5883L_WATCHDOG_LIMIT 100  // número de ciclos permitidos sin progreso (se supone que va a 25 Hz)
+
+uint8_t  q5883l_errors_counter = 0;
+static uint16_t qmc5883l_watchdog_counter = 0;
+
+void qmc5883l_watchdog(void)
+{
+  // Si nunca se inicializó, no hacemos nada
+  if (!mag_qmc5883l.initialized) {
+    qmc5883l_watchdog_counter = 0;
+    return;
+  }
+
+  // Caso normal: si hay datos nuevos, reseteamos el contador
+  if (mag_qmc5883l.data_available) {
+    qmc5883l_watchdog_counter = 0;
+    return;
+  }
+
+  // Si está en MEAS pero no termina, contamos
+  if (mag_qmc5883l.status == QMC5883L_STATUS_MEAS) {
+    qmc5883l_watchdog_counter++;
+    if (qmc5883l_watchdog_counter > QMC5883L_WATCHDOG_LIMIT) {
+      // Forzar reinicio del estado
+      mag_qmc5883l.i2c_trans.status = I2CTransDone;
+      mag_qmc5883l.status = QMC5883L_STATUS_IDLE;
+      qmc5883l_watchdog_counter = 0;
+      q5883l_errors_counter++;
+    }
+  }
+}
+
