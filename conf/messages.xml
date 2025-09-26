@@ -1783,8 +1783,19 @@
     	<field name="ymax" type="float"/>
     </message>
 
-    <!-- 185 is free -->
-    <!-- 186 is free -->
+
+    <message name="QMC5883L_DEBUG" id="186">
+      <field name="status"      type="uint8"  values="INIT|CCR_DONE|TMRC_DONE|CCM_DONE|IDLE|MEAS"/>
+      <field name="i2c_status"  type="uint8"  values="PENDING|RUNNING|SUCESS|FAILED|DONE"/>
+      <field name="data_rate"   type="uint8"/>
+      <field name="initialized" type="uint8"/>
+      <field name="data_avail"  type="uint8"/>
+      <field name="x"           type="int32"/>
+      <field name="y"           type="int32"/>
+      <field name="z"           type="int32"/>
+    </message>
+
+
     <!-- 187 is free -->
     <!-- 188 is free -->
     <!-- 189 is free -->

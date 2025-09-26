@@ -70,6 +70,33 @@ static struct Int32RMat mag_to_imu; ///< rotation from mag to imu frame
 
 struct Qmc5883l mag_qmc5883l;
 
+#ifdef PERIODIC_TELEMETRY
+#include "modules/datalink/telemetry.h"
+
+static void send_mag_debug(struct transport_tx *trans, struct link_device *dev)
+{
+  uint8_t status       = (uint8_t)mag_qmc5883l.status;
+  uint8_t i2c_status   = (uint8_t)mag_qmc5883l.i2c_trans.status;
+  uint8_t data_rate    = mag_qmc5883l.data_rate;
+  uint8_t initialized  = (uint8_t)mag_qmc5883l.initialized;
+  uint8_t data_avail   = (uint8_t)mag_qmc5883l.data_available;
+
+  int32_t x = mag_qmc5883l.data.vect.x;
+  int32_t y = mag_qmc5883l.data.vect.y;
+  int32_t z = mag_qmc5883l.data.vect.z;
+
+  pprz_msg_send_QMC5883L_DEBUG(trans, dev, AC_ID,
+                               &status,
+                               &i2c_status,
+                               &data_rate,
+                               &initialized,
+                               &data_avail,
+                               &x, &y, &z);
+}
+
+#endif
+
+
 void mag_qmc5883l_module_init(void)
 {
   qmc5883l_init(&mag_qmc5883l, &(MAG_QMC5883L_I2C_DEV), QMC5883L_ADDR, QMC5883L_DATA_RATE);
