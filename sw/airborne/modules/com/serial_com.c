@@ -95,6 +95,7 @@ uint32_t msg_buffer = 0;
 #define MAX_DEPTH 20*1000 // En mm
 #define MIN_DEPTH 0.07*1000 			// En mm
 #define PROBE_MSG_LENGTH 12
+#define SAFE_LIMIT 1500 // En mm
 
 // Malacate states
 #define INIT 0
@@ -605,7 +606,7 @@ void set_log_message(uint8_t start_byte){
 
 // Asegurar que no nos pasamos del sonar (con margen de seguridad)
 uint16_t bound_depth(uint16_t depth){
-  uint16_t max_safe_depth = (br_sonar.distance > 500) ? (br_sonar.distance - 500) : 0;
+  uint16_t max_safe_depth = (br_sonar.distance > SAFE_LIMIT) ? (br_sonar.distance - SAFE_LIMIT) : 0;
   return (depth < max_safe_depth) ? depth : max_safe_depth;
 }
 
