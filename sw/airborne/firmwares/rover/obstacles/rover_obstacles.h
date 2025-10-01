@@ -1,3 +1,30 @@
+/*
+ * Copyright (C) 2025 Alejandro Rochas <alrochas@ucm.es>
+ *
+ * This file is part of paparazzi.
+ *
+ * paparazzi is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * paparazzi is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with paparazzi; see the file COPYING.  If not, write to
+ * the Free Software Foundation, 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ *
+ */
+
+/** @file rover_obstacles.hs
+ *  @brief functions to create a grid map
+ *
+ */
+
 
 #ifndef ROVER_OBSTACLES_H
 #define ROVER_OBSTACLES_H
@@ -11,7 +38,6 @@
 #define N_ROW_GRID 100
 #endif
 
-#include "firmwares/rover/navigation.h"
 #include "std.h"
 
 
@@ -50,7 +76,7 @@ extern void obtain_cell_xy(float px, float py, int *cell_x, int *cell_y);
 
 extern void fill_cell(float px, float py);
 extern void fill_bayesian_cell(float px, float py);
-extern void fill_free_cells();
+extern void fill_free_cells(float lidar, float angle);
 
 #ifdef GVF_CBF_H
 extern void get_occupied_cells(int radius);
@@ -60,5 +86,12 @@ extern void get_occupied_cells(int radius);
 #endif // MAX_CELLS
 
 #endif // GVF_CBF_H
+
+extern void decay_map(void);
+extern void update_line_bayes(int x0, int y0, int x1, int y1);
+extern void update_cell(int x, int y, int new_value);
+extern void compute_cell_bayes(int x, int y, bool is_occupied);
+extern void check_probs(void);
+
 
 #endif // ROVER_OBSTACLES_H

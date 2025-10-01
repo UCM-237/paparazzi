@@ -30,15 +30,29 @@
 #include "math/pprz_algebra_float.h"
 #include "math/pprz_geodetic_float.h"
 
-#define MAX_WALLS 10     // Máximo número de paredes
-#define MAX_POINTS 10    // Máximo puntos por pared
+#define MAX_WALLS 10     // Máx number of walls
+#define MAX_POINTS 5     // Máx number of points in a wall
+
+
+// Structs to include the obstacles configuration file
+struct ObstaclePoint {
+  float lat_deg;
+  float lon_deg;
+  float alt;
+};
+
+struct WallConfig {
+  uint8_t count;
+  struct ObstaclePoint points[MAX_POINTS];
+};
+
 
 
 struct Wall {
-  struct LlaCoor_f points_wgs84[MAX_POINTS]; 
+  struct LlaCoor_f points_wgs84[MAX_POINTS];
   struct FloatVect2 points_ltp[MAX_POINTS];
   uint8_t count;
-  bool converted; 
+  bool converted;
 };
 
 struct WallSystem {
@@ -56,10 +70,10 @@ extern float psi_list[MAX_LIDAR_MEASUREMENTS];
 
 
 extern struct WallSystem wall_system;
-extern void init_walls(void);  // Inicializa obstáculos
+extern void init_walls(void);  // Init Obstacles
 extern void convert_walls_to_ltp(void);
 extern float find_nearest_wall(const struct FloatVect2 *obstacle_pos, struct FloatVect2 *nearest_point);
-extern float distance_to_wall(float theta, const struct FloatVect2 *P, const struct FloatVect2 *A, 
-  const struct FloatVect2 *B);
+extern float distance_to_wall(float theta, const struct FloatVect2 *P, const struct FloatVect2 *A,
+                              const struct FloatVect2 *B);
 
 #endif // LIDAR_CORRECTION_H

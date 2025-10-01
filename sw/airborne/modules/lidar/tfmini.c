@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2019 Freek van Tienen <freek.v.tienen@gmail.com>
+ * Copyright (C) 2025 Alejandro Rochas <alrochas@ucm.es>
  *
  * This file is part of paparazzi.
  *
@@ -35,35 +36,23 @@
 #include "pprzlink/messages.h"
 #include "modules/datalink/downlink.h"
 
-// Test
-#include "firmwares/rotorcraft/autopilot_static.h"
 
-#ifdef USE_NPS
-#include "nps_autopilot.h"
-#include "slam/lidar_correction.h"
-struct NPS_Lidar nps_lidar;
+// Horizontal distance from the IMU to the LiDAR (in meters)
+#ifndef LIDAR_OFFSET
+#define LIDAR_OFFSET 0.0f
 #endif
 
-#define LIDAR_MIN_RANGE 0.1
-#define LIDAR_MAX_RANGE 12.0
+// Height of the LiDAR above the ground (in meters)
+#ifndef LIDAR_HEIGHT
+#define LIDAR_HEIGHT 0.0f
+#endif
 
-#define LIDAR_OFFSET 0.20   // Distancia horizontal de la IMU al LiDAR (en metros)
-#define LIDAR_HEIGHT 0.24   // Altura del LiDAR respecto al suelo (en metros)
-
-#define MOTOR_SPEED 5
-static uint32_t last_time = 0;
+static float lidar_offset;
+static float lidar_height;
 
 struct TFMini tfmini = {
   .parse_status = TFMINI_INITIALIZE
 };
-
-
-bool enable_servo = false;
-float motor_speed = MOTOR_SPEED;
-struct TFMiniServo tf_servo;
-// int tfmini_servo_pos = 1500;
-
-static void tfmini_parse(uint8_t byte);
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -81,20 +70,21 @@ static void tfmini_send_lidar(struct transport_tx *trans, struct link_device *de
                       &status);
 }
 
-#ifdef USE_NPS
+// UNUSED
+// #ifdef USE_NPS
 
-static void tfmini_send_nps_lidar(struct transport_tx *trans, struct link_device *dev)
-{
-  pprz_msg_send_NPS_LIDAR(trans, dev, AC_ID,
-                      &nps_lidar.distance,
-                      &tf_servo.ang,
-                      &nps_lidar.pos,
-                      &nps_lidar.t,
-                      &nps_lidar.s,
-                      &nps_lidar.denom);
-}
+// static void tfmini_send_nps_lidar(struct transport_tx *trans, struct link_device *dev)
+// {
+//   pprz_msg_send_NPS_LIDAR(trans, dev, AC_ID,
+//                       &nps_lidar.distance,
+//                       &tf_servo.ang,
+//                       &nps_lidar.pos,
+//                       &nps_lidar.t,
+//                       &nps_lidar.s,
+//                       &nps_lidar.denom);
+// }
 
-#endif
+// #endif
 
 #endif
 
@@ -107,72 +97,19 @@ void tfmini_init(void)
 
   tfmini.update_agl = USE_TFMINI_AGL;
   tfmini.compensate_rotation = TFMINI_COMPENSATE_ROTATION;
+  tfmini.is_rover = TFMINI_ROVER;
 
   tfmini.strength = 0;
   tfmini.distance = 0;
   tfmini.parse_status = TFMINI_PARSE_HEAD;
 
-  tf_servo.pos = 1500*0;
-  tf_servo.dir = 0;
+  lidar_offset = LIDAR_OFFSET;
+  lidar_height = LIDAR_HEIGHT;
 
-  #if PERIODIC_TELEMETRY
-   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_LIDAR, tfmini_send_lidar);
-   #ifdef USE_NPS
-    register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_NPS_LIDAR, tfmini_send_nps_lidar);
-   #endif
-  #endif
+#if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_LIDAR, tfmini_send_lidar);
+#endif
 }
-
-
-// Simulated Lidar Measurement (mover a otro archivo ???)
-#ifdef USE_NPS
-void sim_overwrite_lidar(){
-  uint32_t now_ts = get_sys_time_usec();
-
-  if (!ins_int.ltp_initialized) return;
-
-  // Pasar la posicion GPS a coordenadas NED
-  struct FloatVect2 pos = {0.0f, 0.0f};
-  struct NedCoor_i ned = {0.0f, 0.0f, 0.0f};
-  ned_of_lla_point_i(&ned, stateGetNedOrigin_i(), &gps.lla_pos);
-  pos.x = (float) (ned.y/100.0f);
-  pos.y = (float) (ned.x/100.0f);
-  float theta = M_PI/2-(stateGetNedToBodyEulers_f()->psi)-tf_servo.ang*M_PI/180;
-
-  float min_distance = FLT_MAX;
-
-  // Recorre el array de paredes y almacenar la distancia minima (!= 0)
-  for (uint8_t w = 0; w < wall_system.wall_count; w++) {
-    struct Wall *wall = &wall_system.walls[w];
-    for (uint8_t p = 0; p < wall->count - 1; p++) {
-      struct FloatVect2 p1 = wall->points_ltp[p];
-      struct FloatVect2 p2 = wall->points_ltp[p+1];
-      float distance = distance_to_wall(theta, &pos, &p1, &p2);
-      // distance = fabs(distance);
-      if (distance < min_distance && distance > 0) {
-        min_distance = distance;
-      }
-    }
-  }
-
-  // Almacena ese dato en la variable tfmini.distance
-  nps_lidar.pos = (struct FloatVect2) pos;
-  // DEBUG
-  nps_lidar.pos.x = (float) (ned.y/100.0f);
-  nps_lidar.pos.y = (float) (ned.x/100.0f);
-  nps_lidar.distance = min_distance;
-  if (min_distance == FLT_MAX || min_distance > LIDAR_MAX_RANGE){
-    min_distance = 0;
-  }
-  
-  tfmini.distance = min_distance;
-
-  // send message (if requested)
-  if (tfmini.update_agl) {
-    AbiSendMsgLIDAR_SERVO(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance, tf_servo.ang);
-  }
-}
-#endif // USE_NPS
 
 
 /**
@@ -193,10 +130,11 @@ void tfmini_event(void)
   #endif
 }
 
+
 /**
  * Parse the lidar bytes 1 by 1
  */
-static void tfmini_parse(uint8_t byte)
+void tfmini_parse(uint8_t byte)
 {
   switch (tfmini.parse_status) {
     case TFMINI_INITIALIZE:
@@ -251,7 +189,6 @@ static void tfmini_parse(uint8_t byte)
     case TFMINI_PARSE_CHECKSUM:
       // When the CRC matches
       if (tfmini.parse_crc == byte) {
-        uint32_t now_ts = get_sys_time_usec();
         tfmini.distance = tfmini.raw_dist / 100.f;
         tfmini.strength = tfmini.raw_strength;
         tfmini.mode = tfmini.raw_mode;
@@ -260,31 +197,31 @@ static void tfmini_parse(uint8_t byte)
         if (tfmini.distance != 0xFFFF) {
           // compensate AGL measurement for body rotation
           if (tfmini.compensate_rotation) {
-            float theta = stateGetNedToBodyEulers_f()->theta;
-            float ground_distance;
-            if(fabs(theta) < 0.01){
-              ground_distance = 100;  // Si es 0 esta recto
-            }
-            else{
-              ground_distance = LIDAR_HEIGHT/sinf(-theta) - LIDAR_OFFSET;
-            }
-            
-            // tf_servo.ang = ground_distance; // DELETE
-            if ((tfmini.distance >= ground_distance) && (ground_distance > 0)) {
-              tfmini.distance = 0;
-            }
+            // If it is a rover, we need to compensate the distance
+            if (tfmini.is_rover) {
+              float theta = stateGetNedToBodyEulers_f()->theta;
+              float ground_distance;
+              if (fabs(theta) < 0.01) {
+                ground_distance = 100;  // If it is 0 it is straight
+              } else {
+                ground_distance = lidar_height / sinf(-theta) - lidar_offset;
+              }
 
-            // AQUI HACIA LA CUENTA PENSANDO EN UN DRON, NO NOS SIRVE
-            // float phi = stateGetNedToBodyEulers_f()->phi;
-            // float theta = stateGetNedToBodyEulers_f()->theta;
-            // float gain = (float)fabs((double)(cosf(phi) * cosf(theta)));
-            // tfmini.distance = tfmini.distance * gain;
+              if ((tfmini.distance >= ground_distance) && (ground_distance > 0)) {
+                tfmini.distance = 0;
+              }
+            }
+            // If it is not a rover (like a drone), we need to compensate the distance differently
+            else {
+              float phi = stateGetNedToBodyEulers_f()->phi;
+              float theta = stateGetNedToBodyEulers_f()->theta;
+              float gain = (float)fabs((double)(cosf(phi) * cosf(theta)));
+              tfmini.distance = tfmini.distance * gain;
+            }
           }
 
-          // send message (if requested)
-          if (tfmini.update_agl) {
-            AbiSendMsgLIDAR_SERVO(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance, tf_servo.ang);
-          }
+          // Send the AGL message
+          tfmini_send_abi();
         }
       }
 
@@ -300,31 +237,17 @@ static void tfmini_parse(uint8_t byte)
 }
 
 
-// ####################################
-// ############ LIDAR MOTOR ###########
-// ####################################
-
-#ifdef COMMAND_SERVO
-void tfmini_servo(){
-  if (get_sys_time_msec() > last_time + motor_speed) {
-    last_time = get_sys_time_msec();
-    if(enable_servo){
-      tf_servo.pos += (tf_servo.dir == 0) ? 100 : -100;
-      if (tf_servo.pos >= MAX_PPRZ*0.8 || tf_servo.pos <= -MAX_PPRZ*0.8) {
-          tf_servo.dir ^= 1;
-      }
-    }
-    else{
-      tf_servo.pos = 0;
-    }
-    commands[COMMAND_SERVO] = tf_servo.pos;
-    tf_servo.ang = PWM2ANGLE(tf_servo.pos);
+// Send the lidar message (AGL, and, if requested, OBSTACLE_DETECTION)
+void tfmini_send_abi(void)
+{
+  uint32_t now_ts = get_sys_time_usec();
+  if (tfmini.update_agl) {
+    AbiSendMsgAGL(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance);
   }
-}
-#else
-void tfmini_servo(void) {
-  // No servo functionality; do nothing
-}
+#ifndef USE_SERVO_LIDAR
+  //send message (if there is not servo module)
+  AbiSendMsgOBSTACLE_DETECTION(AGL_LIDAR_TFMINI_ID, tfmini.distance, 0, 0);
 #endif
+}
 
 

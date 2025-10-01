@@ -375,7 +375,7 @@ void lla_of_utm_f(struct LlaCoor_f *lla, struct UtmCoor_f *utm)
  * @param[out] utm position in m, alt is copied directly from utm
  * @param[in]  enu position in m, alt in m
  */
-void utm_of_enu_f(struct UtmCoor_f *utm, const struct EnuCoor_f *enu)
+void utm_of_enu_f(struct UtmCoor_f *utm, struct EnuCoor_f *enu)
 {
 
   struct LtpDef_f *origin = stateGetNedOrigin_f();

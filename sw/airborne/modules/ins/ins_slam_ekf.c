@@ -655,9 +655,9 @@ void ins_int_update_gps(struct GpsState *gps_s)
 
   ins_ned_to_state();
 
-  #ifdef USE_GRID 
-    fill_free_cells();
-  #endif // USE_GRID
+  // #ifdef USE_GRID 
+  //   fill_free_cells();
+  // #endif // USE_GRID
 
   /* reset the counter to indicate we just had a measurement update */
   ins_int.propagation_cnt = 0;
