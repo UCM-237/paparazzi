@@ -2,7 +2,15 @@
 
 <airframe>
 
-    <section name="CTRL_EFF_SHED" prefix="ROTWING_EFF_SCHED_">
+    <section name="AP_FAILSAFE">
+        <!-- <define name="NO_GPS_LOST_WITH_DATALINK_TIME"       value="20"/> --> <!-- Only commented out for navy testing -->
+        <define name="NO_GPS_LOST_WITH_RC_VALID"            value="FALSE"/> <!-- Set to FALSE for navy testing -->
+        <define name="RC_LOST_MODE"                         value="AP_MODE_NAV"/> 
+        <define name="GPS_FIX_TIMEOUT"                      value="5"/> 
+        <define name="FAILSAFE_DESCENT_SPEED"               value="1.0"/> <!-- Does not work as expected with AP static -->
+    </section>
+
+    <section name="CTRL_EFF_SCHED" prefix="ROTWING_EFF_SCHED_">
         <define name="IXX_BODY"              value="0.04780"/>
         <define name="IYY_BODY"              value="0.7546"/>
         <define name="IZZ"                   value="0.9752"/>
@@ -188,6 +196,7 @@
         <define name="QUAD_MAX_DECELERATION"    value="0.75"/>  <!-- Maximum horizontal deceleration in quad mode -->
         <define name="SKEW_UP_AIRSPEED"         value="10.0"/>  <!-- Airspeed where the skewing starts when going up in airspeed -->
         <define name="SKEW_DOWN_AIRSPEED"       value="8.0"/>   <!-- Airspeed where the skewing starts when going down in airspeed -->
+        <define name="STATE_MIN_FW_DIST"        value="150"/>   <!-- Minimum distance to switch to fixed wing mode -->
 
         <define name="SKEW_REF_MODEL"           value="TRUE"/>  <!-- Enable second order reference model for the skewing command -->
         <define name="SKEW_REF_MODEL_P_GAIN"    value="0.001"/> <!-- Skewing reference model proportional gain -->
