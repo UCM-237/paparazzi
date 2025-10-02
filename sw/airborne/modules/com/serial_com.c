@@ -884,7 +884,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_MANUAL_BYTE);
-        set_probe_message(msg_byte, 0, 0);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_MANUAL); 
@@ -904,7 +904,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONAR_BYTE);
-        set_probe_message(msg_byte, 0, 0);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_RQ);
@@ -934,7 +934,7 @@ void serial_ping()
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
         msg_byte = set_header(PPZ_SONDA_AUTO_BYTE);
-        set_probe_message(msg_byte, 0, 0);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_AUTO);
@@ -943,10 +943,8 @@ void serial_ping()
 			else if(CHECK_BIT(msg_buffer, SONDA_TEST)){
         serial_snd.msg_length = PROBE_MSG_LENGTH;
         
-				uint16_t time = 3*60;
-				int16_t depth = 8;
         msg_byte = set_header(PPZ_SONDA_TEST_BYTE);
-        set_probe_message(msg_byte, depth, time);
+        set_probe_message(msg_byte, serial_snd.depth, probe_time);
         
         send_full_message(serial_snd.msg_length);
         CLEAR_BIT(msg_buffer, SONDA_TEST); 

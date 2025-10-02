@@ -138,6 +138,7 @@ void mag_qmc5883l_report(void)
 
 
 // FIX TEMPORAL: Si no encontramos nada, usamos esto para evitar problemas
+// Para ver mas detalles, consultar https://github.com/paparazzi/paparazzi/issues/3543
 
 #define QMC5883L_WATCHDOG_LIMIT 100  // número de ciclos permitidos sin progreso (se supone que va a 25 Hz)
 
