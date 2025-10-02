@@ -1,9 +1,9 @@
-<!-- Firmware para los barcos nuevos con el Matek F405 v2 (version con las PCBs) -->
+<!-- Firmware para los barcos nuevos con el Matek F405 v2 (version del CYANOA, con las placas hechas a mano) -->
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
 
 <airframe name="boat">
 
-  <firmware name="rover">
+  <firmware name="rover"> <!-- Firmware propio del barco?? -->
     <autopilot name="boat_autopilot.xml"/>
 
     <target name="ap" board="matek_f405_wing_v1">
@@ -15,10 +15,11 @@
     	  <configure name="SERIAL_UART" value="UART5"/>
       </module>
       <module name="ahrs" type="float_dcm">
+        <!--  <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
         <define name ="AHRS_DCM_MAG_ID" value="MAG_QMC5883L_SENDER_ID"/>
       </module>
       <module name="sonar" type="bluerobotics">
-    	  <configure name="SONAR_UART" value="UART6"/>
+    	  <configure name="SONAR_UART" value="UART1"/>
       </module>
     </target>
     
@@ -36,7 +37,7 @@
     <module name="actuators" type="pwm"/>
 
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART4"/>
+    	<configure name="GPS_PORT"  value="UART6"/>
     </module>
     <module name="gps_ubx_ucenter"/>
     
@@ -65,7 +66,7 @@
     <module name="geo_mag"/>
     
    <module name="telemetry" type="xbee_api">
-    	<configure name="MODEM_PORT"  value="UART1"/>
+    	<configure name="MODEM_PORT"  value="UART4"/>
     	<define name="BOAT_DEBUG"     value="TRUE"/>
     </module>
 
