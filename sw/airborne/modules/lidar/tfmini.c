@@ -65,7 +65,6 @@ static void tfmini_send_lidar(struct transport_tx *trans, struct link_device *de
   uint8_t status = (uint8_t) tfmini.parse_status;
   pprz_msg_send_LIDAR(trans, dev, AC_ID,
                       &tfmini.distance,
-                      &tf_servo.ang,
                       &tfmini.mode,
                       &status);
 }

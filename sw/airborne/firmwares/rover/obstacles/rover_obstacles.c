@@ -314,6 +314,8 @@ void update_cell(int x, int y, int new_value)
   obstacle_grid.map.LT = LT; // For the GCS
 
   *cell = (int8_t)new_value;
+  // printf("Cell (%d, %d) updated from %d to %d\n", x, y, old_value, *cell);
+  // printf("Cell (%d, %d) state updated from %d to %d\n", x, y, old_state, new_state);
 
   if (old_state != new_state) {
     DOWNLINK_SEND_GRID_CHANGES(DefaultChannel, DefaultDevice, &y, &x, &new_value);
@@ -409,7 +411,7 @@ static void lidar_cb(uint8_t __attribute__((unused)) sender_id,
                      float distance, float angle)
 {
   ins_update_lidar(distance, angle);
-}// Depends of tfmini lidar and INS SLAM EKF (could be replaced by other lidar and ins slam)
+}
 
 
 
@@ -498,7 +500,7 @@ void get_occupied_cells(uint8_t BLOCK_SIZE) {
 
     bool block_occupied = false;
 
-    // Recorre las 9 celdas del bloque 3x3
+    // Recorre las BLOCK_SIZE^2 celdas del bloque BLOCK_SIZExBLOCK_SIZE
     for (int i = 0; i < BLOCK_SIZE && !block_occupied; i++) {
       for (int j = 0; j < BLOCK_SIZE && !block_occupied; j++) {
         int x = cx + i*dxs[b];

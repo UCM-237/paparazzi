@@ -31,15 +31,15 @@
     <waypoint name="_N4" x="-90" y="90"/>
 
     <!-- MAPA DE TODO EL CAMPO -->
-    <!-- <waypoint name="_G1" lat="40.4520549" lon="-3.7280390"/>
+    <waypoint name="_G1" lat="40.4520549" lon="-3.7280390"/>
     <waypoint name="_G2" lat="40.4511540" lon="-3.7280290"/>
     <waypoint name="_G3" lat="40.4511460" lon="-3.7292079"/>
-    <waypoint name="_G4" lat="40.4520470" lon="-3.7292179"/> -->
+    <waypoint name="_G4" lat="40.4520470" lon="-3.7292179"/>
 
-    <waypoint name="_G1" x="-50" y="-50"/>
+    <!--<waypoint name="_G1" x="-50" y="-50"/>
     <waypoint name="_G2" x="50" y="-50"/>
     <waypoint name="_G3" x="50" y="50"/>
-    <waypoint name="_G4" x="-50" y="50"/>
+    <waypoint name="_G4" x="-50" y="50"/>-->
 
     <!-- MAPA DE LA ESQUINA -->
     <!-- <waypoint name="_G1" lat="40.4513680" lon="-3.7288910"/>
