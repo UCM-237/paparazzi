@@ -150,7 +150,7 @@ uint8_t profile_counter;
 #define TIME_IMU 10
 #define TIME_GPS 20
 #define TIME_LIDAR 0
-#define TIME_LOG 4
+#define TIME_LOG 6
 
 
 //Messages received
@@ -581,6 +581,16 @@ void set_log_message(uint8_t start_byte){
     log.throttle_L = (int16_t) guidance_control.command[0];
     log.throttle_R = (int16_t) guidance_control.command[1];
 
+
+		// Verifica si el origen UTM está configurado
+    if (state.utm_origin_f.zone == 0) {
+			struct UtmCoor_f utm_origin = { .north = 500000.0f, .east = 0.0f, .alt = 0.0f, .zone = 30 };
+			stateSetLocalUtmOrigin_f(MODULE_SERIAL_COM_ID, &utm_origin);
+		}
+
+		// Forzar el cálculo de las coordenadas UTM
+    stateCalcPositionUtm_f();
+
 		struct UtmCoor_f *pos_state;
 		pos_state = stateGetPositionUtm_f();
 		log.x = (int32_t)(pos_state->north * 100.0f);  // Convert to cm
@@ -978,7 +988,7 @@ void serial_ping()
 		// SET_BIT_IF(counter, TIME_GPS, msg_buffer, GPS_MESSAGE);
 		// SET_BIT_IF(counter, TIME_LIDAR, msg_buffer, LIDAR_MESSAGE);	// Disable on the boat
 
-		// Solo mando el mensaje de Log si hay gps
+		// Solo mando el mensaje de Log si hay gps (borrar el if para probar en el lab)
 		if (gps.fix >= GPS_FIX_2D) {
 			SET_BIT_IF(counter, TIME_LOG, msg_buffer, LOG_MESSAGE);
 		}
