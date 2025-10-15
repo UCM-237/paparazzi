@@ -46,6 +46,14 @@ unsigned int serial_byteToint(uint8_t * bytes,int length){
   return num;
 }
 
+int16_t serial_byteToInt16(uint8_t *bytes, int length) {
+    int16_t num = 0;
+    for (int i = length-1; i >= 0; i--) {
+        num = num | bytes[i] << (8 * i);
+    }
+    return num;
+}
+
 
 void ito2h(int value, unsigned char* str) {
 	

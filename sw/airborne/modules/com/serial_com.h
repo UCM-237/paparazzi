@@ -105,7 +105,7 @@ struct serial_parse_t {
   bool msg_available;
   
   uint16_t time;
-  uint16_t depth;
+  int16_t depth;
 
   int16_t button_state[BUTTONS];
 

@@ -1985,7 +1985,7 @@
        <field name="RECV_ID"			type="uint8"/>
     	 <field name="RECV_LENGTH"	type="uint8"/>
        <field name="RECV_ERROR"   type="uint8" values="OK|FINISH_TEST"/> 
-       <field name="RECV_DEPTH"	  type="uint16" alt_unit="m"	alt_unit_coef="0.001"/>
+       <field name="RECV_DEPTH"	  type="int16" alt_unit="m"	alt_unit_coef="0.001"/>
     	 <field name="RECV_TIME"	  type="uint16" alt_unit="s"/>
     </message>
 

@@ -36,6 +36,7 @@
 void serial_read_message(void);
 void itoh(int value, unsigned char* str, int nbytes);
 unsigned int serial_byteToint(uint8_t * bytes,int length);
+int16_t serial_byteToInt16(uint8_t * bytes,int length);
 void ito2h(int value, unsigned char* str);
 void ftoh(float value, unsigned char* str, int nbytes) ;
 

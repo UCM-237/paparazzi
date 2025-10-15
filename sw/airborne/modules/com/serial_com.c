@@ -252,22 +252,22 @@ static void parse_MOVE_WP(void)
 
 // Aqui se procesaban los mensajes (se esta usando para la profundidad)
 // UNUSED
-static void message_probe_parse(void){
-	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
-	serial_msg.time = serial_byteToint(msgBytes,2);
+// static void message_probe_parse(void){
+// 	uint8_t msgBytes[2]={serial_msg.msgData[3],serial_msg.msgData[2]};
+// 	serial_msg.time = serial_byteToint(msgBytes,2);
 	
-	memset(msgBytes,0,2);
-	msgBytes[0]=serial_msg.msgData[7];
-	msgBytes[1]=serial_msg.msgData[6];
-	serial_msg.depth=serial_byteToint(msgBytes,2);	// Es un int (en mm)
+// 	memset(msgBytes,0,2);
+// 	msgBytes[0]=serial_msg.msgData[7];
+// 	msgBytes[1]=serial_msg.msgData[6];
+// 	serial_msg.depth=serial_byteToint(msgBytes,2);	// Es un int (en mm)
 
-	memset(msgBytes,0,2);
-	msgBytes[0]=serial_msg.msgData[9];
-	msgBytes[1]=serial_msg.msgData[8];
-	serial_msg.time=serial_byteToint(msgBytes,2);	// Es un int (en s)
+// 	memset(msgBytes,0,2);
+// 	msgBytes[0]=serial_msg.msgData[9];
+// 	msgBytes[1]=serial_msg.msgData[8];
+// 	serial_msg.time=serial_byteToint(msgBytes,2);	// Es un int (en s)
 
-	serial_msg.error=serial_msg.msgData[4];
-}
+// 	serial_msg.error=serial_msg.msgData[4];
+// }
   
 
 // Este es el mensaje que llega de la sonda
@@ -279,7 +279,7 @@ static void message_OK_parse(void){
 	memset(msgBytes,0,2);
 	msgBytes[0]=serial_msg.msgData[7];
 	msgBytes[1]=serial_msg.msgData[6];
-	serial_msg.depth=serial_byteToint(msgBytes,2);	// Es un int (en mm)
+	serial_msg.depth=serial_byteToInt16(msgBytes,2);	// Es un int (en mm)
 
 	
 	if (serial_msg.error == 1){
@@ -326,7 +326,7 @@ void serial_read_message(void){
  			break;
  		
 		case SR_MEASURE:
- 			message_probe_parse();
+ 			// message_probe_parse();	// UNUSED
 			// message_type = 10;
  			break;
  		
@@ -749,8 +749,6 @@ void serial_ping()
 		serial_snd.error = 0;
 		SET_BIT(msg_buffer, SONDA_MANUAL);
 		int gain2 = radio_control_get(RADIO_GAIN2);
-
-		// serial_msg.depth = 1.0*1000; //DEBUG, pendiente de revisar
 
 		// if(serial_msg.error == 1){
 		// 	malacate_state = CHECK;
