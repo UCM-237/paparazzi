@@ -3,7 +3,7 @@
 <module name="ins_slam_ekf" dir="ins" task="estimation">
   <doc>
     <description>
-      INS with SLAM Correction + Extended Kalman Filter
+      INS with SLAM Correction + Extended Kalman Filter + Moving Average Filter for acceleration
     </description>
     <define name="USE_INS_NAV_INIT" value="TRUE|FALSE" description="Initialize the origin of the local coordinate system from flight plan. (Default: TRUE)"/>
     <define name="INS_INT_BARO_ID" value="BARO_BOARD_SENDER_ID" description="The ABI sender id of the baro to use"/>
@@ -53,6 +53,7 @@
     <file name="ins.c"/>
     <file name="ins_slam_ekf.c"/>
     <file name="extended_kalman_filter.c" dir="filters"/>
+    <file name="moving_average_filter.c" dir="filters"/>
     <file name="jacobian.c" dir="filters"/>
     <file name="pprz_random.c" dir="math"/>
   </makefile>

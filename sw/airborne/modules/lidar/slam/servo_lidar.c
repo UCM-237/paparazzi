@@ -68,13 +68,13 @@ void servoLidar_periodic(void) {
       // Set servo command
       commands[COMMAND_SERVO] = servoLidar.position;
       servoLidar.angle = PWM2ANGLE(servoLidar.position);
-      
-      // Send ABI message
-      AbiSendMsgOBSTACLE_DETECTION(AGL_LIDAR_TFMINI_ID, tfmini.distance, servoLidar.angle, 0);
     }
     else {
       commands[COMMAND_SERVO] = 0; // Center servo when disabled
     }
+
+    // Send ABI message
+    AbiSendMsgOBSTACLE_DETECTION(AGL_LIDAR_TFMINI_ID, tfmini.distance, servoLidar.angle, 0);
   }
 }
 #else

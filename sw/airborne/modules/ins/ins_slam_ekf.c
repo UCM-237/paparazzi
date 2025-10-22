@@ -23,7 +23,7 @@
  * @file modules/ins/ins_int.c
  *
  * INS + SLAM Correction for the rovers using the TFMini Lidar.
- * This version use the Extended Kalman Filter.
+ * This version use the Extended Kalman Filter and uses a moving average filter for the IMU.
  *
  */
 
@@ -36,6 +36,7 @@
 #include "modules/lidar/slam/lidar_correction.h"
 
 #include "filters/extended_kalman_filter.h"
+#include "filters/moving_average_filter.h"
 #define DELTA_T  0.008  // Tiempo entre medidas por defecto
 
 #include "modules/nav/waypoints.h"
@@ -50,8 +51,9 @@ static uint32_t N_medidas = 0;
 bool enable_ekf_filter = true;
 struct extended_kalman_filter kalman_filter;
 struct KalmanVariance kalman_variance;
+moving_avg_filter_t accel_filter_x;
+moving_avg_filter_t accel_filter_y;
 
-static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 
 // Parámetros de corrección
 #define MIN_LIDAR_DISTANCE 0.1f
@@ -63,6 +65,9 @@ static struct FloatVect2 debug_point = {0.0, 0.0};  // BORRAR
 // Para el filtro de Kalman
 #define R_LIDAR_HIGH 150.0f
 #define R_LIDAR_LOW  1E-05
+
+// Para el filtro de media movil
+#define ACCEL_MOV_AVG_N 13
 
 // Para NPS
 #define GPS_BIAS_X 0.5f
@@ -87,7 +92,7 @@ struct NedCoor_f rover_pos;
 #include "modules/datalink/downlink.h"
 
 static abi_event lidar_ev;
-static void lidar_cb(uint8_t sender_id, uint32_t stamp, float distance, float angle);
+static void lidar_cb(uint8_t sender_id, uint32_t stamp, float distance, float angle, float heading);
 
 uint8_t counter_test = 0;   // Esto es para pruebas
 
@@ -383,6 +388,10 @@ void ins_slam_init(void)
   ins_slam.min_distance = MIN_LIDAR_DISTANCE;
   ins_slam.max_distance_wall = MAX_WALL_DISTANCE;
 
+  // For the moving average filter
+  moving_avg_filter_init(&accel_filter_x, ACCEL_MOV_AVG_N);
+  moving_avg_filter_init(&accel_filter_y, ACCEL_MOV_AVG_N);
+
   // For NPS
   ins_slam.gps_bias.x = GPS_BIAS_X;
   ins_slam.gps_bias.y = GPS_BIAS_Y;
@@ -401,7 +410,7 @@ void ins_slam_init(void)
    */
   AbiBindMsgIMU_ACCEL(INS_INT_IMU_ID, &accel_ev, accel_cb);
   AbiBindMsgGPS(INS_INT_GPS_ID, &gps_ev, gps_cb);
-  AbiBindMsgLIDAR_SERVO(AGL_LIDAR_TFMINI_ID, &lidar_ev, lidar_cb);
+  AbiBindMsgOBSTACLE_DETECTION(AGL_LIDAR_TFMINI_ID, &lidar_ev, lidar_cb);
   AbiBindMsgINS_RESET(ABI_BROADCAST, &reset_ev, reset_cb);
 
 }
@@ -483,6 +492,10 @@ void ins_int_propagate(struct Int32Vect3 *accel, float dt)
   body_accel.x = ACCEL_FLOAT_OF_BFP(accel->x);
   body_accel.y = ACCEL_FLOAT_OF_BFP(accel->y);
   body_accel.z = ACCEL_FLOAT_OF_BFP(accel->z) + 9.81;  // Aqui esta restando la gravedad
+
+  // Filtramos la aceleración con un filtro de media movil (la z nos da igual)
+  body_accel.x = moving_avg_filter_update(&accel_filter_x, body_accel.x);
+  body_accel.y = moving_avg_filter_update(&accel_filter_y, body_accel.y);
 
   // Velocidad angular (solo hace falta Z)
   struct FloatRates *ang_vel;
@@ -684,7 +697,6 @@ void ins_update_lidar(float distance, float angle){
     convert_walls_to_ltp();
   }
 
-
   // TODAS estas cuentas estan en ENU
   // Obtener posición actual del rover (sin corregir) en coordenadas locales
   // float x_rover = POS_FLOAT_OF_BFP(stateGetPositionEnu_i()->x);
@@ -728,10 +740,6 @@ void ins_update_lidar(float distance, float angle){
   #ifdef USE_GRID
     fill_bayesian_cell(obstacle.x, obstacle.y);
   #endif
-
-  // Cuando lo termine de depurar se puede borrar
-  debug_point.x = nearest_point.x;
-  debug_point.y = nearest_point.y;
 
 }
 
@@ -782,7 +790,7 @@ static void gps_cb(uint8_t sender_id __attribute__((unused)),
 
 static void lidar_cb(uint8_t __attribute__((unused)) sender_id,
                        uint32_t stamp __attribute__((unused)),
-                       float distance, float angle)
+                       float distance, float angle, float heading __attribute__((unused)))
 {
   ins_update_lidar(distance, angle);
 }

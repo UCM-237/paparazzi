@@ -77,21 +77,6 @@ uint8_t grid_block_size = GRID_BLOCK_SIZE; // This is only used in CBF
 
 
 #if PERIODIC_TELEMETRY
-static void send_obstacle_grid(struct transport_tx *trans, struct link_device *dev)
-{
-  // Send all cols from obstacle_grid.now_row in a cyclic pattern
-  pprz_msg_send_OBSTACLE_GRID(trans, dev, AC_ID,
-                              &obstacle_grid.dx,
-                              &obstacle_grid.dy,
-                              &obstacle_grid.xmin,
-                              &obstacle_grid.xmax,
-                              &obstacle_grid.ymin,
-                              &obstacle_grid.ymax,
-                              &obstacle_grid.now_row,
-                              N_COL_GRID, obstacle_grid.world[obstacle_grid.now_row]);
-
-  obstacle_grid.now_row = (obstacle_grid.now_row + 1) % N_ROW_GRID;
-}
 static void send_grid_init(struct transport_tx *trans, struct link_device *dev)
 {
   pprz_msg_send_GRID_INIT(trans, dev, AC_ID,
@@ -162,7 +147,9 @@ void init_grid_4(uint8_t wp1, uint8_t wp2, uint8_t wp3, uint8_t wp4)
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GRID_INIT, send_grid_init);
 #endif
 
+#ifndef INS_SLAM_EKF_H
   AbiBindMsgOBSTACLE_DETECTION(OBSTACLES_RECEIVE_ID, &lidar_ev, lidar_cb);
+#endif
 
   // Send the message to the GCS
   DOWNLINK_SEND_GRID_INIT(
@@ -369,6 +356,7 @@ void check_probs(void)
  ******************************************************************************/
 
 
+#ifndef INS_SLAM_EKF_H
 void ins_update_lidar(float distance, float angle)
 {
 
@@ -405,13 +393,13 @@ void ins_update_lidar(float distance, float angle)
 }
 
 
-
 static void lidar_cb(uint8_t __attribute__((unused)) sender_id,
                      uint32_t stamp __attribute__((unused)),
                      float distance, float angle)
 {
   ins_update_lidar(distance, angle);
 }
+#endif
 
 
 
