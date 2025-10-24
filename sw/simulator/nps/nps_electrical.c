@@ -33,7 +33,7 @@
 #include "generated/airframe.h"
 #include "modules/energy/electrical.h"
 
-#define FIXED_CONSUMPTION 6.6e-4 //Consumo fijo en A (sensores, electrónica, etc)
+#define FIXED_CONSUMPTION 2.35 // Consumo fijo en A (sensores, electrónica, etc)
 
 struct NpsElectrical nps_electrical;
 //struct NpsFdm fdm;

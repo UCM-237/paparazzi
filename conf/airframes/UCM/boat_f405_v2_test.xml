@@ -14,13 +14,21 @@
       <module name="serial" type="com">
     	  <configure name="SERIAL_UART" value="UART5"/>
       </module>
+      <module name="ahrs" type="float_dcm">
+        <!--  <define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/> -->
+        <define name ="AHRS_DCM_MAG_ID" value="MAG_QMC5883L_SENDER_ID"/>
+      </module>
+      <module name="sonar" type="bluerobotics">
+    	  <configure name="SONAR_UART" value="UART1"/>
+      </module>
     </target>
     
     <target name="nps" board="pc">
       <module name="radio_control" type="ppm"/>
-      <module name="fdm"           type="rover"/>
+      <module name="fdm"           type="CYANOA"/>
       <define name="NPS_BYPASS_AHRS" value="TRUE"/>
       <define name="NPS_BYPASS_INS"  value="TRUE"/>
+      <module name="serial" type="nps"/>
     </target>    
     
     <!-- Same board module as matek_f405_wind but without OSD -->
@@ -29,27 +37,25 @@
     <module name="actuators" type="pwm"/>
 
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART4"/>
+    	<configure name="GPS_PORT"  value="UART6"/>
     </module>
     <module name="gps_ubx_ucenter"/>
+    
     <module name="ins"/>
-    
-    <module name="ahrs" type="float_dcm">
-    	<!-- Do not use gps for course in the boat -->
-      <!--define name="AHRS_FLOAT_MIN_SPEED_GPS_COURSE" value="0.1"/-->
-      <!-- Beware, if using other filters, the name AHRS_.. is different, the value is the same -->
-      <define name ="AHRS_DCM_MAG_ID" value="MAG_QMC5883L_SENDER_ID"/>
-    </module>
-    
-    <!-- Use magnetometers on ground, on fly and do not use gps for heading-->
+    <!-- Untested -->
+    <!-- <module name="ins_ekf"/> -->
+  
+
+    <!-- Use magnetometers on ground, on fly and do not use gps for heading    -->
     <configure name="USE_MAGNETOMETER" value="TRUE"/>
     <configure name="USE_MAGNETOMETER_ON_GROUND" value="TRUE"/>
     <configure name="AHRS_USE_GPS_HEADING" value="FALSE"/>
-    
+  
+
     <!-- Compass from our gps modules -->
     <module name="mag_qmc5883l">
     	<configure name="MAG_QMC5883L_I2C_DEV" value="I2C2"/>
-    	<define name="MODULE_QMC5883L_SYNC_SEND" value="TRUE"/>
+    	<define name="MODULE_QMC5883L_SYNC_SEND" value="FALSE"/>
     	<define name="MODULE_QMC5883L_UPDATE_AHRS" value="TRUE"/>
      	<define name="QMC5883L_CHAN_X_SIGN" value="+"/>
      	<define name="QMC5883L_CHAN_Y_SIGN" value="+"/>
@@ -60,22 +66,18 @@
     <module name="geo_mag"/>
     
    <module name="telemetry" type="xbee_api">
-    	<configure name="MODEM_PORT"  value="UART1"/>
+    	<configure name="MODEM_PORT"  value="UART4"/>
     	<define name="BOAT_DEBUG"     value="TRUE"/>
     </module>
 
     <!-- Nuestros módulos: Drivers del sonar, comunicación serie y guiado + navegación del barco -->
-    <module name="sonar" type="bluerobotics">
-    	<configure name="SONAR_UART" value="UART3"/>
-    </module>
 
-
-    <!--LIDAR-->
-    
+    <!--LIDAR
     <module name="lidar" type="tfmini">
-    	<configure name="TFMINI_PORT" value="UART6"/>
+    	<configure name="TFMINI_PORT" value="UART3"/>
     	<configure name="TFMINI_BAUD" value="B115200"/>
-    </module>
+    </module> -->
+
 
     <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
       <define name="ROVER_BASE_SEND_TRAJECTORY" value="FALSE"/>
@@ -83,15 +85,22 @@
 	    
     <module name="gvf"  type="module"/>
     <module name="gvf_parametric_bare">
-      <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
+      <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="4"/>
     </module>
     <module name="guidance" type="boat">
-    	<define name="BOAT_SPEED_KF" value="1000"/>
-      <define name="BOAT_BEARING_KF" value="1000"/>
+    	<!-- <define name="BOAT_SPEED_KF" value="1000"/> -->
+      <define name="BOAT_BEARING_KF" value="10000"/>
+    </module>
+    
+    <module name="boat_sim_physics">
+    	<define name="mu_x" value="1"/> 
+      <define name="mu_y" value="1"/>
+      <define name="mu_z" value="1"/>
     </module>
 
 		
   </firmware>
+
 
 
   <!-- COMMANDS SECTION ..................................................................... -->
@@ -190,10 +199,10 @@
   </section>
   
   <section name="BAT">
-    <define name="CATASTROPHIC_BAT_LEVEL"    value="7.35" unit="V"/>
-    <define name="CRITIC_BAT_LEVEL"          value="7.40" unit="V"/>
-    <define name="LOW_BAT_LEVEL"             value="7.45" unit="V"/>
-    <define name="MAX_BAT_LEVEL"             value="8.44" unit="V"/>
+    <define name="CATASTROPHIC_BAT_LEVEL"    value="10.0" unit="V"/>
+    <define name="CRITIC_BAT_LEVEL"          value="10.2" unit="V"/>
+    <define name="LOW_BAT_LEVEL"             value="10.3" unit="V"/>
+    <define name="MAX_BAT_LEVEL"             value="13.4" unit="V"/>
     <define name="MILLIAMP_AT_FULL_THROTTLE" value="1800" unit="mA"/>
     <define name="MILLIAMP_AT_IDLE_THROTTLE" value="1000" unit="mA"/>
     <!--define name="CURRENT_ESTIMATION_NONLINEARITY" value="1.0"/-->
