@@ -177,5 +177,12 @@
       <exception cond="And(serial_response, serial_response)" deroute="mision_muestreo_ptp"/>
       <!-- <exception cond="And(serial_msg_test, serial_msg_test)" deroute="mision_malacate_ptp"/> -->
     </block>
+   <block name="wait_ptp" strip_icon="downdown.png">
+      <set var="gvf_c_stopwp.pxd" value="GetPosX()"/>
+      <set var="gvf_c_stopwp.pyd" value="GetPosY()"/>
+      <call_once fun="increase_pointer_ptp()"/>
+      <call fun="boat_guidance_bearing_static_ctrl()"/>
+      <!-- exception cond="And(serial_response, serial_response)" deroute="mision_muestreo_ptp"/ -->
+    </block>
   </blocks>
 </flight_plan>
