@@ -1,0 +1,177 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+<!-- This flight plan is designed for use with the Planification GCS -->
+
+<flight_plan alt="660" ground_alt="650" lat0="39.7943606" lon0="-4.0817578" max_dist_from_home="2000" name="GSA 1 - Rotorcraft Multiflight (Portland)" security_height="0.3">
+  <header>
+
+</header>
+  <waypoints>
+    <waypoint name="HOME" x="0" y="0"/>
+    <waypoint name="STDBY"   lat="39.7943606" lon="-4.0833705"/>
+    <waypoint name="ELLIPSE" lat="39.7943606" lon="-4.0845552"/>
+    <waypoint name="_N1" lat="39.8013470" lon="-4.0730481"/>
+    <waypoint name="_N2" lat="39.7816679" lon="-4.0730481"/>
+    <waypoint name="_N3" lat="39.7816679" lon="-4.0977811"/>
+    <waypoint name="_N4" lat="39.8013470" lon="-4.0977811"/>
+    <waypoint name="L0" x="952.2" y="768.4"/>
+    <waypoint name="L1" x="956.2" y="770.4"/>
+    <waypoint name="L2" x="956.2" y="770.4"/>
+    <waypoint name="L3" x="956.2" y="770.4"/>
+    <waypoint name="L4" x="956.2" y="770.4"/>
+    <waypoint name="L5" x="956.2" y="770.4"/>
+    <waypoint name="L6" x="956.2" y="770.4"/>
+    <waypoint name="L7" x="956.2" y="770.4"/>
+    <waypoint name="L8" x="956.2" y="770.4"/>
+    <waypoint name="L9" x="956.2" y="770.4"/>
+    <waypoint name="L10" x="956.2" y="770.4"/>
+    <waypoint name="L11" x="956.2" y="770.4"/>
+    <waypoint name="L12" x="956.2" y="770.4"/>
+    <waypoint name="L13" x="956.2" y="770.4"/>
+    <waypoint name="L14" x="956.2" y="770.4"/>
+    <waypoint name="L15" x="956.2" y="770.4"/>
+    <waypoint name="L16" x="956.2" y="770.4"/>
+    <waypoint name="L17" x="952.2" y="768.4"/>
+    <waypoint name="L18" x="956.2" y="770.4"/>
+    <waypoint name="L19" x="956.2" y="770.4"/>
+    <waypoint name="L20" x="956.2" y="770.4"/>
+    <!-- BZ_i from 0 to 60 -->
+    <!-- Pongo solo 10 descomentados ya que máximo hay 4 segmentos en la curva de Bézier-->
+    <waypoint lat="39.7967000" lon="-4.0856001" name="BZ0"/> <!-- wP/-->
+    <waypoint lat="39.7969235" lon="-4.0859025" name="BZ1"/>
+    <waypoint lat="39.7970411" lon="-4.0862806" name="BZ2"/>
+    <waypoint lat="39.7969255" lon="-4.0867155" name="BZ3"/>
+    <waypoint lat="39.7966866" lon="-4.0872464" name="BZ4"/> 
+    <waypoint lat="39.7962829" lon="-4.0876500" name="BZ5"/> <!-- wP/-->
+    <waypoint lat="39.7958712" lon="-4.0871895" name="BZ6"/>
+    <waypoint lat="39.7956090" lon="-4.0865899" name="BZ7"/> 
+    <waypoint lat="39.7955125" lon="-4.0859338" name="BZ8"/> <!-- wP/-->
+    <waypoint lat="39.7953189" lon="-4.0854506" name="BZ9"/>
+    <waypoint lat="39.7949688" lon="-4.0846792" name="BZ10"/>
+    <waypoint lat="39.7948425" lon="-4.0835361" name="BZ11"/> <!-- wP/-->
+    <waypoint name="BZ12" x="956.2" y="770.4"/>
+    <!--waypoint name="_BZ13" x="956.2" y="770.4"/>
+    <waypoint name="_BZ14" x="956.2" y="770.4"/>
+    <waypoint name="BZ15" x="956.2" y="770.4"/>
+    <waypoint name="_BZ16" x="956.2" y="770.4"/>
+    <waypoint name="_BZ17" x="956.2" y="770.4"/>
+    <waypoint name="BZ18" x="956.2" y="770.4"/>
+    <waypoint name="_BZ19" x="956.2" y="770.4"/>
+    <waypoint name="_BZ20" x="956.2" y="770.4"/>
+    <waypoint name="BZ21" x="956.2" y="770.4"/>
+    <waypoint name="_BZ22" x="956.2" y="770.4"/>
+    <waypoint name="_BZ23" x="956.2" y="770.4"/>
+    <waypoint name="BZ24" x="956.2" y="770.4"/>
+    <waypoint name="_BZ25" x="956.2" y="770.4"/>
+    <waypoint name="_BZ26" x="956.2" y="770.4"/>
+    <waypoint name="BZ27" x="956.2" y="770.4"/>
+    <waypoint name="_BZ28" x="956.2" y="770.4"/>
+    <waypoint name="_BZ29" x="956.2" y="770.4"/>
+    <waypoint name="BZ30" x="956.2" y="770.4"/>
+    <waypoint name="_BZ31" x="956.2" y="770.4"/>
+    <waypoint name="_BZ32" x="956.2" y="770.4"/>
+    <waypoint name="BZ33" x="956.2" y="770.4"/>
+    <waypoint name="_BZ34" x="956.2" y="770.4"/>
+    <waypoint name="_BZ35" x="956.2" y="770.4"/>
+    <waypoint name="BZ36" x="956.2" y="770.4"/>
+    <waypoint name="_BZ37" x="956.2" y="770.4"/>
+    <waypoint name="_BZ38" x="956.2" y="770.4"/>
+    <waypoint name="BZ39" x="956.2" y="770.4"/>
+    <waypoint name="_BZ40" x="956.2" y="770.4"/>
+    <waypoint name="_BZ41" x="956.2" y="770.4"/>
+    <waypoint name="BZ42" x="956.2" y="770.4"/>
+    <waypoint name="_BZ43" x="956.2" y="770.4"/>
+    <waypoint name="_BZ44" x="956.2" y="770.4"/>
+    <waypoint name="BZ45" x="956.2" y="770.4"/>
+    <waypoint name="_BZ46" x="956.2" y="770.4"/>
+    <waypoint name="_BZ47" x="956.2" y="770.4"/>
+    <waypoint name="BZ48" x="956.2" y="770.4"/>
+    <waypoint name="_BZ49" x="956.2" y="770.4"/>
+    <waypoint name="_BZ50" x="956.2" y="770.4"/>
+    <waypoint name="BZ51" x="956.2" y="770.4"/>
+    <waypoint name="_BZ52" x="956.2" y="770.4"/>
+    <waypoint name="_BZ53" x="956.2" y="770.4"/>
+    <waypoint name="BZ54" x="956.2" y="770.4"/>
+    <waypoint name="_BZ55" x="956.2" y="770.4"/>
+    <waypoint name="_BZ56" x="956.2" y="770.4"/>
+    <waypoint name="BZ57" x="956.2" y="770.4"/>
+    <waypoint name="_BZ58" x="956.2" y="770.4"/>
+    <waypoint name="_BZ59" x="956.2" y="770.4"/>
+    <waypoint name="BZ60" x="956.2" y="770.4"/-->
+
+
+  </waypoints>
+  <sectors>
+    <sector color="red" name="Net">
+      <corner name="_N1"/>
+      <corner name="_N2"/>
+      <corner name="_N3"/>
+      <corner name="_N4"/>
+    </sector>
+  </sectors>
+  <variables>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="aa"/>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="bb"/>
+  </variables>
+  <modules>
+    <module name="gvf_module"/>
+    <module name="gvf_parametric_bare"/>
+  </modules>
+  <blocks>
+    <block name="Wait GPS" strip_icon="gps.png">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+    </block>
+    <block name="Geo init" strip_icon="googleearth.png">
+      <while cond="LessThan(NavBlockTime(), 10)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+    </block>
+    <block name="Start Engine" strip_icon="on.png">
+      <while cond="LessThan(NavBlockTime(), 1)"/>
+      <call_once fun="autopilot_set_motors_on(TRUE)"/>
+    </block>
+    <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      <call fun="gvf_ellipse_wp(WP_STDBY, 3, 3, 0)"/>
+    </block>
+    <block name="line_to_HOME" strip_icon="home_drop.png">
+      <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="ellipse_wp" strip_icon="oval.png">
+      <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="gvf_quintic_bezier" strip_icon="survey.png">
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
+      <call fun="gvf_parametric_bare_2D_quintic_bezier_wp(WP_BZ0)"/>
+      <exception cond="dist_quintic(GetPosX(), GetPosY(), WP_BZ0) @LT gvf_c_stopwp.distance_stop" deroute="static_ctrl_time"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="line_array_v3" strip_icon="line.png">
+      <call fun="gvf_lines_array_wp_v3(WP_L0, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_ctrl_time" strip_icon="downdown.png">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun="increase_bz_pointer()"/>
+      <call fun="boat_guidance_bearing_static_ctrl()"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+      <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="gvf_quintic_bezier"/>
+    </block>
+
+    <!-- Malacate functions -->
+    <block name="mision_malacate_ptp" strip_icon="path.png">
+      <set var="gvf_c_stopwp.stay_still" value="0"/>
+      <call fun="gvf_lines_array_wp_v3(WP_L0, gvf_segment_par.d1, gvf_segment_par.d2)"/>
+      <exception cond="dist_ptp(GetPosX(), GetPosY(), WP_L0) @LT gvf_c_stopwp.distance_stop" deroute="static_ptp"/>
+      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+    </block>
+    <block name="static_ptp" strip_icon="downdown.png">
+      <set var="gvf_c_stopwp.stay_still" value="1"/>
+      <call_once fun="increase_pointer_ptp()"/>
+      <call fun="boat_guidance_bearing_static_ctrl()"/>
+      <!-- <exception cond="! LessThan(NavBlockTime(), gvf_c_stopwp.wait_time)" deroute="mision_malacate_ptp"/> -->
+      <exception cond="And(serial_response, serial_response)" deroute="mision_malacate_ptp"/>
+    </block>
+  </blocks>
+</flight_plan>
