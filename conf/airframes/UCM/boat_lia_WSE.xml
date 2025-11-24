@@ -29,7 +29,7 @@
     <module name="actuators" type="pwm"/>
 
     <module name="gps" type="ublox">
-    	<configure name="GPS_PORT"  value="UART3"/>
+    	<configure name="GPS_PORT"  value="UART4"/>
     </module>
     <module name="gps_ubx_ucenter"/>
     <module name="ins"/>
@@ -48,7 +48,7 @@
     
     <!-- Compass from our gps modules -->
     <module name="mag_qmc5883l">
-    	<configure name="MAG_QMC5883L_I2C_DEV" value="I2C1"/>
+    	<configure name="MAG_QMC5883L_I2C_DEV" value="I2C2"/>
     	<define name="MODULE_QMC5883L_SYNC_SEND" value="TRUE"/>
     	<define name="MODULE_QMC5883L_UPDATE_AHRS" value="TRUE"/>
      	<define name="QMC5883L_CHAN_X_SIGN" value="+"/>
@@ -72,10 +72,10 @@
 
     <!--LIDAR-->
     
-    <module name="lidar" type="tfmini">
+   <!-- <module name="lidar" type="tfmini">
     	<configure name="TFMINI_PORT" value="UART4"/>
     	<configure name="TFMINI_BAUD" value="B115200"/>
-    </module>
+    </module>-->
 
     <module name="nav"  type="rover_base"> <!-- TODO: Tendremos que cambiar este módulo por el de nav. del barco -->
       <define name="ROVER_BASE_SEND_TRAJECTORY" value="FALSE"/>
@@ -98,8 +98,8 @@
   <servos> 
     <!-- "no" 0 and 1 0, our f405 don't have power pin for these pwm outputs... -->
     <!-- "changed limits following manufacturer instructions-->
-    <servo name="MOTOR_LEFT"  no="2" min="1100" neutral="1500" max="1900"/>
-    <servo name="MOTOR_RIGHT" no="3" min="1100" neutral="1500" max="1900"/>
+    <servo name="MOTOR_LEFT"  no="1" min="1100" neutral="1500" max="1900"/>
+    <servo name="MOTOR_RIGHT" no="2" min="1100" neutral="1500" max="1900"/>
   </servos> 
   
   <!-- Low level commands -->
