@@ -211,3 +211,65 @@ void gvf_parametric_bare_2d_lines_info(int n_segments, float *x_points, float *y
                                                         n_segments, epsilon_y,
                                                         1);
 }
+
+void gvf_parametric_bare_2d_lines_restrict_curvature(int n_segments, float *x_points,
+                                                     float *y_points, float kappa_max)
+{
+  // This method assumes that epsilon_x = epsilon_y
+  float epsilon = gvf_parametric_bare_2d_lines_par.epsilon_x;
+  int which_segment = (int)(gvf_parametric_bare_control.w);
+  float decimal_part = gvf_parametric_bare_control.w - which_segment;
+  if(which_segment < 0)
+  {
+    which_segment = 0;
+    decimal_part = 0;
+  }
+  else if(which_segment >= GVF_PARAMETRIC_BARE_2D_LINES_N_SEG - 1)
+  {
+    which_segment = GVF_PARAMETRIC_BARE_2D_LINES_N_SEG  - 1;
+  }
+
+  // If we are in the last segment we leave it as is, as well if we are not
+  // past half of the segment (i.e., decimal part >= 0.5)
+  if( (which_segment < GVF_PARAMETRIC_BARE_2D_LINES_N_SEG - 1) &&
+      (decimal_part >= 0.5))
+  { 
+    printf("Parameter value %f\n", gvf_parametric_bare_control.w);
+    printf("Which segment %d\n", which_segment);
+    printf("Decimal part %f\n", decimal_part);
+    float delta_p1_x = x_points[which_segment+1] - x_points[which_segment];
+    float delta_p2_x = x_points[which_segment+2] - x_points[which_segment + 1];
+    float delta_p1_y = y_points[which_segment+1] - y_points[which_segment];
+    float delta_p2_y = y_points[which_segment+2] - y_points[which_segment + 1];
+    float delta_p_x = delta_p2_x - delta_p1_x;
+    float delta_p_y = delta_p2_y - delta_p1_y;
+    float cross = delta_p1_x * delta_p2_y - delta_p1_y * delta_p2_x;
+    float inner = delta_p_x * delta_p2_x + delta_p_y * delta_p2_y;
+    float dist  = sqrtf(powf(delta_p_x, 2) + powf(delta_p_y,2));
+    // TODO: Handle divisions by zero
+    float auxi  = inner / powf(dist,2);
+    float aux_x = delta_p1_x * auxi + (1 - auxi) * delta_p2_x;
+    float aux_y = delta_p1_y * auxi + (1 - auxi) * delta_p2_y;
+    float big_expr = powf( powf(aux_x, 2) + powf(aux_y, 2), 1.5);
+    float M;
+    if( (0 <= auxi) && (auxi <= 1))
+    {
+      M = 1.0 / big_expr;
+    }
+    else
+    {
+      float p1_norm = sqrtf(powf(delta_p1_x, 2) + powf(delta_p1_y, 2));
+      float p2_norm = sqrtf(powf(delta_p2_x, 2) + powf(delta_p2_y, 2));
+      M = (1.0 / (powf(p1_norm, 3))) ? (1/p1_norm >= 1/p2_norm) : (1.0 / (powf(p1_norm, 3)));
+    }
+
+    float varphi_inf_norm = gvf_parametric_bare_2d_lines_mollifier(0, 1);
+    float upper_bound = fabsf(cross) * varphi_inf_norm * M;
+    float epsilon = upper_bound / kappa_max;
+    // TODO: Set security upper bound in case epsilon is greater than 
+    // a certain value (e.g., the number of segments).
+    gvf_parametric_bare_2d_lines_par.epsilon_x = upper_bound / kappa_max;
+    gvf_parametric_bare_2d_lines_par.epsilon_y = upper_bound / kappa_max;
+  }
+
+}

@@ -31,7 +31,7 @@
 #include "gvf_parametric_bare.h"
 #include "./trajectories/gvf_parametric_bare_2d_bezier_splines.h"
 #include "trajectories/gvf_parametric_bare_2d_lines.h"
-
+#include <guidance/gvf_common.h>
 #include "autopilot.h"
 
 
@@ -98,6 +98,7 @@ void gvf_parametric_bare_init(void)
   gvf_parametric_bare_control.k_psi = GVF_PARAMETRIC_BARE_CONTROL_KPSI;
   gvf_parametric_bare_control.L = GVF_PARAMETRIC_BARE_CONTROL_L;
   gvf_parametric_bare_control.beta = GVF_PARAMETRIC_BARE_CONTROL_BETA;
+  gvf_c_info.bound_kappa = 0;
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GVF_PARAMETRIC, send_gvf_parametric_bare);
 #if GVF_OCAML_GCS
@@ -383,7 +384,15 @@ bool gvf_parametric_bare_2D_lines_XY(float *x_points, float *y_points)
   gvf_parametric_bare_2d_lines_info(GVF_PARAMETRIC_BARE_2D_LINES_N_SEG,
                                     x_points, y_points, &fx, &fy, &fxd, &fyd);
 
-  // Compute control signal. TODO: Add second derivatives
+  // Restrict the curvature by changing gvf_parametric_bare_2d_lines_par.epsilon
+  if(gvf_c_info.bound_kappa)
+  {
+    gvf_parametric_bare_2d_lines_restrict_curvature(GVF_PARAMETRIC_BARE_2D_LINES_N_SEG,
+                                                    x_points, y_points,
+                                                    gvf_c_info.kappa_max);
+  }
+
+  // Compute control signal. TODO: Add second derivatives.
   gvf_parametric_bare_control_2D(gvf_parametric_bare_2d_lines_par.kx, gvf_parametric_bare_2d_lines_par.ky,
                                  fx, fy, fxd, fyd, 0.0, 0.0);
   return true;

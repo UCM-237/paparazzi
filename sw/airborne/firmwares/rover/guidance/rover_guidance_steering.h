@@ -144,6 +144,9 @@ typedef struct {
   float max_lateral_accel;
   float beta;
   float h_cbf;
+  float min_radius_curvature;
+  float max_radius_curvature;
+  int bound_curvature_gvf;
 } rover_rollover_protection;
 
 extern rover_ctrl guidance_control;

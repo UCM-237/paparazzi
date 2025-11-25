@@ -75,7 +75,7 @@
     <module name="gvf" type="module"/>
     <module name="gvf_parametric_bare">
       <!--define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/-->
-      <define name="GVF_PARAMETRIC_BARE_2D_LINES_N_SEG"  value="8"/>
+      <define name="GVF_PARAMETRIC_BARE_2D_LINES_N_SEG"  value="4"/>
       <define name="GVF_PARAMETRIC_BARE_2D_LINES_KX"     value="0.8"/>
       <define name="GVF_PARAMETRIC_BARE_2D_LINES_KY"     value="0.8"/>
       <define name="GVF_PARAMETRIC_BARE_CONTROL_BETA"    value="0.05"/>

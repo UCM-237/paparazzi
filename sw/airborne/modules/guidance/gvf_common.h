@@ -39,6 +39,9 @@
 /** @typedef gvf_common_params
 * @brief Different parameters obtained from gvfs. dot means d/dt
 * @param kappa is the curve's curvature
+* @param kappa_dot is the time derivative of the curvature
+* @param kappa_max is the maximum allowed curvature
+* @param bound_kappa is a boolean indicating if kappa must be bounded
 * @param ori_err is the orientation error
 * @param ori_err_dot is the derivative of the orientation error
 */
@@ -46,6 +49,8 @@
 typedef struct{
   float kappa;
   float kappa_dot;
+  float kappa_max;
+  int bound_kappa;
   float ori_err;
   float ori_err_dot;
 } gvf_common_params;

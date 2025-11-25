@@ -145,6 +145,8 @@ void rover_guidance_steering_init(void)
   rollover_protection.beta = 1;
   rollover_protection.h_cbf = 0;
   rollover_protection.max_lateral_accel = 3.0;
+  rollover_protection.min_radius_curvature = 1;
+  rollover_protection.max_radius_curvature = 10; // TODO: Remove magic numbers
 
   // Initialize distance protection
   tfmini_event();
@@ -188,7 +190,7 @@ void rover_guidance_steering_heading_ctrl(float omega) //GVF give us this omega
   guidance_control.cmd.delta = BoundDelta(delta);
 }
 
-// Speed control (nonlinear or feedforward + pi)
+// Speed control (nonlinear or feedforward + pid)
 void rover_guidance_steering_speed_ctrl(void) 
 {
   // Mov avg speed
@@ -198,6 +200,15 @@ void rover_guidance_steering_speed_ctrl(void)
   ptr_avg = (ptr_avg + 1) % MOV_AVG_M;
   float dv_sp;
   rover_guidance_steering_obtain_setpoint(&dv_sp);
+
+  // Compute the minimum of curvature depending on speed
+  float R_min = rollover_protection.min_radius_curvature;
+  // - speed_avg /
+  //guidance_control.cmd.max_speed * (rollover_protection.min_radius_curvature -
+  //rollover_protection.max_radius_curvature);
+
+  gvf_c_info.kappa_max = 1.0 / R_min;
+  gvf_c_info.bound_kappa = rollover_protection.bound_curvature_gvf;
 
   if(guidance_control.use_non_linear)
     rover_guidance_steering_speed_ctrl_lyap(dv_sp);
@@ -238,7 +249,7 @@ void rover_guidance_steering_obtain_setpoint(float *dv_sp)
   *dv_sp = 0; // For now speed setpoint is asumed to be constant (which is not true)
 }
 
-// PI controller
+// PID controller
 void rover_guidance_steering_speed_ctrl_pid(void)
 {
   // - Looking for setting update
@@ -285,7 +296,6 @@ void rover_guidance_steering_speed_ctrl_lyap(float dv_sp)
   }
   guidance_control.throttle = BoundThrottle(u);
 }
-
 
 // Update dist measurement using moving average filter
 void rover_guidance_steering_update_measurment(void)
@@ -354,6 +364,7 @@ void rover_guidance_steering_pid_reset(void)
     reset_pid_f(&rover_pid);
   }
 }
+
 /** To Stop at Waypoints **/
 bool rover_guidance_bearing_static_ctrl(void)
 { 

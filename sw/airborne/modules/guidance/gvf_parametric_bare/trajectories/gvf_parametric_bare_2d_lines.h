@@ -21,9 +21,9 @@
 #ifndef GVF_PARAMETRIC_BARE_2D_LINES_H
 #define GVF_PARAMETRIC_BARE_2D_LINES_H
 
-// Define default number of segments of the spline
+// Define default number of segments of the lines
 #ifndef GVF_PARAMETRIC_BARE_2D_LINES_N_SEG
-#define GVF_PARAMETRIC_BARE_2D_LINES_N_SEG 1
+#define GVF_PARAMETRIC_BARE_2D_LINES_N_SEG 2
 #endif
 
 /** @typdef struct gvf_bare_par_2d_lines_par
@@ -95,4 +95,18 @@ float gvf_parametric_bare_2d_lines_simple_convolution(float lambda, float *point
  */
 void gvf_parametric_bare_2d_lines_info(int n_segments, float *x_points, float *y_points,
                                        float *f1, float *f2, float *f1d, float *f2d);
-#endif // bezier splines
+
+
+/* @function gvf_parametric_bare_2d_lines_restrict_curvature
+ * @brief Computes the necessary epsilon to upper bound the curvature deppending
+ * on kappa_max
+ * @param n_segments Number of segments
+ * @param x_points Array of x coordinates
+ * @param y_points Array of y coordinates
+ * @param kappa_max Maximum allowed curvature
+ * Returns: None
+ */
+void gvf_parametric_bare_2d_lines_restrict_curvature(int n_segments, float *x_points,
+                                                     float *y_points, float kappa_max);
+
+#endif // 2D Lines Mollifier

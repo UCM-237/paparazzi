@@ -43,10 +43,13 @@
           <dl_setting MAX="10" MIN="0.1" STEP="0.1" VAR="obstacle_avoidance.min_distance" shortname="min distance"/>
         </dl_settings>
         <dl_settings NAME="Rollover Protection">
-          <dl_setting MAX="1" MIN="0" STEP="1" VAR="rollover_protection.protect_curvature" shortname="protect_curvature"/>
-          <dl_setting MAX="1" MIN="0" STEP="1" VAR="rollover_protection.use_cbf" shortname="use cbf"/>
-          <dl_setting MAX="100" MIN="1" STEP="0.1" VAR="rollover_protection.beta" shortname="beta"/>
-          <dl_setting MAX="10" MIN="0" STEP="0.1" VAR="rollover_protection.max_lateral_accel" shortname="max lat acceleration"/>
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="rollover_protection.protect_curvature" shortname="protect_curvature (CBF)"/>
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="rollover_protection.use_cbf" shortname="use cbf (CBF)"/>
+          <dl_setting MAX="100" MIN="1" STEP="0.1" VAR="rollover_protection.beta" shortname="beta (CBF)"/>
+          <dl_setting MAX="10" MIN="0" STEP="0.1" VAR="rollover_protection.max_lateral_accel" shortname="max lat acceleration (CBF)"/>
+          <dl_setting MAX="10" MIN="0" STEP="0.1" VAR="rollover_protection.min_radius_curvature" shortname="min radius curvature (MOLLI)"/>
+          <dl_setting MAX="10" MIN="0" STEP="0.1" VAR="rollover_protection.max_radius_curvature" shortname="max radius curvature (MOLLI)"/>
+          <dl_setting MAX="1" MIN="0" STEP="1" VAR="rollover_protection.bound_curvature_gvf" shortname="bound curvature gvf (MOLLI)"/>
         </dl_settings>
       </dl_settings>
     </dl_settings>
