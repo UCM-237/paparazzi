@@ -201,12 +201,37 @@ void rover_guidance_steering_speed_ctrl(void)
   float dv_sp;
   rover_guidance_steering_obtain_setpoint(&dv_sp);
 
-  // Compute the minimum of curvature depending on speed
-  float R_min = rollover_protection.min_radius_curvature;
-  // - speed_avg /
-  //guidance_control.cmd.max_speed * (rollover_protection.min_radius_curvature -
-  //rollover_protection.max_radius_curvature);
+  // Compute the minimum of curvature depending on speed setpoint
+  // This assumes that there's a good speed controller.
+  float R_min = rollover_protection.min_radius_curvature - (
+    guidance_control.cmd.speed /MAX_SPEED *
+    (rollover_protection.min_radius_curvature -
+    rollover_protection.max_radius_curvature));
 
+  // Maxmimum allowed angular speed. TODO: Remove magic number
+  /*
+  float w_max = 10;
+  if(guidance_control.cmd.speed == 0)
+  {
+    gvf_c_info.kappa_max = 1; // TODO: Remove magic numebr
+  }
+  else
+  {
+    if(w_max / guidance_control.cmd.speed <= 1)
+    {
+      gvf_c_info.kappa_max = (w_max / guidance_control.cmd.speed);
+    }
+    else
+    {
+      // This is computed taking into account the following
+      // consideration: k(t) = tan(phi(t))/l, where phi is the 
+      // wheel angle function, and l the shaft distance.
+      // In our case phi(t)|_{max} = 15 degrees, and l = 0.25,
+      // Thus kappa_max = tan (2pi * 15/360) / 0.25 \simeq 1.
+      gvf_c_info.kappa_max = 1; // TODO: Remove magic number
+    }
+  }
+  */
   gvf_c_info.kappa_max = 1.0 / R_min;
   gvf_c_info.bound_kappa = rollover_protection.bound_curvature_gvf;
 

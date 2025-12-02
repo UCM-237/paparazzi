@@ -76,7 +76,7 @@
 
 // MIN_SPEED, MAX_SPEED: Min and max state speed (m/s)
 #ifndef MAX_SPEED 
-#define MAX_SPEED 999.0 //We don't really use that variable
+#define MAX_SPEED 6.0
 #endif
 #ifndef MIN_SPEED 
 #define MIN_SPEED 0.2 //But this one is mandatory because we have

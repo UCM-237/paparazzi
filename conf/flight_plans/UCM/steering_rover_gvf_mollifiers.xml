@@ -9,15 +9,15 @@
     <waypoint name="STDBY" x="-1.2" y="-14.4"/>
     <!--waypoint name="ELLIPSE" x="-2.7" y="-10.6"/-->
     
-    <waypoint name="L0" x="9.34" y="5.569"/>
-    <waypoint name="L1" x="-1.2" y="43.0"/>
-    <waypoint name="L2" x="25.273" y="40.659"/>
-    <waypoint name="L3" x="40.785" y="4.436"/>
-    <waypoint name="L4" x="51.818" y="51.478"/>
-    <waypoint name="L5" x="73.109" y="40.654"/>
-    <waypoint name="L6" x="56.623" y="-0.22"/>
-    <waypoint name="L7" x="41.368" y="25.509"/>
-    <waypoint name="L8" x="-6.724" y="13.445"/>
+    <waypoint name="L0" lat="40.4514806"   lon="-3.7289157"/>
+    <waypoint name="L1" lat="40.4516892"  lon="-3.7290436"/>
+    <waypoint name="L2" lat="40.4517214" lon="-3.7287739"/>
+    <waypoint name="L3" lat="40.4514951" lon="-3.7287601"/>
+    <waypoint name="L4" lat="40.4515789" lon="-3.7285101"/>
+    <waypoint name="L5" lat="40.4518696" lon="-3.7284964"/>
+    <waypoint name="L6" lat="40.4518008" lon="-3.7282960"/>
+    <waypoint name="L7" lat="40.4515358" lon="-3.7285365"/>
+    <waypoint name="L8" lat="40.4518143" lon="-3.7289896"/>
     
     <waypoint name="_S1" x="3" y="4"/>
     <waypoint name="_S2" x="3" y="-4"/>

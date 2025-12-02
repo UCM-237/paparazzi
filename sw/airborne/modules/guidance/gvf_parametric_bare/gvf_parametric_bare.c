@@ -401,7 +401,6 @@ bool gvf_parametric_bare_2D_lines_XY(float *x_points, float *y_points)
 bool gvf_parametric_bare_2D_lines_wp(uint8_t wp0)
 {
 
-  float max_epsilon;
   float x_points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1];
   float y_points[GVF_PARAMETRIC_BARE_2D_LINES_N_SEG + 1];
 
