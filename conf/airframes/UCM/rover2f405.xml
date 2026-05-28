@@ -52,11 +52,12 @@
     
     <!-- Our modules: Lidar -->
     <!--LIDAR UART-->
+    <!--
     <module name="lidar_tfmini">
     	<configure name="TFMINI_PORT" value="UART6"/>
     	<configure name="TFMINI_BAUD" value="B115200"/>
     </module>
-
+-->
     <module name="nav"  type="rover_base"> 
       <define name="ROVER_BASE_SEND_TRAJECTORY" value="FALSE"/>
     </module>

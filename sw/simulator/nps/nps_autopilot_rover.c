@@ -69,6 +69,8 @@ bool nps_bypass_ins;
 #error "INDI_RPM_FEEDBACK can not be used in simulation!"
 #endif
 
+void sys_tick_handler(void);
+
 void nps_autopilot_init(enum NpsRadioControlType type_rc, int num_rc_script, char *rc_dev)
 {
   nps_autopilot.launch = TRUE;
@@ -179,7 +181,8 @@ void nps_autopilot_run_step(double time)
 
 
 void sim_overwrite_ahrs(void)
-{
+{ 
+  stateSetInputFilter(STATE_INPUT_ATTITUDE, MODULE_NPS_ID);
 
   struct FloatQuat quat_f;
   QUAT_COPY(quat_f, fdm.ltp_to_body_quat);

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2019 Freek van Tienen <freek.v.tienen@gmail.com>
+ * Copyright (C) 2025 Alejandro Rochas <alrochas@ucm.es>
  *
  * This file is part of paparazzi.
  *
@@ -35,20 +36,23 @@
 #include "pprzlink/messages.h"
 #include "modules/datalink/downlink.h"
 
-#define MOTOR_SPEED 5
-static uint32_t last_time = 0;
+
+// Horizontal distance from the IMU to the LiDAR (in meters)
+#ifndef LIDAR_OFFSET
+#define LIDAR_OFFSET 0.0f
+#endif
+
+// Height of the LiDAR above the ground (in meters)
+#ifndef LIDAR_HEIGHT
+#define LIDAR_HEIGHT 0.0f
+#endif
+
+static float lidar_offset;
+static float lidar_height;
 
 struct TFMini tfmini = {
   .parse_status = TFMINI_INITIALIZE
 };
-
-bool enable_servo = false;
-#define PWM2ANGLE(pwm) (((pwm) + MAX_PPRZ) * 90 / MAX_PPRZ) - 90 
-
-struct TFMiniServo tf_servo;
-// int tfmini_servo_pos = 1500;
-
-static void tfmini_parse(uint8_t byte);
 
 #if PERIODIC_TELEMETRY
 #include "modules/datalink/telemetry.h"
@@ -77,18 +81,20 @@ void tfmini_init(void)
 
   tfmini.update_agl = USE_TFMINI_AGL;
   tfmini.compensate_rotation = TFMINI_COMPENSATE_ROTATION;
+  tfmini.is_rover = TFMINI_ROVER;
 
   tfmini.strength = 0;
   tfmini.distance = 0;
   tfmini.parse_status = TFMINI_PARSE_HEAD;
 
-  tf_servo.pos = 1500*0;
-  tf_servo.dir = 0;
+  lidar_offset = LIDAR_OFFSET;
+  lidar_height = LIDAR_HEIGHT;
 
-  #if PERIODIC_TELEMETRY
-   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_LIDAR, tfmini_send_lidar);
-  #endif
+#if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_LIDAR, tfmini_send_lidar);
+#endif
 }
+
 
 /**
  * Lidar event function
@@ -101,10 +107,11 @@ void tfmini_event(void)
   }
 }
 
+
 /**
  * Parse the lidar bytes 1 by 1
  */
-static void tfmini_parse(uint8_t byte)
+void tfmini_parse(uint8_t byte)
 {
   switch (tfmini.parse_status) {
     case TFMINI_INITIALIZE:
@@ -159,7 +166,6 @@ static void tfmini_parse(uint8_t byte)
     case TFMINI_PARSE_CHECKSUM:
       // When the CRC matches
       if (tfmini.parse_crc == byte) {
-        uint32_t now_ts = get_sys_time_usec();
         tfmini.distance = tfmini.raw_dist / 100.f;
         tfmini.strength = tfmini.raw_strength;
         tfmini.mode = tfmini.raw_mode;
@@ -168,16 +174,31 @@ static void tfmini_parse(uint8_t byte)
         if (tfmini.distance != 0xFFFF) {
           // compensate AGL measurement for body rotation
           if (tfmini.compensate_rotation) {
-            float phi = stateGetNedToBodyEulers_f()->phi;
-            float theta = stateGetNedToBodyEulers_f()->theta;
-            float gain = (float)fabs((double)(cosf(phi) * cosf(theta)));
-            tfmini.distance = tfmini.distance * gain;
+            // If it is a rover, we need to compensate the distance
+            if (tfmini.is_rover) {
+              float theta = stateGetNedToBodyEulers_f()->theta;
+              float ground_distance;
+              if (fabs(theta) < 0.01) {
+                ground_distance = 100;  // If it is 0 it is straight
+              } else {
+                ground_distance = lidar_height / sinf(-theta) - lidar_offset;
+              }
+
+              if ((tfmini.distance >= ground_distance) && (ground_distance > 0)) {
+                tfmini.distance = 0;
+              }
+            }
+            // If it is not a rover (like a drone), we need to compensate the distance differently
+            else {
+              float phi = stateGetNedToBodyEulers_f()->phi;
+              float theta = stateGetNedToBodyEulers_f()->theta;
+              float gain = (float)fabs((double)(cosf(phi) * cosf(theta)));
+              tfmini.distance = tfmini.distance * gain;
+            }
           }
 
-          // send message (if requested)
-          if (tfmini.update_agl) {
-            AbiSendMsgAGL(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance);
-          }
+          // Send the AGL message
+          tfmini_send_abi();
         }
       }
 
@@ -193,27 +214,17 @@ static void tfmini_parse(uint8_t byte)
 }
 
 
-// ####################################
-// ############ LIDAR MOTOR ###########
-// ####################################
-
-void tfmini_servo(){
-  if (get_sys_time_msec() > last_time + MOTOR_SPEED) {
-    last_time = get_sys_time_msec();
-    if(enable_servo){
-      tf_servo.pos += (tf_servo.dir == 0) ? 100 : -100;
-      if (tf_servo.pos >= MAX_PPRZ*0.8 || tf_servo.pos <= -MAX_PPRZ*0.8) {
-          tf_servo.dir ^= 1;
-      }
-    }
-    else{
-      tf_servo.pos = 0;
-    }
-    tf_servo.ang = PWM2ANGLE(tf_servo.pos);
-    // if(tfmini.distance <= 0.15){
-    //   nav_set_failsafe(); // Con esto en teoria para (no hace nada, algo hace porque se queda pillado)
-    // }
+// Send the lidar message (AGL, and, if requested, OBSTACLE_DETECTION)
+void tfmini_send_abi(void)
+{
+  uint32_t now_ts = get_sys_time_usec();
+  if (tfmini.update_agl) {
+    AbiSendMsgAGL(AGL_LIDAR_TFMINI_ID, now_ts, tfmini.distance);
   }
+#ifndef USE_SERVO_LIDAR
+  //send message (if there is not servo module)
+  AbiSendMsgOBSTACLE_DETECTION(AGL_LIDAR_TFMINI_ID, tfmini.distance, 0, 0);
+#endif
 }
 
 

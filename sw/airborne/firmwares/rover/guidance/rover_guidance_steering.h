@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2021 Jesús Bautista <jesusbautistavillar@gmail.com> 
+ * Copyright (C) 2021 Jesús Bautista <jesusbautistavillar@gmail.com>
  *                    Hector García  <noeth3r@gmail.com>
+ *               2025 Gautier Hattenberger <gautier.hattenberger@gmail.com>
  *
  * This file is part of paparazzi.
  *
@@ -30,6 +31,7 @@
 
 #include "std.h"
 #include <math.h>
+#include "math/pprz_geodetic_float.h"
 
 #include "generated/airframe.h"
 
@@ -56,10 +58,10 @@
 // MIN_DELTA, MAX_DELTA: Min and max wheels turning angle (deg)
 // You should measure this angle if you want to have an
 // efficient control in your steering
-#ifndef MAX_DELTA 
+#ifndef MAX_DELTA
 #define MAX_DELTA 15.0
 #endif
-#ifndef MIN_DELTA 
+#ifndef MIN_DELTA
 #define MIN_DELTA MAX_DELTA
 #endif
 
@@ -70,15 +72,15 @@
 #ifndef MAX_CMD_SHUT
 #define MAX_CMD_SHUT 0
 #endif
-#ifndef MIN_CMD_SHUT 
+#ifndef MIN_CMD_SHUT
 #define MIN_CMD_SHUT 0
 #endif
 
 // MIN_SPEED, MAX_SPEED: Min and max state speed (m/s)
-#ifndef MAX_SPEED 
+#ifndef MAX_SPEED
 #define MAX_SPEED 999.0 //We don't really use that variable
 #endif
-#ifndef MIN_SPEED 
+#ifndef MIN_SPEED
 #define MIN_SPEED 0.2 //But this one is mandatory because we have
 #endif                //to deal with GPS noise (and 1/v in guidance control).
 
@@ -152,6 +154,7 @@ extern rover_obstacle_avoidance obstacle_avoidance;
 
 /** Steering rover guidance EXT FUNCTIONS **/
 extern void rover_guidance_steering_init(void);
+extern void rover_guidance_steering_periodic(void); // call state machine
 extern void rover_guidance_steering_heading_ctrl(float omega);
 extern void rover_guidance_steering_speed_ctrl(void);
 extern void rover_guidance_steering_obtain_setpoint(float *dv_sp);
@@ -164,6 +167,8 @@ extern void rover_guidance_steering_pid_reset(void);
 extern void rover_guidance_steering_kill(void);
 extern bool rover_guidance_bearing_static_ctrl(void);
 
+extern void rover_guidance_steering_set_speed_pgain(float pgain);
+extern void rover_guidance_steering_set_speed_igain(float igain);
 
 /** MACROS **/
 // Bound delta
@@ -180,8 +185,8 @@ extern bool rover_guidance_bearing_static_ctrl(void);
 #define BoundThrottle(throttle) TRIM_PPRZ((int)throttle)
 
 // Set low level commands from high level commands
-#define GetCmdFromDelta(delta) (delta >= 0 ? -delta/MAX_DELTA * (MAX_PPRZ - (int)MAX_CMD_SHUT) : \
-                                             -delta/MIN_DELTA * (MAX_PPRZ - (int)MIN_CMD_SHUT))
+#define GetCmdFromDelta(delta) (delta >= 0 ? delta/MAX_DELTA * (MAX_PPRZ - (int)MAX_CMD_SHUT) : \
+                                             delta/MIN_DELTA * (MAX_PPRZ - (int)MIN_CMD_SHUT))
 
 // This macro is for NAV state
 #define GetCmdFromThrottle(throttle) (autopilot_throttle_killed() ? 0 : TRIM_PPRZ((int)throttle))

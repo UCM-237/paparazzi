@@ -41,11 +41,11 @@
             </module>
 
             <!-- MAVLink Genius communication -->
-            <module name="mavlink">
+            <!--module name="mavlink">
                 <configure name="MAVLINK_BAUD" value="B57600"/>
                 <configure name="MAVLINK_PORT" value="UART3"/>
                 <define name="MAV_AUTOPILOT_ID" value="MAV_AUTOPILOT_ARDUPILOTMEGA"/>
-            </module>
+            </module-->
 
             <!-- Log in high speed (Remove for outdoor flights) -->
             <!-- <define name="IMU_LOG_HIGHSPEED"    value="TRUE"/> -->
@@ -80,7 +80,7 @@
 
         <!-- Herelink datalink -->
         <module name="telemetry" type="transparent">
-            <!--configure name="MODEM_PORT" value="usb_serial"/-->
+            <!-- <configure name="MODEM_PORT" value="usb_serial"/> -->
             <configure name="MODEM_BAUD" value="B460800"/>
         </module>
 
@@ -91,7 +91,7 @@
         </module>
         <module name="airspeed" type="ms45xx_i2c">
             <configure name="MS45XX_I2C_DEV"            value="I2C2"/>
-            <define name="MS45XX_PRESSURE_SCALE"        value="1.3231"/>
+            <define name="MS45XX_PRESSURE_SCALE"        value="1.1232"/>
             <define name="USE_AIRSPEED_LOWPASS_FILTER"  value="TRUE"/>
             <define name="MS45XX_LOWPASS_TAU"           value="0.15"/>
         </module>
@@ -156,11 +156,9 @@
         <!-- Other -->
         <module name="sys_id_doublet"/>
         <module name="sys_id_auto_doublets"/>
-         <module name="ground_detect"/>
+        <module name="ground_detect"/>
         <module name="rotwing_state"/>
-        <module name="preflight_checks">
-            <define name="SDLOG_PREFLIGHT_ERROR" value="TRUE"/>
-        </module>
+        <module name="preflight_checks"/>
         <module name="agl_dist"/>
         <module name="approach_moving_target"/>
 
@@ -169,15 +167,13 @@
 
     </firmware>
 
-
-
     <!-- Can bus 1 actuators -->
     <servos driver="Uavcan1">
         <servo no="0"  name="BMOTOR_FRONT"     min="0"     neutral="1000"  max="8191"/> <!-- Supercan (1100-1202.56-1940us) -->
         <servo no="1"  name="BMOTOR_RIGHT"     min="0"     neutral="1000"  max="8191"/> <!-- Supercan (1100-1202.56-1940us) -->
         <servo no="2"  name="BMOTOR_BACK"      min="0"     neutral="1000"  max="8191"/> <!-- Supercan (1100-1202.56-1940us) -->
         <servo no="3"  name="MOTOR_LEFT"       min="0"     neutral="1000"  max="8191"/> <!-- T-Motor ESC  is neutral -->
-        <servo no="4"  name="BMOTOR_PUSH"      min="-3276" neutral="-2500" max="3605"/> <!-- Supercan (1100-1940us) -->
+        <servo no="4"  name="BMOTOR_PUSH"      min="-4095" neutral="-3522" max="4095"/> <!-- Supercan (1070 idle 1000-2000) -->
         <servo no="5"  name="BPARACHUTE"       min="-8191" neutral="0"     max="8191"/>
     </servos>
 
@@ -197,7 +193,7 @@
         <servo no="1"  name="MOTOR_RIGHT"    min="0"     neutral="1000"  max="8191"/> <!-- T-Motor ESC -->
         <servo no="2"  name="MOTOR_BACK"     min="0"     neutral="1000"  max="8191"/> <!-- T-Motor ESC -->
         <servo no="3"  name="BMOTOR_LEFT"    min="0"     neutral="1000"  max="8191"/> <!-- Supercan (1100-1202.56-1940us) -->
-        <servo no="4"  name="MOTOR_PUSH"     min="-3276" neutral="-2500" max="3605"/> <!-- Supercan (1100-1940us) -->
+        <servo no="4"  name="MOTOR_PUSH"     min="-4095" neutral="-3522" max="4095"/> <!-- Supercan (1070 idle 1000-2000) -->
         <servo no="5"  name="PARACHUTE"      min="-8191" neutral="0"     max="8191"/>
     </servos>
 
@@ -296,16 +292,17 @@
             </field>
         </define>
 
-        <!-- Accelerometers calibration (NOT DONE!) -->
         <define name="ACCEL_CALIB" type="array">
             <field type="struct">
                 <field name="abi_id" value="26"/>
                 <field name="calibrated" type="struct">
-                    <field name="neutral" value="false"/>
-                    <field name="scale" value="false"/>
+                    <field name="neutral" value="true"/>
+                    <field name="scale_f" value="true"/>
                     <field name="rotation" value="false"/>
                     <field name="filter" value="true"/>
                 </field>
+                <field name="neutral" value="-3,-3,-18" type="int[]"/>
+                <field name="scale_f" value="{ 4.9047, 4.9219, 4.9307 }"/>
                 <field name="filter_sample_freq" value="4042"/>
                 <field name="filter_freq" value="30"/>
             </field>
@@ -357,8 +354,8 @@
 
     <section name="BAT">
         <define name="CATASTROPHIC_BAT_LEVEL"   value="36.0" unit="V"/>
-        <define name="CRITIC_BAT_LEVEL"         value="37.2" unit="V"/>
-        <define name="LOW_BAT_LEVEL"            value="48.4" unit="V"/>
+        <define name="CRITIC_BAT_LEVEL"         value="42.6" unit="V"/>
+        <define name="LOW_BAT_LEVEL"            value="44.4" unit="V"/>
         <define name="MAX_BAT_LEVEL"            value="52.2" unit="V"/>
         <define name="TAKEOFF_BAT_LEVEL"        value="48.4" unit="V"/>
         <define name="BAT_NB_CELLS"             value="12"/>

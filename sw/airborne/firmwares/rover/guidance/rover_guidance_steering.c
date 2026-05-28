@@ -33,7 +33,7 @@
 #include "state.h"
 
 #include "filters/pid.h" // Used for p+i speed controller
-#include "modules/lidar/tfmini.h"
+//#include "modules/lidar/tfmini.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -132,10 +132,10 @@ void rover_guidance_steering_init(void)
 
   // Mov avg init Speed and distance
   float speed = stateGetHorizontalSpeedNorm_f();
-  tfmini_event();
+  //tfmini_event();
   for(int k = 0; k < MOV_AVG_M; k++){
     mvg_avg[k] = speed;
-    mvg_avg_dist[k] = tfmini.distance;
+    //mvg_avg_dist[k] = tfmini.distance;
   }
   speed_avg = speed;
 
@@ -147,8 +147,8 @@ void rover_guidance_steering_init(void)
   rollover_protection.max_lateral_accel = 3.0;
 
   // Initialize distance protection
-  tfmini_event();
-  obstacle_avoidance.distance = tfmini.distance;
+  //tfmini_event();
+//  obstacle_avoidance.distance = tfmini.distance;
   obstacle_avoidance.use_obstacle_avoidance = 1;
   obstacle_avoidance.use_speed_function = 0;
   obstacle_avoidance.max_distance = 2.0;
@@ -291,8 +291,8 @@ void rover_guidance_steering_speed_ctrl_lyap(float dv_sp)
 void rover_guidance_steering_update_measurment(void)
 {
   obstacle_avoidance.distance = obstacle_avoidance.distance - mvg_avg_dist[ptr_avg_dist]/MOV_AVG_M;
-  tfmini_event();
-  mvg_avg_dist[ptr_avg_dist] = tfmini.distance;
+  //tfmini_event();
+//  mvg_avg_dist[ptr_avg_dist] = tfmini.distance;
   obstacle_avoidance.distance = obstacle_avoidance.distance + mvg_avg_dist[ptr_avg_dist]/MOV_AVG_M;
   ptr_avg_dist = (ptr_avg_dist + 1) % MOV_AVG_M;
 }
