@@ -93,7 +93,7 @@
       <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
     </block>
     <block name="gvf_rhomboid" strip_icon="oval.png">
-      <call fun="gvf_romboid_wp(WP_ELLIPSE, gvf_romboid_par.r)"/>
+      <call fun="gvf_rhomboid_wp(WP_ELLIPSE, gvf_rhomboid_par.r)"/>
     </block>
     <block name="gvf_bezier_bare">
       <call fun="gvf_parametric_bare_2D_bezier_wp(WP_BZ0)"/>
