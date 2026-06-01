@@ -65,6 +65,7 @@
     <module name="gvf" type="module"/>
     <module name="gvf_parametric_bare">
       <define name="GVF_PARAMETRIC_BARE_2D_BEZIER_N_SEG" value="3"/>
+      <define name="GVF_PARAMETRIC_BARE_2D_LINES_N_SEG" value="7"/>
     </module>
     <!--module name="gvf_parametric">
     	<define name="MOV_AVG_GVF_M" value="20"/>
