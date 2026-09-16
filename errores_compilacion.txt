@@ -1,0 +1,63 @@
+------------------------------------------------------------
+Building Paparazzi version v7.1_unstable-6-gf3a8d3317
+------------------------------------------------------------
+make -C sw/ext pprzlink.update
+../../conf/Makefile.arm-embedded-toolchain:14: Warning: arm-none-eabi-gcc cross-compiler not found! Some tools might not be able to build correctly
+make[1]: Entering directory '/home/yushed/paparazzi/sw/ext/pprzlink'
+make[2]: Entering directory '/home/yushed/paparazzi/sw/ext/pprzlink/lib/v2.0/ocaml'
+Check for already installed pprzlink ocaml lib
+ -> found lib version 2.0 while installing 2.0
+Build bytecode lib
+Build native lib
+INSTALL at location /home/yushed/paparazzi/var/lib/ocaml
+make[2]: Leaving directory '/home/yushed/paparazzi/sw/ext/pprzlink/lib/v2.0/ocaml'
+make[2]: Entering directory '/home/yushed/paparazzi/sw/ext/pprzlink/lib/v2.0/python'
+# Install correct version python library to DESTDIR
+INSTALL at location /home/yushed/paparazzi/var/lib/python
+make[2]: Leaving directory '/home/yushed/paparazzi/sw/ext/pprzlink/lib/v2.0/python'
+make[1]: Leaving directory '/home/yushed/paparazzi/sw/ext/pprzlink'
+make -C sw/lib/ocaml
+make[1]: Nothing to be done for 'all'.
+make -C sw/logalizer
+make[1]: Nothing to be done for 'all'.
+make -C sw/tools
+make[1]: Nothing to be done for 'all'.
+make -C sw/ground_segment/tmtc
+make[1]: Nothing to be done for 'all'.
+make -C /home/yushed/paparazzi/sw/tools/generators
+OC gen_aircraft.ml
+OL gen_aircraft.out
+make -C sw/simulator
+make[1]: Nothing to be done for 'all'.
+make -C sw/ground_segment/joystick
+make[1]: Nothing to be done for 'all'.
+GENERATE pprzlink_protocol with default messages
+Generate C messages (Python) at location /home/yushed/paparazzi/var/include/pprzlink
+Validation skipped for msg_class telemetry in message_definitions/v1.0/messages.xml.
+Parsing message_definitions/v1.0/messages.xml
+Found 249 PPRZLink messages of msg_class telemetry in XML file message_definitions/v1.0/messages.xml
+Generating C implementation in /home/yushed/paparazzi/var/include/pprzlink/messages.h
+Copying fixed headers
+Validation skipped for msg_class datalink in message_definitions/v1.0/messages.xml.
+Parsing message_definitions/v1.0/messages.xml
+Found 60 PPRZLink messages of msg_class datalink in XML file message_definitions/v1.0/messages.xml
+Generating C implementation in /home/yushed/paparazzi/var/include/pprzlink/dl_protocol.h
+Copying fixed headers
+Validation skipped for msg_class intermcu in message_definitions/v1.0/messages.xml.
+Parsing message_definitions/v1.0/messages.xml
+Found 17 PPRZLink messages of msg_class intermcu in XML file message_definitions/v1.0/messages.xml
+Generating C implementation in /home/yushed/paparazzi/var/include/pprzlink/intermcu_msg.h
+Copying fixed headers
+Copy extra lib files
+GENERATE /home/yushed/paparazzi/var/include/ubx_protocol.h
+GENERATE /home/yushed/paparazzi/var/include/mtk_protocol.h
+GENERATE /home/yushed/paparazzi/var/include/xsens_protocol.h
+GENERATE /home/yushed/paparazzi/var/include/abi_messages.h
+make -C sw/ext
+../../conf/Makefile.arm-embedded-toolchain:14: Warning: arm-none-eabi-gcc cross-compiler not found! Some tools might not be able to build correctly
+Synchronizing submodule url for 'sw/ext/chibios'
+Synchronizing submodule url for 'sw/ext/fatfs'
+GENERATE ../../var/include/mavlink
+/bin/sh: 1: python: not found
+make[1]: *** [Makefile:82: mavlink.build] Error 127
+make: *** [Makefile:171: ext] Error 2

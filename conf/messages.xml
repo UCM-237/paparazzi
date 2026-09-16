@@ -2890,6 +2890,16 @@
       <field name="desired_sigma" type="int16">Desired angle to have w.r.t. the neighbor</field>
     </message>
 
+    <message name="HPPM_OBSTACLE" id="200" link="forwarded">
+      <description>Inyeccion de coordenadas de obstaculos dinamicos desde ROS al algoritmo HPPM</description>
+      <field name="ac_id" type="uint8"/>
+      <field name="obs_id" type="uint8"/>
+      <field name="x" type="float" unit="m"/>
+      <field name="y" type="float" unit="m"/>
+      <field name="radio" type="float" unit="m"/>
+      <field name="peso" type="float"/>
+    </message>
+
     <message name="KEY_EXCHANGE_GCS" id="159" link="forwarded">
       <description>Message for key exchange during crypto initialization</description>
       <field name="ac_id" type="uint8">ID of the table's aircraft to be updated</field>

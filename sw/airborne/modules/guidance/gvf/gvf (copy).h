@@ -78,7 +78,6 @@ enum trajectories {
   RHOMBOID,
   SQUARE,
   PNORM,
-  HPPM, // <-- Tu nuevo algoritmo de navegación multi-robot
   NONE = 255,
 };
 

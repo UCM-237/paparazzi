@@ -1,0 +1,24 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="hppm" dir="hppm">
+  <doc>
+    <description>
+      Algoritmo de Navegacion HPPM (Homotopy Path Planning Method)
+      Control predictivo-corrector para el rover (Espacio Isotrópico 1x1).
+    </description>
+  </doc>
+
+  <header>
+    <file name="hppm_control.h"/>
+  </header>
+
+  <!-- Inicialización segura: Limpia la memoria física y establece D=1.0 -->
+  <init fun="hppm_init()"/>
+
+  <!-- Recepción de obstáculos desde telemetría (SITL o ROS) -->
+  <datalink message="HPPM_OBSTACLE" fun="hppm_parse_obstacle(dl_buffer)"/>
+
+  <makefile>
+    <file name="hppm_control.c"/>
+  </makefile>
+</module> 
