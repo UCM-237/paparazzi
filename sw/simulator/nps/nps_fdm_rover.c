@@ -110,8 +110,13 @@ static struct NedCoor_d rover_acc;
 void nps_fdm_init(double dt)
 {
   fdm.init_dt = dt; // (1 / simulation freq)
+<<<<<<< Updated upstream
   fdm.curr_dt = dt;
   fdm.time = 0;
+=======
+  fdm.curr_dt = dt; // ¿Configurable from GCS?
+  fdm.time = dt;
+>>>>>>> Stashed changes
 
   fdm.on_ground = TRUE;
   fdm.nan_count = 0;

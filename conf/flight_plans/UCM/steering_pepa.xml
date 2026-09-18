@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+<flight_plan alt="660" ground_alt="650" lat0="40.4514297" lon0="-3.7290253" max_dist_from_home="1500" name="Rover Steering Pepa" security_height="0.3">
+  
+  <waypoints>
+    <!-- Pepa nace en el Norte -->
+    <waypoint name="HOME" x="10.0" y="45.0"/>
+    <waypoint name="STDBY" x="8.0" y="45.0"/>
+    
+    <!-- Waypoints (Requeridos por hppm_control.c) -->
+    <waypoint name="L0" x="0.0" y="0.0"/>
+    <waypoint name="L1" x="0.0" y="0.0"/>
+    <waypoint name="L2" x="0.0" y="0.0"/>
+    <waypoint name="L3" x="0.0" y="0.0"/>
+    <waypoint name="L4" x="0.0" y="0.0"/>
+    <waypoint name="L5" x="0.0" y="0.0"/>
+    <waypoint name="L6" x="0.0" y="0.0"/>
+    <waypoint name="L7" x="0.0" y="0.0"/>
+    <waypoint name="L8" x="0.0" y="0.0"/>
+    
+    <!-- Waypoints para obstaculos (Requeridos por hppm_control.c) -->
+    <waypoint name="OBS0" x="999.0" y="999.0"/> 
+    <waypoint name="OBS1" x="999.0" y="999.0"/>
+    <waypoint name="OBS2" x="999.0" y="999.0"/>
+    <waypoint name="OBS3" x="999.0" y="999.0"/> 
+    <waypoint name="OBS4" x="999.0" y="999.0"/>
+    
+    <!-- Límites de red / seguridad -->
+    <waypoint name="_S1" x="3" y="4"/>
+    <waypoint name="_N1" x="200" y="200"/>
+    <waypoint name="_N2" x="200" y="-200"/>
+    <waypoint name="_N3" x="-200" y="-200"/>
+    <waypoint name="_N4" x="-200" y="200"/>
+  </waypoints>
+
+  <sectors>
+    <sector color="transparent" name="Net">
+      <corner name="_N1"/>
+      <corner name="_N2"/>
+      <corner name="_N3"/>
+      <corner name="_N4"/>
+    </sector>
+  </sectors>
+
+  <variables>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="aa"/>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="bb"/>
+    <variable init="8" max="20" min="0" step="1" var="puntos_hppm"/>
+    <variable init="0" type="int" var="i"/>
+  </variables>
+
+  <modules>
+    <module name="gvf_module"/>
+    <module name="gvf_parametric_bare"/>
+  </modules>
+
+  <blocks>
+    <block name="Wait GPS" strip_icon="gps.png"><while cond="!GpsFixValid()"/></block>
+    <block name="Geo init" strip_icon="googleearth.png"><while cond="LessThan(NavBlockTime(), 10)"/><call_once fun="NavSetGroundReferenceHere()"/><call_once fun="NavSetAltitudeReferenceHere()"/></block>
+    <block name="Start Engine" strip_icon="on.png"><while cond="LessThan(NavBlockTime(), 1)"/><call_once fun="autopilot_set_motors_on(TRUE)"/><deroute block="Standby"/></block>
+    <block name="Standby" strip_button="Standby" strip_icon="home.png"><call fun="gvf_ellipse_wp(WP_STDBY, 3, 3, 0)"/><deroute block="Standby"/></block>
+    
+    <!-- RUTA MAESTRA (Prioridad) -->
+    <block name="Ruta_Prioridad" strip_button="Ruta Pepa" strip_icon="path.png">
+      
+      <!-- 1. APAGAR LOS FRENOS Y LIMITADORES DE CURVATURA DE LA UCM -->
+      <set var="rollover_protection.bound_curvature_gvf" value="0"/>
+      <set var="rollover_protection.protect_curvature" value="0"/>
+      <set var="rollover_protection.use_cbf" value="0"/>
+      
+      <!-- 2. FORZAR LOS LÍMITES DE VELOCIDAD PREDETERMINADOS -->
+      <set var="guidance_control.cmd.max_speed" value="5.0"/> 
+      <set var="guidance_control.cmd.min_speed" value="0.5"/>
+      <set var="guidance_control.use_non_linear" value="0"/>
+
+      <!-- 3. INICIAR ALGORITMO HPPM -->
+      <call_once fun="hppm_ruta_limpiar()"/>
+      <call_once fun="hppm_mover_wp(WP_L0, 10.0, 40.0)"/> <!-- Norte -->
+      <call_once fun="hppm_mover_wp(WP_L1, 10.0, 0.0)"/>  <!-- Sur -->
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      <call_once fun="hppm_ruta_iniciar()"/>
+      
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
+    </block> 
+  </blocks>
+</flight_plan> 

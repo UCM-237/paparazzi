@@ -334,7 +334,11 @@ bool nav_hppm_run(void) {
     struct EnuCoor_f *pos_gps = stateGetPositionEnu_f();
     
     if (hppm_buffer_trayectoria.recalculando) {
+<<<<<<< Updated upstream
         printf(">> GENERANDO RUTA MATEMÁTICA COMPLETA DESDE L0 A L1 <<\n");
+=======
+        // printf(">> GENERANDO RUTA MATEMÁTICA COMPLETA DESDE L0 A L1 <<\n");
+>>>>>>> Stashed changes
         
         hppm_robot.x = hppm_entorno.inicio_x;
         hppm_robot.y = hppm_entorno.inicio_y;
@@ -358,7 +362,11 @@ bool nav_hppm_run(void) {
         hppm_buffer_trayectoria.indice_actual = 0;
         hppm_buffer_trayectoria.recalculando = FALSO;
         
+<<<<<<< Updated upstream
         printf(">> BÚFER GENERADO EXITOSAMENTE: %d PUNTOS <<\n", hppm_buffer_trayectoria.cantidad_puntos);
+=======
+        // printf(">> BÚFER GENERADO EXITOSAMENTE: %d PUNTOS <<\n", hppm_buffer_trayectoria.cantidad_puntos);
+>>>>>>> Stashed changes
     }
 
     int closest_idx = 0;
@@ -463,6 +471,29 @@ void hppm_update_obstacle(uint8_t id, float x, float y, float radio, float peso)
 }
 
 void hppm_parse_obstacle(uint8_t *buf) {
+<<<<<<< Updated upstream
     printf("\n>> ALERTA: OBSTACULO RECIBIDO EN X:%.1f Y:%.1f <<\n", DL_HPPM_OBSTACLE_x(buf), DL_HPPM_OBSTACLE_y(buf));
     hppm_update_obstacle(DL_HPPM_OBSTACLE_obs_id(buf), DL_HPPM_OBSTACLE_x(buf), DL_HPPM_OBSTACLE_y(buf), DL_HPPM_OBSTACLE_radio(buf), DL_HPPM_OBSTACLE_peso(buf));
+=======
+    // Extraemos para quién iba dirigido este mensaje desde el bus Ivy
+    uint8_t id_destino = DL_HPPM_OBSTACLE_ac_id(buf);
+    
+    // FILTRO DE JERARQUÍA: AC_ID es la macro global de Paparazzi para este rover.
+    // Si el mensaje no es para mí, lo descarto silenciosamente.
+    if (id_destino != AC_ID) {
+        return; 
+    }
+
+    // Si llegó hasta aquí, el robot sabe que él debe esquivar
+    // printf("\n>> ALERTA (Rover %d): OBSTACULO RECIBIDO EN X:%.1f Y:%.1f <<\n", 
+    //        AC_ID, DL_HPPM_OBSTACLE_x(buf), DL_HPPM_OBSTACLE_y(buf));
+           
+    hppm_update_obstacle(
+        DL_HPPM_OBSTACLE_obs_id(buf), 
+        DL_HPPM_OBSTACLE_x(buf), 
+        DL_HPPM_OBSTACLE_y(buf), 
+        DL_HPPM_OBSTACLE_radio(buf), 
+        DL_HPPM_OBSTACLE_peso(buf)
+    );
+>>>>>>> Stashed changes
 } 
