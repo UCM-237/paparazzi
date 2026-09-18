@@ -18,15 +18,11 @@
 #include "state.h"
 
 #include "filters/pid.h" // Used for p+i speed controller
-<<<<<<< Updated upstream
-//#include "modules/lidar/tfmini.h"
-=======
 
 /* PARCHE DE HARDWARE PARA SIMULADOR */
 #ifndef SITL
 #include "modules/lidar/tfmini.h"
 #endif
->>>>>>> Stashed changes
 
 #include <math.h>
 #include <stdio.h>
@@ -125,12 +121,6 @@ void rover_guidance_steering_init(void)
 
   // Mov avg init Speed and distance
   float speed = stateGetHorizontalSpeedNorm_f();
-<<<<<<< Updated upstream
-  //tfmini_event();
-  for(int k = 0; k < MOV_AVG_M; k++){
-    mvg_avg[k] = speed;
-    //mvg_avg_dist[k] = tfmini.distance;
-=======
   
   /* PARCHE DE HARDWARE PARA SIMULADOR */
   #ifndef SITL
@@ -146,7 +136,6 @@ void rover_guidance_steering_init(void)
     #else
     mvg_avg_dist[k] = 999.0f; // Distancia segura falsa en simulador
     #endif
->>>>>>> Stashed changes
   }
   speed_avg = speed;
 
@@ -156,14 +145,8 @@ void rover_guidance_steering_init(void)
   rollover_protection.beta = 1;
   rollover_protection.h_cbf = 0;
   rollover_protection.max_lateral_accel = 3.0;
-<<<<<<< Updated upstream
-
-  // Initialize distance protection
-  //tfmini_event();
-//  obstacle_avoidance.distance = tfmini.distance;
-=======
-  rollover_protection.min_radius_curvature = 1;
-  rollover_protection.max_radius_curvature = 10;
+  //rollover_protection.min_radius_curvature = 1;
+  //rollover_protection.max_radius_curvature = 10;
 
   // Initialize distance protection
   /* PARCHE DE HARDWARE PARA SIMULADOR */
@@ -174,7 +157,6 @@ void rover_guidance_steering_init(void)
   obstacle_avoidance.distance = 999.0f;
   #endif
   
->>>>>>> Stashed changes
   obstacle_avoidance.use_obstacle_avoidance = 1;
   obstacle_avoidance.use_speed_function = 0;
   obstacle_avoidance.max_distance = 2.0;
@@ -254,10 +236,6 @@ void rover_guidance_steering_obtain_setpoint(float *dv_sp)
   *dv_sp = 0; 
 }
 
-<<<<<<< Updated upstream
-// PI controller
-=======
->>>>>>> Stashed changes
 void rover_guidance_steering_speed_ctrl_pid(void)
 {
   if (guidance_control.kp != rover_pid.g[0] || guidance_control.ki != rover_pid.g[2] || guidance_control.kd != rover_pid.g[1]) {
@@ -300,10 +278,6 @@ void rover_guidance_steering_speed_ctrl_lyap(float dv_sp)
 void rover_guidance_steering_update_measurment(void)
 {
   obstacle_avoidance.distance = obstacle_avoidance.distance - mvg_avg_dist[ptr_avg_dist]/MOV_AVG_M;
-<<<<<<< Updated upstream
-  //tfmini_event();
-//  mvg_avg_dist[ptr_avg_dist] = tfmini.distance;
-=======
   
   /* PARCHE DE HARDWARE PARA SIMULADOR */
   #ifndef SITL
@@ -313,7 +287,6 @@ void rover_guidance_steering_update_measurment(void)
   mvg_avg_dist[ptr_avg_dist] = 999.0f; // Distancia segura en simulación
   #endif
   
->>>>>>> Stashed changes
   obstacle_avoidance.distance = obstacle_avoidance.distance + mvg_avg_dist[ptr_avg_dist]/MOV_AVG_M;
   ptr_avg_dist = (ptr_avg_dist + 1) % MOV_AVG_M;
 }
@@ -367,11 +340,6 @@ void rover_guidance_steering_pid_reset(void)
     reset_pid_f(&rover_pid);
   }
 }
-<<<<<<< Updated upstream
-/** To Stop at Waypoints **/
-=======
-
->>>>>>> Stashed changes
 bool rover_guidance_bearing_static_ctrl(void)
 { 
   guidance_control.cmd.speed = 0.0;
@@ -384,8 +352,4 @@ void rover_guidance_steering_kill(void)
 {
   guidance_control.cmd.delta = 0.0;
   guidance_control.cmd.speed = 0.0;
-<<<<<<< Updated upstream
-}
-=======
 } 
->>>>>>> Stashed changes

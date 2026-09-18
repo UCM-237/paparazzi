@@ -1,6 +1,4 @@
 <!DOCTYPE module SYSTEM "module.dtd">
-<<<<<<< Updated upstream
-
 <module name="hppm" dir="hppm">
   <doc>
     <description>
@@ -17,23 +15,10 @@
   <init fun="hppm_init()"/>
 
   <!-- Recepción de obstáculos desde telemetría (SITL o ROS) -->
-  <datalink message="HPPM_OBSTACLE" fun="hppm_parse_obstacle(dl_buffer)"/>
-
-  <makefile>
-    <file name="hppm_control.c"/>
-=======
-<module name="hppm" dir="hppm">
-  <doc>
-    <description>Algoritmo HPPM</description>
-  </doc>
-  <header>
-    <file name="hppm_control.h"/>
-  </header>
-  <init fun="hppm_init()"/>
   <datalink message="HPPM_OBSTACLE" fun="hppm_parse_obstacle(buf)"/>
+
   <makefile target="ap|nps">
     <file name="hppm_control.c"/>
     <flag name="CFLAGS_hppm_control" value="-O3 -ffast-math"/>
->>>>>>> Stashed changes
   </makefile>
 </module> 

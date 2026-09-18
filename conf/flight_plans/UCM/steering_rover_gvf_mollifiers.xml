@@ -82,16 +82,6 @@
     <block name="Base" strip_button="Base" strip_icon="home.png">
       <call fun="gvf_ellipse_wp(WP_HOME, 3, 3, 0)"/>
       <deroute block="Base"/>
-<<<<<<< Updated upstream
-    </block>
-
-    <!-- PRUEBA 1-->
-    <block name="Test_Slalom3" strip_button="Slalom x3" strip_icon="path.png">
-      <call_once fun="hppm_ruta_limpiar()"/>
-
-      <call_once fun="hppm_mover_wp(WP_L0, 5.0, 5.0)"/>
-      <call_once fun="hppm_mover_wp(WP_L1, 5.0, 45.0)"/>
-=======
     </block>
 
     <!-- PRUEBA 1-->
@@ -119,60 +109,18 @@
       
       <call_once fun="hppm_mover_wp(WP_L0, 10.0, 0.0)"/>
       <call_once fun="hppm_mover_wp(WP_L1, 10.0, 40.0)"/>
->>>>>>> Stashed changes
-      
-      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
-      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
-      
-<<<<<<< Updated upstream
-      <call_once fun="hppm_update_obstacle(0, 5.0, 15.0, 3.0, 80.0)"/> 
-      <call_once fun="hppm_update_obstacle(1, 5.0, 25.0, 3.0, -80.0)"/> 
-      <call_once fun="hppm_update_obstacle(2, 5.0, 35.0, 3.0, 80.0)"/> 
-=======
-      <call_once fun="hppm_update_obstacle(0, 6.0, 20.0, 2.5, 80.0)"/>
-      <call_once fun="hppm_update_obstacle(1, 14.0, 20.0, 2.5, -80.0)"/>
->>>>>>> Stashed changes
-      
-      <call_once fun="hppm_ruta_iniciar()"/>
-      <while cond="nav_hppm_run()"/>
-      <deroute block="Standby"/>
-    </block>
-
-<<<<<<< Updated upstream
-    <!-- PRUEBA 2 -->
-    <block name="Test_Puerta" strip_button="Puerta" strip_icon="path.png">
-      <call_once fun="hppm_ruta_limpiar()"/>
-      
-      <call_once fun="hppm_mover_wp(WP_L0, 10.0, 0.0)"/>
-      <call_once fun="hppm_mover_wp(WP_L1, 10.0, 40.0)"/>
       
       <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
       <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
       
       <call_once fun="hppm_update_obstacle(0, 6.0, 20.0, 2.5, 80.0)"/>
       <call_once fun="hppm_update_obstacle(1, 14.0, 20.0, 2.5, -80.0)"/>
-=======
-    <!-- PRUEBA 3 -->
-    <block name="Test_Vertice" strip_button="Vertice Block" strip_icon="path.png">
-      <call_once fun="hppm_ruta_limpiar()"/>
-      
-      <call_once fun="hppm_mover_wp(WP_L0, 10.0, 0.0)"/>
-      <call_once fun="hppm_mover_wp(WP_L1, 30.0, 20.0)"/> 
-      <call_once fun="hppm_mover_wp(WP_L2, 10.0, 40.0)"/>
-      
-      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
-      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
-      <call_once fun="hppm_ruta_add_wp(WP_L2)"/>
-      
-      <call_once fun="hppm_update_obstacle(0, 22.0, 12.0, 4.0, 80.0)"/>
->>>>>>> Stashed changes
       
       <call_once fun="hppm_ruta_iniciar()"/>
       <while cond="nav_hppm_run()"/>
       <deroute block="Standby"/>
     </block>
 
-<<<<<<< Updated upstream
     <!-- PRUEBA 3 -->
     <block name="Test_Vertice" strip_button="Vertice Block" strip_icon="path.png">
       <call_once fun="hppm_ruta_limpiar()"/>
@@ -187,24 +135,11 @@
       
       <call_once fun="hppm_update_obstacle(0, 22.0, 12.0, 4.0, 80.0)"/>
       
-=======
-    <block name="Prueba_Interactiva" strip_button="Prueba_Interactiva" strip_icon="path.png">
-      <call_once fun="hppm_ruta_limpiar()"/>
-
-      <call_once fun="hppm_mover_wp(WP_L0, -1.6, 21.9)"/>
-      <call_once fun="hppm_mover_wp(WP_L1, 65.1, 27.9)"/>
-      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
-      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
-
-      <call_once fun="hppm_update_obstacle(0, 16.5, 23.4, 3.0, 80.0)"/>
-      <call_once fun="hppm_update_obstacle(1, 44.6, 26.3, 3.0, -80.0)"/>
->>>>>>> Stashed changes
       <call_once fun="hppm_ruta_iniciar()"/>
       <while cond="nav_hppm_run()"/>
       <deroute block="Standby"/>
     </block>
 
-<<<<<<< Updated upstream
     <block name="Prueba_Interactiva" strip_button="Prueba_Interactiva" strip_icon="path.png">
       <call_once fun="hppm_ruta_limpiar()"/>
 
@@ -215,7 +150,11 @@
 
       <call_once fun="hppm_update_obstacle(0, 16.5, 23.4, 3.0, 80.0)"/>
       <call_once fun="hppm_update_obstacle(1, 44.6, 26.3, 3.0, -80.0)"/>
-=======
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
+    </block>
+
     <!-- PRUEBA MULTI-ROBOT: Cruces separados para compatibilidad XML -->
     <block name="Cruce_Pepa" strip_button="Cruce Pepa" strip_icon="path.png">
       <call_once fun="hppm_ruta_limpiar()"/>
@@ -234,7 +173,6 @@
       <call_once fun="hppm_mover_wp(WP_L1, -10.0, 20.0)"/>
       <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
       <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
->>>>>>> Stashed changes
       <call_once fun="hppm_ruta_iniciar()"/>
       <while cond="nav_hppm_run()"/>
       <deroute block="Standby"/>
@@ -266,8 +204,4 @@
     </block>
     
   </blocks>
-<<<<<<< Updated upstream
-</flight_plan>
-=======
 </flight_plan> 
->>>>>>> Stashed changes
