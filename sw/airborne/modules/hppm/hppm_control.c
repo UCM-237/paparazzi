@@ -9,6 +9,8 @@
 #include "modules/datalink/downlink.h"
 #include "firmwares/rover/navigation.h"
 #include <math.h> 
+#include <stdio.h>
+#include <string.h>
 
 EntornoNavegacion hppm_entorno;
 EstadoRobot hppm_robot;
@@ -287,8 +289,54 @@ void hppm_route_start(uint8_t wp_meta) {
     hppm_buffer_trayectoria.recalculando = VERDADERO; 
 }
 
+static void hppm_sincronizar_interfaz(void) {
+    bool cambio_detectado = FALSO;
+    uint8_t obs_wp_ids[] = {WP_OBS0, WP_OBS1, WP_OBS2, WP_OBS3, WP_OBS4};
+
+    for (int i = 0; i < hppm_entorno.num_obstaculos && i < 5; i++) {
+        float wp_x = WaypointX(obs_wp_ids[i]);
+        float wp_y = WaypointY(obs_wp_ids[i]);
+        float int_x = hppm_entorno.matriz_obstaculos[i][0];
+        float int_y = hppm_entorno.matriz_obstaculos[i][1];
+
+        if (fabs(wp_x - int_x) > 0.1 || fabs(wp_y - int_y) > 0.1) {
+            hppm_entorno.matriz_obstaculos[i][0] = wp_x;
+            hppm_entorno.matriz_obstaculos[i][1] = wp_y;
+            cambio_detectado = VERDADERO;
+            printf(">> INTERFAZ: Obstaculo %d reubicado a X:%.1f Y:%.1f\n", i, wp_x, wp_y);
+        }
+    }
+
+    if (hppm_mision.total_puntos > 0) {
+        uint8_t wp_meta = hppm_mision.waypoints[hppm_mision.punto_actual];
+        float meta_wp_x = WaypointX(wp_meta);
+        float meta_wp_y = WaypointY(wp_meta);
+
+        if (fabs(meta_wp_x - hppm_entorno.meta_x) > 0.1 || fabs(meta_wp_y - hppm_entorno.meta_y) > 0.1) {
+            hppm_entorno.meta_x = meta_wp_x;
+            hppm_entorno.meta_y = meta_wp_y;
+            
+            double dx = hppm_entorno.meta_x - hppm_entorno.inicio_x;
+            double dy = hppm_entorno.meta_y - hppm_entorno.inicio_y;
+            if (fabs(dx) < 1e-6) dx = 1e-6;
+            double angulo = atan2(dy, dx);
+            hppm_entorno.pendiente_inicial = tan(angulo + (M_PI / 4.0));
+            hppm_entorno.pendiente_final = tan(angulo - (M_PI / 4.0));
+            
+            cambio_detectado = VERDADERO;
+            printf(">> INTERFAZ: Meta reubicada a X:%.1f Y:%.1f\n", meta_wp_x, meta_wp_y);
+        }
+    }
+
+    if (cambio_detectado) {
+        hppm_buffer_trayectoria.recalculando = VERDADERO;
+    }
+}
+
 bool nav_hppm_run(void) {
     struct EnuCoor_f *pos_gps = stateGetPositionEnu_f();
+    
+    hppm_sincronizar_interfaz();
     
     if (hppm_buffer_trayectoria.recalculando) {
         printf(">> GENERANDO RUTA MATEMÁTICA COMPLETA DESDE L0 A L1 <<\n");
@@ -332,7 +380,6 @@ bool nav_hppm_run(void) {
 
     float p1_x, p1_y, p2_x, p2_y;
     
-    // ANCLA PURE PURSUIT (Elimina el efecto cangrejo y el lazo inicial)
     p1_x = pos_gps->x;
     p1_y = pos_gps->y;
 
@@ -344,14 +391,12 @@ bool nav_hppm_run(void) {
         p2_y = WaypointY(hppm_mision.waypoints[hppm_mision.punto_actual]);
     }
 
-    // El GVF se encarga al 100% de calcular el volante sin bloqueos externos
     gvf_segment_XY1_XY2(p1_x, p1_y, p2_x, p2_y);
 
     float dx_meta = hppm_entorno.meta_x - pos_gps->x;
     float dy_meta = hppm_entorno.meta_y - pos_gps->y;
     float dist_fisica_al_punto = sqrtf((dx_meta * dx_meta) + (dy_meta * dy_meta));
 
-    // Control de velocidad durante la ruta
     if (dist_fisica_al_punto < 3.0f) {
         guidance_control.cmd.max_speed = 0.5f; 
     } else {
@@ -367,8 +412,6 @@ bool nav_hppm_run(void) {
             hppm_route_start(hppm_mision.waypoints[hppm_mision.punto_actual]);
             return true; 
         } else { 
-            // ¡CLAVE! Devolvemos la velocidad a la normalidad para que el Standby
-            // tenga fuerza para viajar a su órbita y dar vueltas sin volverse loco.
             guidance_control.cmd.max_speed = 1.5f;
             return false; 
         }

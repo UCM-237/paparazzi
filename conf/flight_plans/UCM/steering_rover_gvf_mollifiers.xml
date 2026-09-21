@@ -124,7 +124,6 @@
     <!-- PRUEBA 3 -->
     <block name="Test_Vertice" strip_button="Vertice Block" strip_icon="path.png">
       
-      <!-- Dejamos únicamente los límites de velocidad -->
       <set var="guidance_control.cmd.max_speed" value="2.0"/>
       <set var="guidance_control.cmd.min_speed" value="0.5"/>
       <set var="guidance_control.use_non_linear" value="0"/>
