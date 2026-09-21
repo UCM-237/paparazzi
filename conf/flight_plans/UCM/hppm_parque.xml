@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+<flight_plan alt="660" ground_alt="650" lat0="40.450939" lon0="-3.727197" max_dist_from_home="150" name="Pruebas Explanada UCM" security_height="0.3">
+  <header>
+  </header>
+  
+  <waypoints>
+    <!-- Origen y Standby -->
+    <waypoint name="HOME" x="0.0" y="0.0"/>
+    <waypoint name="STDBY" x="-2.0" y="-2.0"/>
+    
+    <!-- Puntos de ruta (Inician en 0,0 y el bloque los moverá) -->
+    <waypoint name="L0" x="0.0" y="0.0"/>
+    <waypoint name="L1" x="0.0" y="0.0"/>
+    <waypoint name="L2" x="0.0" y="0.0"/>
+    <waypoint name="L3" x="0.0" y="0.0"/>
+    <waypoint name="L4" x="0.0" y="0.0"/>
+    <waypoint name="L5" x="0.0" y="0.0"/>
+    <waypoint name="L6" x="0.0" y="0.0"/>
+    <waypoint name="L7" x="0.0" y="0.0"/>
+    <waypoint name="L8" x="0.0" y="0.0"/>
+    
+    <!-- 8 Reservas para obstáculos dinámicos -->
+    <waypoint name="OBS0" x="999.0" y="999.0"/> 
+    <waypoint name="OBS1" x="999.0" y="999.0"/>
+    <waypoint name="OBS2" x="999.0" y="999.0"/>
+    <waypoint name="OBS3" x="999.0" y="999.0"/> 
+    <waypoint name="OBS4" x="999.0" y="999.0"/>
+    <waypoint name="OBS5" x="999.0" y="999.0"/>
+    <waypoint name="OBS6" x="999.0" y="999.0"/>
+    <waypoint name="OBS7" x="999.0" y="999.0"/>
+    
+    <!-- RED DE SEGURIDAD GEOGRÁFICA (Explanada) -->
+    <waypoint name="_N1" lat="40.450645" lon="-3.727341"/>
+    <waypoint name="_N2" lat="40.450691" lon="-3.726952"/>
+    <waypoint name="_N3" lat="40.451233" lon="-3.727052"/>
+    <waypoint name="_N4" lat="40.451194" lon="-3.727444"/>
+  </waypoints>
+
+  <sectors>
+    <sector color="transparent" name="Net">
+      <corner name="_N1"/>
+      <corner name="_N2"/>
+      <corner name="_N3"/>
+      <corner name="_N4"/>
+    </sector>
+  </sectors>
+
+  <variables>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="aa"/>
+    <variable init="5.0" max="10.0" min="1.0" step="1.0" var="bb"/>
+    <variable init="8" max="20" min="0" step="1" var="puntos_hppm"/>
+  </variables>
+
+  <modules>
+    <module name="gvf_module"/>
+    <module name="gvf_parametric_bare"/>
+  </modules>
+
+  <blocks>
+    <block name="Wait GPS" strip_icon="gps.png">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+    </block>
+
+    <block name="Geo init" strip_icon="googleearth.png">
+      <while cond="LessThan(NavBlockTime(), 10)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+    </block>
+
+    <block name="Start Engine" strip_icon="on.png">
+      <while cond="LessThan(NavBlockTime(), 1)"/>
+      <call_once fun="autopilot_set_motors_on(TRUE)"/>
+      <deroute block="Standby"/> 
+    </block>
+
+    <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      <call fun="gvf_ellipse_wp(WP_STDBY, 3, 3, 0)"/>
+      <deroute block="Standby"/>
+    </block>
+
+    <block name="Base" strip_button="Base" strip_icon="home.png">
+      <call fun="gvf_ellipse_wp(WP_HOME, 3, 3, 0)"/>
+      <deroute block="Base"/>
+    </block>
+
+    <!-- BLOQUE GENERADO POR PYTHON -->
+    <block name="Prueba_esquinas" strip_button="Prueba_esquinas" strip_icon="path.png">
+      <!-- Ajustes de velocidad para exteriores -->
+      <set var="guidance_control.cmd.max_speed" value="2.0"/>
+      <set var="guidance_control.cmd.min_speed" value="0.5"/>
+      <set var="guidance_control.use_non_linear" value="0"/>
+      <call_once fun="hppm_ruta_limpiar()"/>
+      <!-- Coordenadas -->
+      <call_once fun="hppm_mover_wp(WP_L0, -15.9, 25.6)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, -8.2, -29.9)"/>
+      <call_once fun="hppm_mover_wp(WP_L2, 17.1, -25.6)"/>
+      <call_once fun="hppm_mover_wp(WP_L3, 8.5, 28.6)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L2)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L3)"/>
+      <!-- Obstaculos -->
+      <call_once fun="hppm_update_obstacle(0, -14.2, 13.1, 3.0, 80.0)"/>
+      <call_once fun="hppm_update_obstacle(1, 14.8, -12.4, 3.0, 80.0)"/>
+      <call_once fun="hppm_update_obstacle(2, -9.8, -16.1, 3.0, -80.0)"/>
+      <call_once fun="hppm_update_obstacle(3, 10.1, 15.7, 3.0, -80.0)"/>
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
+    </block>
+
+    <block name="Prueba_Explanada" strip_button="Prueba_Explanada" strip_icon="path.png">
+      <!-- Ajustes de velocidad para exteriores -->
+      <set var="guidance_control.cmd.max_speed" value="2.0"/>
+      <set var="guidance_control.cmd.min_speed" value="0.5"/>
+      <set var="guidance_control.use_non_linear" value="0"/>
+      <call_once fun="hppm_ruta_limpiar()"/>
+      <!-- Coordenadas -->
+      <call_once fun="hppm_mover_wp(WP_L0, -5.2, 26.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 3.5, -24.1)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      <!-- Obstaculos -->
+      <call_once fun="hppm_update_obstacle(0, -3.1, 12.0, 3.0, 80.0)"/>
+      <call_once fun="hppm_update_obstacle(1, 0.9, -11.0, 3.0, -80.0)"/>
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
+    </block>
+
+  </blocks>
+</flight_plan> 

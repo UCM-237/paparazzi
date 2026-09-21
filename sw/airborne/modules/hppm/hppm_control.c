@@ -221,28 +221,67 @@ static void hppm_calcular_ruta_completa(void) {
     }
 }
 
+// ---------------------------------------------------------
+// COMPATIBILIDAD RETROACTIVA APLICADA: 
+// Las directivas #ifdef verifican si los waypoints existen 
+// en el mapa XML activo antes de compilar la línea.
+// ---------------------------------------------------------
+
 void hppm_clear_obstacles(void) { 
     hppm_entorno.num_obstaculos = 0; 
+    #ifdef WP_OBS0
     waypoint_move_xy_i(WP_OBS0, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_OBS1
     waypoint_move_xy_i(WP_OBS1, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_OBS2
     waypoint_move_xy_i(WP_OBS2, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_OBS3
     waypoint_move_xy_i(WP_OBS3, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_OBS4
     waypoint_move_xy_i(WP_OBS4, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_OBS5
+    waypoint_move_xy_i(WP_OBS5, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_OBS6
+    waypoint_move_xy_i(WP_OBS6, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_OBS7
+    waypoint_move_xy_i(WP_OBS7, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
 }
 
 void hppm_ruta_limpiar(void) {
     hppm_mision.total_puntos = 0;
     hppm_mision.punto_actual = 0;
     hppm_clear_obstacles(); 
+    
+    // Asumimos L0 a L4 son seguros siempre, validamos los opcionales
     waypoint_move_xy_i(WP_L0, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
     waypoint_move_xy_i(WP_L1, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
     waypoint_move_xy_i(WP_L2, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #ifdef WP_L3
     waypoint_move_xy_i(WP_L3, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_L4
     waypoint_move_xy_i(WP_L4, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_L5
     waypoint_move_xy_i(WP_L5, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_L6
     waypoint_move_xy_i(WP_L6, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_L7
     waypoint_move_xy_i(WP_L7, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
+    #ifdef WP_L8
     waypoint_move_xy_i(WP_L8, (int32_t)(999.0f * 256.0f), (int32_t)(999.0f * 256.0f));
+    #endif
 } 
 
 void hppm_mover_wp(uint8_t wp_id, float x, float y) {
@@ -291,11 +330,38 @@ void hppm_route_start(uint8_t wp_meta) {
 
 static void hppm_sincronizar_interfaz(void) {
     bool cambio_detectado = FALSO;
-    uint8_t obs_wp_ids[] = {WP_OBS0, WP_OBS1, WP_OBS2, WP_OBS3, WP_OBS4};
 
-    for (int i = 0; i < hppm_entorno.num_obstaculos && i < 5; i++) {
-        float wp_x = WaypointX(obs_wp_ids[i]);
-        float wp_y = WaypointY(obs_wp_ids[i]);
+    for (int i = 0; i < hppm_entorno.num_obstaculos; i++) {
+        // Valores por defecto para evitar arrastres fantasma
+        float wp_x = hppm_entorno.matriz_obstaculos[i][0];
+        float wp_y = hppm_entorno.matriz_obstaculos[i][1];
+
+        // Solo lee de la interfaz si el Waypoint fue compilado
+        #ifdef WP_OBS0
+        if (i == 0) { wp_x = WaypointX(WP_OBS0); wp_y = WaypointY(WP_OBS0); }
+        #endif
+        #ifdef WP_OBS1
+        if (i == 1) { wp_x = WaypointX(WP_OBS1); wp_y = WaypointY(WP_OBS1); }
+        #endif
+        #ifdef WP_OBS2
+        if (i == 2) { wp_x = WaypointX(WP_OBS2); wp_y = WaypointY(WP_OBS2); }
+        #endif
+        #ifdef WP_OBS3
+        if (i == 3) { wp_x = WaypointX(WP_OBS3); wp_y = WaypointY(WP_OBS3); }
+        #endif
+        #ifdef WP_OBS4
+        if (i == 4) { wp_x = WaypointX(WP_OBS4); wp_y = WaypointY(WP_OBS4); }
+        #endif
+        #ifdef WP_OBS5
+        if (i == 5) { wp_x = WaypointX(WP_OBS5); wp_y = WaypointY(WP_OBS5); }
+        #endif
+        #ifdef WP_OBS6
+        if (i == 6) { wp_x = WaypointX(WP_OBS6); wp_y = WaypointY(WP_OBS6); }
+        #endif
+        #ifdef WP_OBS7
+        if (i == 7) { wp_x = WaypointX(WP_OBS7); wp_y = WaypointY(WP_OBS7); }
+        #endif
+
         float int_x = hppm_entorno.matriz_obstaculos[i][0];
         float int_y = hppm_entorno.matriz_obstaculos[i][1];
 
@@ -432,11 +498,32 @@ void hppm_update_obstacle(uint8_t id, float x, float y, float radio, float peso)
         hppm_entorno.matriz_obstaculos[id][2] = radio * radio; 
         hppm_entorno.matriz_obstaculos[id][3] = peso;
         if (id >= hppm_entorno.num_obstaculos) hppm_entorno.num_obstaculos = id + 1;
-        if (id == 0) { waypoint_move_xy_i(WP_OBS0, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); } 
-        else if (id == 1) { waypoint_move_xy_i(WP_OBS1, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); } 
-        else if (id == 2) { waypoint_move_xy_i(WP_OBS2, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); } 
-        else if (id == 3) { waypoint_move_xy_i(WP_OBS3, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); } 
+        
+        #ifdef WP_OBS0
+        if (id == 0) { waypoint_move_xy_i(WP_OBS0, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        #ifdef WP_OBS1
+        else if (id == 1) { waypoint_move_xy_i(WP_OBS1, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        #ifdef WP_OBS2
+        else if (id == 2) { waypoint_move_xy_i(WP_OBS2, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        #ifdef WP_OBS3
+        else if (id == 3) { waypoint_move_xy_i(WP_OBS3, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        #ifdef WP_OBS4
         else if (id == 4) { waypoint_move_xy_i(WP_OBS4, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        #ifdef WP_OBS5
+        else if (id == 5) { waypoint_move_xy_i(WP_OBS5, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        #ifdef WP_OBS6
+        else if (id == 6) { waypoint_move_xy_i(WP_OBS6, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        #ifdef WP_OBS7
+        else if (id == 7) { waypoint_move_xy_i(WP_OBS7, (int32_t)(x * 256.0f), (int32_t)(y * 256.0f)); }
+        #endif
+        
         hppm_buffer_trayectoria.recalculando = VERDADERO;
     }
 }
