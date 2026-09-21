@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+<flight_plan alt="660" ground_alt="650" lat0="40.4514297" lon0="-3.7290253" max_dist_from_home="1500" name="Rover Steering Enjambre" security_height="0.3">
+  
+  <waypoints>
+    <waypoint name="HOME" x="0.0" y="0.0"/>
+    
+    <!-- Puntos de Standby -->
+    <waypoint name="STDBY_N" x="8.0" y="45.0"/>  <!-- Pepa (5) -->
+    <waypoint name="STDBY_E" x="35.0" y="18.0"/> <!-- Anibal (6) -->
+    <waypoint name="STDBY_S" x="8.0" y="-10.0"/> <!-- Siete (7) -->
+    <waypoint name="STDBY_W" x="-20.0" y="18.0"/><!-- Ocho (8) -->
+    
+    <!-- Puntos dinámicos (Requeridos por hppm_control.c) -->
+    <waypoint name="L0" x="0.0" y="0.0"/>
+    <waypoint name="L1" x="0.0" y="0.0"/>
+    <waypoint name="L2" x="0.0" y="0.0"/>
+    <waypoint name="L3" x="0.0" y="0.0"/>
+    <waypoint name="L4" x="0.0" y="0.0"/>
+    <waypoint name="L5" x="0.0" y="0.0"/>
+    <waypoint name="L6" x="0.0" y="0.0"/>
+    <waypoint name="L7" x="0.0" y="0.0"/>
+    <waypoint name="L8" x="0.0" y="0.0"/>
+    
+    <waypoint name="OBS0" x="999.0" y="999.0"/> 
+    <waypoint name="OBS1" x="999.0" y="999.0"/>
+    <waypoint name="OBS2" x="999.0" y="999.0"/>
+    <waypoint name="OBS3" x="999.0" y="999.0"/> 
+    <waypoint name="OBS4" x="999.0" y="999.0"/> 
+  </waypoints>
+
+  <variables>
+    <variable init="8" max="20" min="0" step="1" var="puntos_hppm"/>
+  </variables>
+
+  <modules>
+    <module name="gvf_module"/>
+    <module name="gvf_parametric_bare"/>
+  </modules>
+
+  <blocks>
+    <block name="Wait GPS" strip_icon="gps.png">
+      <while cond="!GpsFixValid()"/>
+    </block>
+    
+    <!-- Mantiene el rover quieto usando la función C que creamos -->
+    <block name="Geo init" strip_icon="googleearth.png">
+      <while cond="LessThan(NavBlockTime(), 10)">
+        <call fun="hppm_frenar()"/>
+      </while>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+    </block>
+    
+    <block name="Start Engine" strip_icon="on.png">
+      <while cond="LessThan(NavBlockTime(), 1)"/>
+      <call_once fun="autopilot_set_motors_on(TRUE)"/>
+      <deroute block="Standby_Router"/>
+    </block>
+    
+    <!-- ============================================ -->
+    <!-- ENRUTADOR INTELIGENTE DE STANDBY -->
+    <!-- ============================================ -->
+    <block name="Standby_Router" strip_button="Standby" strip_icon="home.png">
+      <exception cond="AC_ID == 5" deroute="STDBY_Pepa"/>
+      <exception cond="AC_ID == 6" deroute="STDBY_Anibal"/>
+      <exception cond="AC_ID == 7" deroute="STDBY_Siete"/>
+      <exception cond="AC_ID == 8" deroute="STDBY_Ocho"/>
+    </block>
+    
+    <!-- Bucle infinito de frenado, evita reinicios destructivos -->
+    <block name="STDBY_Pepa"><while cond="TRUE"><call fun="gvf_ellipse_wp(WP_STDBY_N, 3, 3, 0)"/></while></block>
+    <block name="STDBY_Anibal"><while cond="TRUE"><call fun="gvf_ellipse_wp(WP_STDBY_E, 3, 3, 0)"/></while></block>
+    <block name="STDBY_Siete"><while cond="TRUE"><call fun="gvf_ellipse_wp(WP_STDBY_S, 3, 3, 0)"/></while></block>
+    <block name="STDBY_Ocho"><while cond="TRUE"><call fun="gvf_ellipse_wp(WP_STDBY_W, 3, 3, 0)"/></while></block>
+    
+    <!-- ============================================ -->
+    <!-- ENRUTADOR INTELIGENTE DE RUTAS -->
+    <!-- ============================================ -->
+    <block name="Cruce_Experimento" strip_button="Iniciar Cruce" strip_icon="path.png">
+      <call_once fun="hppm_ruta_limpiar()"/>
+      <exception cond="AC_ID == 5" deroute="Ruta_Pepa"/>
+      <exception cond="AC_ID == 6" deroute="Ruta_Anibal"/>
+      <exception cond="AC_ID == 7" deroute="Ruta_Siete"/>
+      <exception cond="AC_ID == 8" deroute="Ruta_Ocho"/>
+    </block>
+    
+    <!-- Asignaciones de Rutas individuales -->
+    <block name="Ruta_Pepa">
+      <call_once fun="hppm_mover_wp(WP_L0, 10.0, 40.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 10.0, 0.0)"/>
+      <deroute block="Ejecutar_Ruta"/>
+    </block>
+    
+    <block name="Ruta_Anibal">
+      <call_once fun="hppm_mover_wp(WP_L0, 30.0, 20.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, -10.0, 20.0)"/>
+      <deroute block="Ejecutar_Ruta"/>
+    </block>
+    
+    <block name="Ruta_Siete">
+      <call_once fun="hppm_mover_wp(WP_L0, 10.0, -10.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 10.0, 40.0)"/>
+      <deroute block="Ejecutar_Ruta"/>
+    </block>
+    
+    <block name="Ruta_Ocho">
+      <call_once fun="hppm_mover_wp(WP_L0, -20.0, 20.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 30.0, 20.0)"/>
+      <deroute block="Ejecutar_Ruta"/>
+    </block>
+    
+    <!-- ============================================ -->
+    <!-- BLOQUE COMÚN DE EJECUCIÓN HPPM -->
+    <!-- ============================================ -->
+    <block name="Ejecutar_Ruta">
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby_Router"/>
+    </block>
+  </blocks>
+</flight_plan> 

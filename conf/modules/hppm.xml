@@ -1,0 +1,15 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+<module name="hppm" dir="hppm">
+  <doc>
+    <description>Algoritmo HPPM</description>
+  </doc>
+  <header>
+    <file name="hppm_control.h"/>
+  </header>
+  <init fun="hppm_init()"/>
+  <datalink message="HPPM_OBSTACLE" fun="hppm_parse_obstacle(buf)"/>
+  <makefile target="ap|nps">
+    <file name="hppm_control.c"/>
+    <flag name="CFLAGS_hppm_control" value="-O3 -ffast-math"/>
+  </makefile>
+</module>

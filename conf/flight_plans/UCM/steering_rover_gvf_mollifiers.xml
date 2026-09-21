@@ -2,78 +2,189 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 <flight_plan alt="660" ground_alt="650" lat0="40.4514297" lon0="-3.7290253" max_dist_from_home="1500" name="Rover Steering" security_height="0.3">
   <header>
-
-</header>
+  </header>
+  
   <waypoints>
+    <!-- Puntos base del sistema -->
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="STDBY" x="-1.2" y="-14.4"/>
-    <!--waypoint name="ELLIPSE" x="-2.7" y="-10.6"/-->
     
-    <waypoint name="L0" lat="40.4514806"   lon="-3.7289157"/>
-    <waypoint name="L1" lat="40.4516892"  lon="-3.7290436"/>
-    <waypoint name="L2" lat="40.4517214" lon="-3.7287739"/>
-    <waypoint name="L3" lat="40.4514951" lon="-3.7287601"/>
-    <waypoint name="L4" lat="40.4515789" lon="-3.7285101"/>
-    <waypoint name="L5" lat="40.4518696" lon="-3.7284964"/>
-    <waypoint name="L6" lat="40.4518008" lon="-3.7282960"/>
-    <waypoint name="L7" lat="40.4515358" lon="-3.7285365"/>
-    <waypoint name="L8" lat="40.4518143" lon="-3.7289896"/>
+    <!-- Waypoints -->
+    <waypoint name="L0" x="0.0" y="0.0"/>
+    <waypoint name="L1" x="0.0" y="0.0"/>
+    <waypoint name="L2" x="0.0" y="0.0"/>
+    <waypoint name="L3" x="0.0" y="0.0"/>
+    <waypoint name="L4" x="0.0" y="0.0"/>
+    <waypoint name="L5" x="0.0" y="0.0"/>
+    <waypoint name="L6" x="0.0" y="0.0"/>
+    <waypoint name="L7" x="0.0" y="0.0"/>
+    <waypoint name="L8" x="0.0" y="0.0"/>
     
+    <!-- Waypoints para obstaculos -->
+    <waypoint name="OBS0" x="999.0" y="999.0"/> 
+    <waypoint name="OBS1" x="999.0" y="999.0"/>
+    <waypoint name="OBS2" x="999.0" y="999.0"/>
+    <waypoint name="OBS3" x="999.0" y="999.0"/> 
+    <waypoint name="OBS4" x="999.0" y="999.0"/>
+    
+    <!-- Límites de red / seguridad -->
     <waypoint name="_S1" x="3" y="4"/>
-    <waypoint name="_S2" x="3" y="-4"/>
-    <waypoint name="_S3" x="-3" y="-4"/>
-    <waypoint name="_S4" x="-3" y="4"/>
     <waypoint name="_N1" x="200" y="200"/>
     <waypoint name="_N2" x="200" y="-200"/>
     <waypoint name="_N3" x="-200" y="-200"/>
     <waypoint name="_N4" x="-200" y="200"/>
   </waypoints>
+
   <sectors>
-    <sector color="red" name="Net">
+    <sector color="transparent" name="Net">
       <corner name="_N1"/>
       <corner name="_N2"/>
       <corner name="_N3"/>
       <corner name="_N4"/>
     </sector>
   </sectors>
+
   <variables>
     <variable init="5.0" max="10.0" min="1.0" step="1.0" var="aa"/>
     <variable init="5.0" max="10.0" min="1.0" step="1.0" var="bb"/>
+    <variable init="8" max="20" min="0" step="1" var="puntos_hppm"/>
+    <variable init="0" type="int" var="i"/>
   </variables>
+
   <modules>
     <module name="gvf_module"/>
     <module name="gvf_parametric_bare"/>
   </modules>
+
   <blocks>
     <block name="Wait GPS" strip_icon="gps.png">
       <call_once fun="NavKillThrottle()"/>
       <while cond="!GpsFixValid()"/>
     </block>
+
     <block name="Geo init" strip_icon="googleearth.png">
       <while cond="LessThan(NavBlockTime(), 10)"/>
       <call_once fun="NavSetGroundReferenceHere()"/>
       <call_once fun="NavSetAltitudeReferenceHere()"/>
     </block>
+
     <block name="Start Engine" strip_icon="on.png">
       <while cond="LessThan(NavBlockTime(), 1)"/>
       <call_once fun="autopilot_set_motors_on(TRUE)"/>
+      <deroute block="Standby"/> 
     </block>
+
     <block name="Standby" strip_button="Standby" strip_icon="home.png">
       <call fun="gvf_ellipse_wp(WP_STDBY, 3, 3, 0)"/>
+      <deroute block="Standby"/>
     </block>
-    <block name="line_to_HOME" strip_icon="home_drop.png">
-      <call fun="gvf_segment_XY1_XY2(GetPosX(), GetPosY(), 0.f, 0.f)"/>
-      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+
+    <block name="Base" strip_button="Base" strip_icon="home.png">
+      <call fun="gvf_ellipse_wp(WP_HOME, 3, 3, 0)"/>
+      <deroute block="Base"/>
     </block>
-    <!--
-    <block name="ellipse_wp" strip_icon="oval.png">
-      <call fun="gvf_ellipse_wp(WP_ELLIPSE, gvf_ellipse_par.a, gvf_ellipse_par.b, gvf_ellipse_par.alpha)"/>
-      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+
+    <!-- PRUEBA 1-->
+    <block name="Test_Slalom3" strip_button="Slalom x3" strip_icon="path.png">
+      <call_once fun="hppm_ruta_limpiar()"/>
+
+      <call_once fun="hppm_mover_wp(WP_L0, 5.0, 5.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 5.0, 45.0)"/>
+      
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      
+      <call_once fun="hppm_update_obstacle(0, 5.0, 15.0, 3.0, 80.0)"/> 
+      <call_once fun="hppm_update_obstacle(1, 5.0, 25.0, 3.0, -80.0)"/> 
+      <call_once fun="hppm_update_obstacle(2, 5.0, 35.0, 3.0, 80.0)"/> 
+      
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
     </block>
-    -->
-    <block name="bare_lines_wp" strip_icon="line_drop.png">
-      <call fun="gvf_parametric_bare_2D_lines_wp(WP_L0)"/>
-      <exception cond="! InsideNet(GetPosX(), GetPosY())" deroute="Standby"/>
+
+    <!-- PRUEBA 2 -->
+    <block name="Test_Puerta" strip_button="Puerta" strip_icon="path.png">
+      <call_once fun="hppm_ruta_limpiar()"/>
+      
+      <call_once fun="hppm_mover_wp(WP_L0, 10.0, 0.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 10.0, 40.0)"/>
+      
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      
+      <call_once fun="hppm_update_obstacle(0, 6.0, 20.0, 2.5, 80.0)"/>
+      <call_once fun="hppm_update_obstacle(1, 14.0, 20.0, 2.5, -80.0)"/>
+      
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
     </block>
+
+    <!-- PRUEBA 3 -->
+    <block name="Test_Vertice" strip_button="Vertice Block" strip_icon="path.png">
+      
+      <!-- Dejamos únicamente los límites de velocidad -->
+      <set var="guidance_control.cmd.max_speed" value="2.0"/>
+      <set var="guidance_control.cmd.min_speed" value="0.5"/>
+      <set var="guidance_control.use_non_linear" value="0"/>
+
+      <call_once fun="hppm_ruta_limpiar()"/>
+      
+      <call_once fun="hppm_mover_wp(WP_L0, 10.0, 0.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 30.0, 20.0)"/> 
+      <call_once fun="hppm_mover_wp(WP_L2, 10.0, 40.0)"/>
+      
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L2)"/>
+      
+      <call_once fun="hppm_update_obstacle(0, 22.0, 12.0, 4.0, 80.0)"/>
+      
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
+    </block>
+
+    <block name="Prueba_Interactiva" strip_button="Prueba_Interactiva" strip_icon="path.png">
+      <call_once fun="hppm_ruta_limpiar()"/>
+
+      <call_once fun="hppm_mover_wp(WP_L0, -1.6, 21.9)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 65.1, 27.9)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+
+      <call_once fun="hppm_update_obstacle(0, 16.5, 23.4, 3.0, 80.0)"/>
+      <call_once fun="hppm_update_obstacle(1, 44.6, 26.3, 3.0, -80.0)"/>
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
+    </block>
+
+    <!-- PRUEBA 5 -->
+    <block name="Test_Resistencia" strip_button="Circuito" strip_icon="path.png">
+      <call_once fun="hppm_ruta_limpiar()"/>
+      
+      <call_once fun="hppm_mover_wp(WP_L0, 0.0, 0.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L1, 0.0, 30.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L2, 30.0, 30.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L3, 30.0, 0.0)"/>
+      <call_once fun="hppm_mover_wp(WP_L4, 0.0, 0.0)"/> 
+      
+      <call_once fun="hppm_ruta_add_wp(WP_L0)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L1)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L2)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L3)"/>
+      <call_once fun="hppm_ruta_add_wp(WP_L4)"/>
+      
+      <call_once fun="hppm_update_obstacle(0, 0.0, 15.0, 3.0, 80.0)"/>
+      <call_once fun="hppm_update_obstacle(1, 15.0, 30.0, 3.0, -80.0)"/>
+      <call_once fun="hppm_update_obstacle(2, 30.0, 15.0, 3.0, 80.0)"/>
+      
+      <call_once fun="hppm_ruta_iniciar()"/>
+      <while cond="nav_hppm_run()"/>
+      <deroute block="Standby"/>
+    </block>
+    
   </blocks>
 </flight_plan>
